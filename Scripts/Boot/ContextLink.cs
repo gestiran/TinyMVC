@@ -1,13 +1,20 @@
 using System;
-using Sirenix.OdinInspector;
 using UnityEngine.SceneManagement;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Boot {
     public abstract class ContextLink<T> : IEquatable<ContextLink<T>>, IEquatable<Scene> {
+    #if ODIN_INSPECTOR
         [HideInEditorMode, HideInPlayMode]
+    #endif
         public readonly Scene scene;
-        
-        [ShowInInspector, LabelText("@scene.name"), HideInEditorMode, HideReferenceObjectPicker]
+
+    #if ODIN_INSPECTOR
+        [ShowInInspector, LabelText("@" + nameof(scene) + ".name"), HideInEditorMode, HideReferenceObjectPicker]
+    #endif
         public readonly T context;
 
         protected ContextLink(Scene scene, T context) {

@@ -1,10 +1,13 @@
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using TinyDI.Dependencies.Models;
 using TinyDI.Dependencies.Parameters;
 using TinyDI.Resolving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Boot {
     [DisallowMultipleComponent]
@@ -12,27 +15,33 @@ namespace TinyMVC.Boot {
         private sealed class ParametersContext : ContextLink<ParametersContainer> {
             public ParametersContext(Scene scene, ParametersContainer context) : base(scene, context) { }
         }
-    
+
         private sealed class ModelsContext : ContextLink<ModelsContainer> {
             public ModelsContext(Scene scene, ModelsContainer context) : base(scene, context) { }
         }
-    
+
         private sealed class BootstrapContext : ContextLink<IContext> {
             public BootstrapContext(Scene scene, IContext context) : base(scene, context) { }
         }
-        
+
+    #if ODIN_INSPECTOR
         [BoxGroup("Debug"), ShowInInspector, InlineProperty, HideInEditorMode, HideReferenceObjectPicker, Searchable]
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+    #endif
         private List<ParametersContext> _parameters;
-        
+
+    #if ODIN_INSPECTOR
         [BoxGroup("Debug"), ShowInInspector, InlineProperty, HideInEditorMode, HideReferenceObjectPicker, Searchable]
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+    #endif
         private List<ModelsContext> _models;
-        
+
+    #if ODIN_INSPECTOR
         [BoxGroup("Debug"), ShowInInspector, InlineProperty, HideInEditorMode, HideReferenceObjectPicker, Searchable]
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+    #endif
         private List<BootstrapContext> _contexts;
-        
+
         public void Awake() {
             DontDestroyOnLoad(this);
 
@@ -44,15 +53,15 @@ namespace TinyMVC.Boot {
         public void Start() {
             SceneManager.sceneLoaded += InitScene;
             SceneManager.sceneUnloaded += UnloadScene;
-            
+
             InitScene(SceneManager.GetActiveScene(), LoadSceneMode.Single);
         }
-        
+
         public void AddParameters(Scene scene, ParametersContainer parameters) {
             if (TryGetContext(_parameters, scene, out ParametersContainer _, out int _)) {
                 return;
             }
-            
+
             _parameters.Add(new ParametersContext(scene, parameters));
         }
 
@@ -60,7 +69,7 @@ namespace TinyMVC.Boot {
             if (TryGetContext(_models, scene, out ModelsContainer _, out int _)) {
                 return;
             }
-            
+
             _models.Add(new ModelsContext(scene, models));
         }
 
@@ -81,7 +90,7 @@ namespace TinyMVC.Boot {
 
             return containers;
         }
-        
+
         private ModelsContainer[] CreateModelsContainers() {
             ModelsContainer[] containers = new ModelsContainer[_models.Count];
 
@@ -91,15 +100,13 @@ namespace TinyMVC.Boot {
 
             return containers;
         }
-        
-        
 
         private void InitScene(Scene scene, LoadSceneMode mode) {
             IContext context = GetSceneContext(scene);
-            
+
             context.Create();
             context.Init(this, scene);
-            
+
             _contexts.Add(new BootstrapContext(scene, context));
         }
 
@@ -119,28 +126,30 @@ namespace TinyMVC.Boot {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.LogError($"ProjectContext.GetSceneBootstrap() - {scene.name} not contain Bootstrap!");
         #endif
-            
+
             return null;
         }
-        
+
         private void UnloadScene(Scene scene) {
             if (!TryGetContext(_contexts, scene, out IContext context, out int contextId)) {
                 return;
             }
-            
+
             context.Unload();
 
-            if (context is not IHaveProjectModels && TryGetContext(_models, scene, out ModelsContainer _, out int modelsId)) {
+            if (context is not IHaveProjectModels &&
+                TryGetContext(_models, scene, out ModelsContainer _, out int modelsId)) {
                 _models.RemoveAt(modelsId);
             }
 
-            if (context is not IHaveProjectParameters && TryGetContext(_parameters, scene, out ParametersContainer _, out int parametersId)) {
+            if (context is not IHaveProjectParameters &&
+                TryGetContext(_parameters, scene, out ParametersContainer _, out int parametersId)) {
                 _parameters.RemoveAt(parametersId);
             }
-            
+
             _contexts.RemoveAt(contextId);
         }
-        
+
         private bool TryGetContext<T1, T2>(List<T1> list, Scene target, out T2 context, out int id) where T1 : ContextLink<T2> {
             for (int contextId = 0; contextId < list.Count; contextId++) {
                 if (list[contextId].scene != target) {
@@ -151,7 +160,7 @@ namespace TinyMVC.Boot {
                 id = contextId;
                 return true;
             }
-            
+
             context = default;
             id = default;
             return false;
