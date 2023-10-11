@@ -1,0 +1,12 @@
+{
+    "name": "com.ges.tinymvc",
+    "displayName": "Tiny MVC",
+    "author": { "name": "Derek Sliman", "url": "https://github.com/gestiran" },
+    "version": "1.0.0",
+    "unity": "2018.4",
+    "description": "Model View Controller initialization system.",
+    "keywords": [ "mvc", "bootstrap", "di", "model", "view", "controller", "boot" ],
+    "license": "MIT",
+    "category": "MVC",
+    "dependencies": {}
+}
