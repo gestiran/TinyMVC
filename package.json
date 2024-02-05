@@ -5,7 +5,7 @@
     "name": "Derek Sliman",
     "url": "https://github.com/gestiran"
   },
-  "version": "1.0.0",
+  "version": "1.2.0",
   "unity": "2018.4",
   "description": "Model View Controller initialization system.",
   "keywords": [
@@ -19,8 +19,5 @@
   ],
   "license": "MIT",
   "category": "MVC",
-  "dependencies": {
-    "com.ges.tinydi": "1.0.0",
-    "com.ges.tinyreactive": "1.0.0"
-  }
+  "dependencies": { }
 }

@@ -1,0 +1,22 @@
+{
+    "name": "TinyMVC.Runtime",
+    "rootNamespace": "TinyMVC",
+    "references": [],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "iOS",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Sirenix.OdinInspector.Attributes.dll",
+        "Sirenix.Serialization.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

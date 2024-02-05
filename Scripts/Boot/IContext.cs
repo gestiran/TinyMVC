@@ -1,11 +1,11 @@
 ﻿using UnityEngine.SceneManagement;
 
 namespace TinyMVC.Boot {
-    public interface IContext {
-        public void Create();
+    internal interface IContext {
+        internal void Create();
 
-        public void Init(ProjectBootstrap projectContext, Scene scene);
+        internal void Init(ProjectContext context, ref Scene scene);
 
-        public void Unload();
+        internal void Unload();
     }
 }

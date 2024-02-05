@@ -1,0 +1,22 @@
+{
+    "name": "TinyMVC.Editor",
+    "rootNamespace": "TinyMVC",
+    "references": [
+        "GUID:1d8cf7cb5006f57428fd819399459569"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Sirenix.OdinInspector.Attributes.dll",
+        "Sirenix.OdinInspector.Editor.dll",
+        "Sirenix.Serialization.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
