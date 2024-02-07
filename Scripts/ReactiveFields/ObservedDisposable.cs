@@ -44,7 +44,7 @@ namespace TinyMVC.ReactiveFields {
             
             _value = newValue;
 
-            for (int i = 0; i < _listeners.Count; i++) {
+            for (int i = _listeners.Count - 1; i >= 0; i--) {
                 _listeners[i].Invoke(newValue);
             }
             

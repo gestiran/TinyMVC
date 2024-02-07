@@ -22,7 +22,7 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send(T data) {
-            for (int i = 0; i < _listeners.Count; i++) {
+            for (int i = _listeners.Count - 1; i >= 0; i--) {
                 _listeners[i].Invoke(data);
             }
 

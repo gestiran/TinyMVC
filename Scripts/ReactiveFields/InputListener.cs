@@ -12,7 +12,7 @@ namespace TinyMVC.ReactiveFields {
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener : IUnload {
-        private List<Action> _listeners = new List<Action>();
+        internal List<Action> listeners = new List<Action>();
         
     #if UNITY_EDITOR
         private uint _frameId;
@@ -22,8 +22,8 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send() {
-            for (int i = 0; i < _listeners.Count; i++) {
-                _listeners[i].Invoke();
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].Invoke();
             }
             
         #if UNITY_EDITOR
@@ -35,18 +35,14 @@ namespace TinyMVC.ReactiveFields {
         #endif
         }
 
-        public void AddListener(Action listener) => _listeners.Add(listener);
-
-        public void RemoveListener(Action listener) => _listeners.Remove(listener);
-
-        public void Unload() => _listeners = null;
+        public void Unload() => listeners = null;
     }
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T> : IUnload {
-        private List<MultipleListener<T>> _listeners = new List<MultipleListener<T>>();
+        internal List<MultipleListener<T>> listeners = new List<MultipleListener<T>>();
 
     #if UNITY_EDITOR
         private uint _frameId;
@@ -56,8 +52,8 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send([NotNull] params T[] data) {
-            for (int i = 0; i < _listeners.Count; i++) {
-                _listeners[i].Invoke(data);
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].Invoke(data);
             }
             
         #if UNITY_EDITOR
@@ -69,18 +65,14 @@ namespace TinyMVC.ReactiveFields {
         #endif
         }
 
-        public void AddListener(MultipleListener<T> listener) => _listeners.Add(listener);
-
-        public void RemoveListener(MultipleListener<T> listener) => _listeners.Remove(listener);
-
-        public void Unload() => _listeners = null;
+        public void Unload() => listeners = null;
     }
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2> : IUnload {
-        private List<Action<T1, T2>> _listeners = new List<Action<T1, T2>>();
+        internal List<Action<T1, T2>> listeners = new List<Action<T1, T2>>();
 
     #if UNITY_EDITOR
         private uint _frameId;
@@ -90,8 +82,8 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send(T1 data1, T2 data2) {
-            for (int i = 0; i < _listeners.Count; i++) {
-                _listeners[i].Invoke(data1, data2);
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].Invoke(data1, data2);
             }
             
         #if UNITY_EDITOR
@@ -103,18 +95,14 @@ namespace TinyMVC.ReactiveFields {
         #endif
         }
 
-        public void AddListener(Action<T1, T2> listener) => _listeners.Add(listener);
-
-        public void RemoveListener(Action<T1, T2> listener) => _listeners.Remove(listener);
-
-        public void Unload() => _listeners = null;
+        public void Unload() => listeners = null;
     }
     
 #if ODIN_INSPECTOR && UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2, T3> : IUnload {
-        private List<Action<T1, T2, T3>> _listeners = new List<Action<T1, T2, T3>>();
+        internal List<Action<T1, T2, T3>> listeners = new List<Action<T1, T2, T3>>();
 
     #if UNITY_EDITOR
         private uint _frameId;
@@ -124,8 +112,8 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send(T1 data1, T2 data2, T3 data3) {
-            for (int i = 0; i < _listeners.Count; i++) {
-                _listeners[i].Invoke(data1, data2, data3);
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].Invoke(data1, data2, data3);
             }
             
         #if UNITY_EDITOR
@@ -137,10 +125,6 @@ namespace TinyMVC.ReactiveFields {
         #endif
         }
 
-        public void AddListener(Action<T1, T2, T3> listener) => _listeners.Add(listener);
-
-        public void RemoveListener(Action<T1, T2, T3> listener) => _listeners.Remove(listener);
-
-        public void Unload() => _listeners = null;
+        public void Unload() => listeners = null;
     }
 }

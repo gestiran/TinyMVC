@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using TinyMVC.Dependencies;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
@@ -17,9 +16,9 @@ namespace TinyMVC.ReactiveFields {
         public T Current => _value[_currentId];
         object IEnumerator.Current => _value[_currentId];
         
-        private List<MultipleListener<T>> _onAdd;
-        private List<MultipleListener<T>> _onRemove;
-        private List<Action> _onClear;
+        internal List<MultipleListener<T>> onAdd;
+        internal List<MultipleListener<T>> onRemove;
+        internal List<Action> onClear;
 
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel, ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
@@ -40,9 +39,9 @@ namespace TinyMVC.ReactiveFields {
         
         public ObservedList(List<T> value) {
             _value = value;
-            _onAdd = new List<MultipleListener<T>>();
-            _onRemove = new List<MultipleListener<T>>();
-            _onClear = new List<Action>();
+            onAdd = new List<MultipleListener<T>>();
+            onRemove = new List<MultipleListener<T>>();
+            onClear = new List<Action>();
             _currentId = -1;
         }
 
@@ -57,8 +56,8 @@ namespace TinyMVC.ReactiveFields {
         public void Add([NotNull] params T[] values) {
             _value.AddRange(values);
             
-            for (int i = _onAdd.Count - 1; i >= 0; i--) {
-                _onAdd[i].Invoke(values);
+            for (int i = onAdd.Count - 1; i >= 0; i--) {
+                onAdd[i].Invoke(values);
             }
             
         #if UNITY_EDITOR
@@ -79,8 +78,8 @@ namespace TinyMVC.ReactiveFields {
                 _value.Remove(values[i]);
             }
             
-            for (int i = _onRemove.Count - 1; i >= 0; i--) {
-                _onRemove[i].Invoke(values);
+            for (int i = onRemove.Count - 1; i >= 0; i--) {
+                onRemove[i].Invoke(values);
             }
             
         #if UNITY_EDITOR
@@ -99,8 +98,8 @@ namespace TinyMVC.ReactiveFields {
         public void Clear() {
             _value.Clear();
             
-            for (int i = _onClear.Count - 1; i >= 0; i--) {
-                _onClear[i].Invoke();
+            for (int i = onClear.Count - 1; i >= 0; i--) {
+                onClear[i].Invoke();
             }
             
         #if UNITY_EDITOR
@@ -119,18 +118,6 @@ namespace TinyMVC.ReactiveFields {
             }
         }
 
-        public void AddOnAddListener(MultipleListener<T> listener) => _onAdd.Add(listener);
-        
-        public void RemoveOnAddListener(MultipleListener<T> listener) => _onAdd.Remove(listener);
-        
-        public void AddOnRemoveListener(MultipleListener<T> listener) => _onRemove.Add(listener);
-        
-        public void RemoveOnRemoveListener(MultipleListener<T> listener) => _onRemove.Remove(listener);
-        
-        public void AddOnClearListener(Action listener) => _onClear.Add(listener);
-        
-        public void RemoveOnClearListener(Action listener) => _onClear.Remove(listener);
-
         public bool MoveNext() {
             _currentId++;
             return _currentId < _value.Count;
@@ -141,9 +128,9 @@ namespace TinyMVC.ReactiveFields {
         public void Dispose() {
             Reset();
             _value = null;
-            _onAdd = null;
-            _onRemove = null;
-            _onClear = null;
+            onAdd = null;
+            onRemove = null;
+            onClear = null;
         }
     }
 }

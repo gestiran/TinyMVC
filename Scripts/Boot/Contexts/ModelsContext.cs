@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using TinyMVC.Dependencies;
 using TinyMVC.Extensions;
 
-namespace TinyMVC.Boot {
+namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains models initialization </summary>
     public abstract class ModelsContext {
         private readonly List<IDependency> _models;

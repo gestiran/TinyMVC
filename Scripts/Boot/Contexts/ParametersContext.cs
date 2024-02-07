@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using TinyMVC.Dependencies;
 
-namespace TinyMVC.Boot {
+namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains parameters initialization </summary>
     public abstract class ParametersContext {
         private readonly List<IDependency> _parameters;

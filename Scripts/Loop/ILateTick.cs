@@ -1,5 +1,5 @@
 ﻿namespace TinyMVC.Loop {
-    public interface ILateTick {
+    public interface ILateTick : ILoop {
         public void LateTick();
     }
 }

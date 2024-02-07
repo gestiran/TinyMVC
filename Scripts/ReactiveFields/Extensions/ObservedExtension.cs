@@ -1,5 +1,17 @@
-﻿namespace TinyMVC.ReactiveFields.Extensions {
+﻿using System;
+
+namespace TinyMVC.ReactiveFields.Extensions {
     public static class ObservedExtension {
+        public static Observed<T> AddListener<T>(this Observed<T> observed, Action<T> listener) {
+            observed.listeners.Add(listener);
+            return observed;
+        }
+
+        public static Observed<T> RemoveListener<T>(this Observed<T> observed, Action<T> listener) {
+            observed.listeners.Remove(listener);
+            return observed;
+        }
+
         public static void AddValue(this Observed<int> observed, int value) => observed.Set(observed.value + value);
 
         public static void AddValue(this Observed<float> observed, float value) => observed.Set(observed.value + value);

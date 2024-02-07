@@ -1,5 +1,5 @@
 ﻿namespace TinyMVC.Loop {
-    public interface IFixedTick {
+    public interface IFixedTick : ILoop {
         public void FixedTick();
     }
 }

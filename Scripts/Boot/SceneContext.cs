@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using TinyMVC.Boot.Contexts;
+using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
+using TinyMVC.Views;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
@@ -38,12 +40,12 @@ namespace TinyMVC.Boot {
                 views.ApplyDontDestroyOnLoad();
             }
         }
-        
-        void IContext.Init(ProjectContext context, ref Scene current) {
-            _controllers.Init();
-            views.Init();
 
-            Resolve(context, ref current);
+        void IContext.Init(ProjectContext context, int sceneId) {
+            _controllers.Init(controller => Connect(controller, context, sceneId), controller => Disconnect(controller, context, sceneId));
+            views.Init(view => Connect(view, context, sceneId), view => Disconnect(view, context, sceneId));
+
+            Resolve(context, sceneId);
 
             _controllers.BeginPlay();
             views.BeginPlay();
@@ -60,9 +62,9 @@ namespace TinyMVC.Boot {
             views.CheckAndAdd(ticks);
             views.CheckAndAdd(lateTicks);
             
-            context.AddFixedTicks(ref current, fixedTicks);
-            context.AddTicks(ref current, ticks);
-            context.AddLateTicks(ref current, lateTicks);
+            context.AddFixedTicks(sceneId, fixedTicks);
+            context.AddTicks(sceneId, ticks);
+            context.AddLateTicks(sceneId, lateTicks);
         }
 
         void IContext.Unload() {
@@ -70,8 +72,8 @@ namespace TinyMVC.Boot {
             views.Unload();
             _models.Unload();
         }
-        
-        private void Resolve(ProjectContext context, ref Scene current) {
+
+        private void Resolve(ProjectContext context, int sceneId) {
             if (_parameters is IResolving parametersResolving) {
                 context.Resolve(parametersResolving);
             }
@@ -96,7 +98,7 @@ namespace TinyMVC.Boot {
             _models.Create();
             _models.AddDependencies(dependencies);
             
-            context.AddContainer(ref current, new DependencyContainer(dependencies));
+            context.AddContainer(sceneId, new DependencyContainer(dependencies));
             
             List<IResolving> resolvers = new List<IResolving>();
             
@@ -105,11 +107,27 @@ namespace TinyMVC.Boot {
             
             context.Resolve(resolvers);
         }
-        
+
         protected abstract ControllersContext CreateControllers();
 
         protected abstract ModelsContext CreateModels();
 
         protected abstract ParametersContext CreateParameters();
+
+        private void Connect(IController controller, ProjectContext context, int sceneId) {
+            _controllers.InitSubController(controller, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
+        }
+
+        private void Disconnect(IController controller, ProjectContext context, int sceneId) {
+            _controllers.DeInitSubController(controller, loop => context.DisconnectLoop(sceneId, loop));
+        }
+        
+        private void Connect(IView view, ProjectContext context, int sceneId) {
+            views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
+        }
+
+        private void Disconnect(IView view, ProjectContext context, int sceneId) {
+            views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
+        }
     }
 }

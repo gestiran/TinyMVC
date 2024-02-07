@@ -8,7 +8,6 @@ using Sirenix.Serialization;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
-using UnityEngine;
 #endif
 
 namespace TinyMVC.ReactiveFields {
@@ -19,7 +18,7 @@ namespace TinyMVC.ReactiveFields {
     public sealed class Observed<T> : IUnload {
         public T value => _value;
 
-        private List<Action<T>> _listeners;
+        internal List<Action<T>> listeners;
 
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel, OnValueChanged("@" + nameof(Set) + "(" + nameof(_value) + ")"), HideDuplicateReferenceBox, HideReferenceObjectPicker]
@@ -37,13 +36,13 @@ namespace TinyMVC.ReactiveFields {
 
         public Observed(T value) : this() => _value = value;
 
-        public Observed() => _listeners = new List<Action<T>>();
+        public Observed() => listeners = new List<Action<T>>();
 
         public void Set(T newValue) {
             _value = newValue;
             
-            for (int i = _listeners.Count - 1; i >= 0; i--) {
-                _listeners[i].Invoke(newValue);
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].Invoke(newValue);
             }
 
         #if UNITY_EDITOR
@@ -56,14 +55,10 @@ namespace TinyMVC.ReactiveFields {
         #endif
         }
         
-        public void AddListener(Action<T> listener) => _listeners.Add(listener);
-
-        public void RemoveListener(Action<T> listener) => _listeners.Remove(listener);
-
-        public void Unload() => _listeners.Clear();
+        public void Unload() => listeners.Clear();
 
         public static implicit operator T(Observed<T> value) => value._value;
 
-        public override string ToString() => $"Observed({typeof(T).Name}: {_value}, listeners: {_listeners.Count})";
+        public override string ToString() => $"Observed({typeof(T).Name}: {_value}, listeners: {listeners.Count})";
     }
 }
