@@ -20,7 +20,11 @@ namespace TinyMVC.Boot.Helpers {
             this.sceneId = sceneId;
             this.context = context;
         #if ODIN_INSPECTOR && UNITY_EDITOR
-            _label = SceneManager.GetSceneByBuildIndex(sceneId).name;
+            if (sceneId >= 0) {
+                _label = SceneManager.GetSceneByBuildIndex(sceneId).name;
+            } else {
+                _label = SceneManager.GetActiveScene().name;
+            }
         #endif
         }
 
