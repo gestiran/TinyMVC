@@ -29,8 +29,8 @@ namespace TinyMVC.Boot.Contexts {
         }
 
         internal void Init(Action<IView> connectView, Action<IView> disconnectView) {
-            for (int viewId = 0; viewId < _subViews.Count; viewId++) {
-                if (_subViews[viewId] is View view) {
+            for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
+                if (_mainViews[viewId] is View view) {
                     view.ConnectToContext(connectView, disconnectView);
                 }
             }

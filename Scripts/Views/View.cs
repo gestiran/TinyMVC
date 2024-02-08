@@ -18,12 +18,11 @@ namespace TinyMVC.Views {
         }
 
         protected T ConnectView<T>([NotNull] T view) where T : class, IView {
-            _connectView(view);
-
             if (view is View root) {
                 root.ConnectToContext(_connectView, _disconnectView);
             }
             
+            _connectView(view);
             return view;
         }
 

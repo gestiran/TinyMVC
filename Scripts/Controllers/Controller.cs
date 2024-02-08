@@ -12,12 +12,11 @@ namespace TinyMVC.Controllers {
         }
 
         protected T ConnectController<T>([NotNull] T controller) where T : class, IController {
-            _connectController(controller);
-
             if (controller is Controller root) {
                 root.ConnectToContext(_connectController, _disconnectController);
             }
             
+            _connectController(controller);
             return controller;
         }
 
