@@ -1,12 +1,10 @@
 ﻿using TinyMVC.Dependencies;
 
-namespace TinyMVC.Boot {
+namespace TinyMVC.Boot.Binding {
     /// <summary> Dependency objects factory </summary>
     /// <typeparam name="T"> Dependency object type </typeparam>
     public abstract class DependencyPoolBinder<T> : Binder where T : IDependency, new() {
-        private readonly int _count;
-
-        protected DependencyPoolBinder(int count) => _count = count;
+        protected abstract int _count { get; }
 
         /// <summary> Internal create first state dependency object </summary>
         /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>

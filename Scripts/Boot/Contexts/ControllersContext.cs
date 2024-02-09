@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using TinyMVC.Boot.Empty;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Extensions;
@@ -20,10 +21,12 @@ namespace TinyMVC.Boot.Contexts {
             _mainControllers = new List<IController>();
             _subControllers = new List<IController>();
         }
+        
+        public static ControllersEmptyContext Empty() => new ControllersEmptyContext();
 
         /// <summary> Create initialization stage </summary>
         /// <remarks> First create <see cref="_mainControllers"/> and fill pool </remarks>
-        internal void Create() => Create(_mainControllers);
+        internal void CreateControllers() => Create();
 
         /// <summary> Init initialization stage </summary>
         /// <remarks> Check and run <see cref="TinyMVC.Loop.IInit"/> interface on <see cref="_mainControllers"/> </remarks>
@@ -93,8 +96,11 @@ namespace TinyMVC.Boot.Contexts {
             _mainControllers.TryUnload();
         }
 
+        protected void Add<T>() where T : IController, new() => _mainControllers.Add(new T());
+        
+        protected void Add<T>(T controller) where T : IController => _mainControllers.Add(controller);
+
         /// <summary> Create controllers and connect initialization </summary>
-        /// <param name="controllers"> Controllers pool, placed in order of call </param>
-        protected abstract void Create(List<IController> controllers);
+        protected abstract void Create();
     }
 }

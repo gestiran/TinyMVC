@@ -25,6 +25,11 @@ namespace TinyMVC.Dependencies {
 
             TryApply(resolving);
         }
+        
+        internal static void Resolve(List<IResolving> resolving, DependencyContainer containers) {
+            Resolve(resolving, containers.dependencies, _injectType);
+            TryApply(resolving);
+        }
 
         internal static void Resolve(IResolving resolving, DependencyContainer[] containers) {
             ResolveWithoutApply(resolving, containers);
@@ -57,11 +62,9 @@ namespace TinyMVC.Dependencies {
 
         private static void Resolve(IResolving resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
             FieldInfo[] fields = resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-            
+
             for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
-                Inject attribute = (Inject)Attribute.GetCustomAttribute(fields[fieldId], injectType);
-                
-                if (attribute == null) {
+                if (!Attribute.IsDefined(fields[fieldId], injectType)) {
                     continue;
                 }
 

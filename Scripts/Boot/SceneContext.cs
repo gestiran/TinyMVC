@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TinyMVC.Boot.Contexts;
+using TinyMVC.Boot.Empty;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
@@ -11,6 +12,8 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Boot {
+    public abstract class SceneContext : SceneContext<ViewsEmptyContext> { }
+    
     /// <summary> Scene initialization order </summary>
     /// <typeparam name="TViews"> Serialized views class to store references to scene objects </typeparam>
     [DisallowMultipleComponent]
@@ -33,8 +36,8 @@ namespace TinyMVC.Boot {
             
             views.Instantiate();
 
-            _controllers.Create();
-            views.Create();
+            _controllers.CreateControllers();
+            views.CreateViews();
 
             if (this is IGlobalContext) {
                 views.ApplyDontDestroyOnLoad();
@@ -83,17 +86,20 @@ namespace TinyMVC.Boot {
             _parameters.Create();
             _parameters.AddDependencies(dependencies);
             
-            if (_models is IResolving modelsResolving) {
-                context.ResolveWithoutApply(modelsResolving, new DependencyContainer(dependencies));
+            context.ResolveWithoutApply(_models, new DependencyContainer(dependencies));
 
-                List<IDependency> bindDependencies = new List<IDependency>();
-                _models.Bind();
-                _models.AddDependencies(bindDependencies);
+            List<IDependency> bindDependencies = new List<IDependency>();
+            _models.CreateBinders();
+
+            views.GetDependencies(bindDependencies);
                 
-                ResolveUtility.Resolve(modelsResolving, new DependencyContainer(bindDependencies));
-            } else {
-                _models.Bind();
-            }
+            ResolveUtility.Resolve(_models.CreateResolving(), new DependencyContainer(bindDependencies));
+                
+            bindDependencies.Clear();
+            _models.ApplyBindDependencies();
+            _models.AddDependencies(bindDependencies);
+                
+            ResolveUtility.Resolve(_models, new DependencyContainer(bindDependencies));
             
             _models.Create();
             _models.AddDependencies(dependencies);
@@ -129,5 +135,15 @@ namespace TinyMVC.Boot {
         private void Disconnect(IView view, ProjectContext context, int sceneId) {
             views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
         }
+
+    #if UNITY_EDITOR
+
+        [Button("Generate"), ShowIn(PrefabKind.InstanceInScene)]
+        private void Reset() {
+            views.Generate_Editor();
+            UnityEditor.EditorUtility.SetDirty(gameObject);
+        }
+        
+    #endif
     }
 }

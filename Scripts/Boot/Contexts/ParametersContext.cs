@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
 
 namespace TinyMVC.Boot.Contexts {
@@ -7,6 +8,8 @@ namespace TinyMVC.Boot.Contexts {
         private readonly List<IDependency> _parameters;
 
         protected ParametersContext() => _parameters = new List<IDependency>();
+
+        public static ParametersEmptyContext Empty() => new ParametersEmptyContext();
         
         internal void Create() => Create(_parameters);
 

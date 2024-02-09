@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 namespace TinyMVC.Loop {
-    public sealed class UnloadPool {
+    public sealed class UnloadPool : IUnload {
         private readonly List<IUnload> _unloads;
 
         public UnloadPool(int capacity = 4) => _unloads = new List<IUnload>(capacity);
@@ -19,7 +19,7 @@ namespace TinyMVC.Loop {
         }
     }
 
-    public sealed class UnloadPool<T> where T : IUnload {
+    public sealed class UnloadPool<T> : IUnload where T : IUnload {
         private readonly List<T> _unloads;
 
         public UnloadPool(int capacity = 4) => _unloads = new List<T>(capacity);

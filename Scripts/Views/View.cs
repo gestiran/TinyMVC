@@ -27,12 +27,5 @@ namespace TinyMVC.Views {
         }
 
         protected void DisconnectView<T>([NotNull] T view) where T : class, IView => _disconnectView(view);
-        
-    #if UNITY_EDITOR && ODIN_INSPECTOR
-        
-        [Button("Generate", DirtyOnClick = true), PropertyOrder(1000)]
-        public virtual void Generate_Editor() { }
-        
-    #endif
     }
 }

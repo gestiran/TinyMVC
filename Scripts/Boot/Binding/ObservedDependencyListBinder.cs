@@ -1,6 +1,6 @@
 ﻿using TinyMVC.Dependencies;
 
-namespace TinyMVC.Boot {
+namespace TinyMVC.Boot.Binding {
     /// <summary> Dependency objects factory </summary>
     /// <typeparam name="T"> Dependency object type </typeparam>
     public abstract class ObservedDependencyListBinder<T> : Binder where T : IDependency, new() {

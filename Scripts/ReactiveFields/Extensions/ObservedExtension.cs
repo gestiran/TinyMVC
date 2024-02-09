@@ -1,4 +1,5 @@
 ﻿using System;
+using TinyMVC.Loop;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class ObservedExtension {
@@ -9,6 +10,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
 
         public static Observed<T> RemoveListener<T>(this Observed<T> observed, Action<T> listener) {
             observed.listeners.Remove(listener);
+            return observed;
+        }
+        
+        public static Observed<T> RemoveListenerOnUnload<T>(this Observed<T> observed, Action<T> listener, UnloadPool pool) {
+            pool.Add(new UnloadAction(() => observed.RemoveListener(listener)));
             return observed;
         }
 

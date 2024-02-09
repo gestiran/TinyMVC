@@ -4,6 +4,7 @@ using TinyMVC.Dependencies;
 using TinyMVC.Extensions;
 using TinyMVC.Loop;
 using TinyMVC.Views;
+using TinyMVC.Views.Generated;
 using UnityEngine;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
@@ -19,13 +20,50 @@ namespace TinyMVC.Boot.Contexts {
 #endif
     [Serializable]
     public abstract class ViewsContext {
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [AssetsOnly, ListDrawerSettings(HideRemoveButton = true), AssetSelector(Paths = "Assets/Prefabs", ExpandAllMenuItems = false), Required]
+    #endif
+        [SerializeField]
+        private View[] _assets;
+        
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [SceneObjectsOnly, ShowIn(PrefabKind.InstanceInScene), ReadOnly, RequiredIn(PrefabKind.InstanceInScene)]
+    #endif
+        [SerializeField]
+        private View[] _generated;
+        
         private List<IView> _mainViews;
         private List<IView> _subViews;
         
-        internal void Create() {
+        /// <summary> Instantiate new objects to scene before initialization process </summary>
+        internal void Instantiate() {
+            for (int assetId = 0; assetId < _assets.Length; assetId++) {
+                _assets[assetId] = UnityObject.Instantiate(_assets[assetId]);
+            }
+        }
+
+        internal void GetDependencies(List<IDependency> dependencies) {
+            for (int assetId = 0; assetId < _assets.Length; assetId++) {
+                if (_assets[assetId] is IDependency dependency) {
+                    dependencies.Add(dependency);
+                }
+            }
+            
+            for (int generateId = 0; generateId < _generated.Length; generateId++) {
+                if (_generated[generateId] is IDependency dependency) {
+                    dependencies.Add(dependency);
+                }
+            }
+        }
+        
+        internal void CreateViews() {
             _mainViews = new List<IView>();
             _subViews = new List<IView>();
-            Create(_mainViews);
+            
+            Create();
+            
+            _mainViews.AddRange(_assets);
+            _mainViews.AddRange(_generated);
         }
 
         internal void Init(Action<IView> connectView, Action<IView> disconnectView) {
@@ -95,23 +133,36 @@ namespace TinyMVC.Boot.Contexts {
             _mainViews.TryUnload();
         }
 
-        /// <summary> Instantiate new objects to scene before initialization process </summary>
-        public abstract void Instantiate();
-        
+        protected void Add<T>(T view) where T : IView => _mainViews.Add(view);
+
         /// <summary> Create and connect views to initialization </summary>
-        /// <param name="views"> Any view type </param>
-        protected abstract void Create(List<IView> views);
+        protected abstract void Create();
 
     #if UNITY_EDITOR && ODIN_INSPECTOR
-
-        [Button("Generate", DirtyOnClick = true), HideInPlayMode, ShowIn(PrefabKind.InstanceInScene)]
-        public virtual void Generate_Editor() {
+        
+        internal void Generate_Editor() {
             View[] views = UnityObject.FindObjectsOfType<View>(includeInactive: true);
-
+            List<View> generated = new List<View>();
+            
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                views[viewId].Generate_Editor();
-                UnityEditor.EditorUtility.SetDirty(views[viewId].gameObject);
+                if (views[viewId] is not IGenerated) {
+                    continue;
+                }
+
+                if (views[viewId] is IGeneratedContext) {
+                    generated.Add(views[viewId]); 
+                }
+
+                if (views[viewId] is IApplyGenerated target) {
+                    target.Reset();
+                    UnityEditor.EditorUtility.SetDirty(views[viewId].gameObject);
+                } else if (views[viewId] is IApplyGeneratedContext targetContext) {
+                    targetContext.Reset();
+                    UnityEditor.EditorUtility.SetDirty(views[viewId].gameObject);
+                }
             }
+            
+            _generated = generated.ToArray();
         }
 
     #endif
