@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Helpers;
@@ -80,25 +81,42 @@ namespace TinyMVC.Boot {
 
         internal void AddLateTicks(int sceneId, List<ILateTick> ticks) => _loopContext.AddLateTicks(sceneId, ticks);
 
-        internal void Resolve(IResolving resolving) => ResolveUtility.Resolve(resolving, CreateContainers());
+        internal void Resolve(IResolving resolving) => ResolveUtility.Resolve(resolving, CreateContainer());
 
-        internal void Resolve(List<IResolving> resolving) => ResolveUtility.Resolve(resolving, CreateContainers());
+        internal void Resolve(List<IResolving> resolving) => ResolveUtility.Resolve(resolving, CreateContainer());
 
-        internal void ResolveWithoutApply(IResolving resolving, DependencyContainer container) =>
-            ResolveUtility.ResolveWithoutApply(resolving, container, CreateContainers());
+        internal void ResolveWithoutApply(IResolving resolving, List<IDependency> dependencies) {
+            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));
+        }
+
+        internal void ResolveWithoutApply(List<IResolving> resolving, List<IDependency> dependencies) {
+            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));
+        }
 
         internal void ConnectLoop(int sceneId, ILoop loop) => _loopContext.ConnectLoop(sceneId, loop);
         
         internal void DisconnectLoop(int sceneId, ILoop loop) => _loopContext.DisconnectLoop(sceneId, loop);
-        
-        private DependencyContainer[] CreateContainers() {
-            DependencyContainer[] containers = new DependencyContainer[_dependencies.Count];
 
-            for (int containerId = 0; containerId < _dependencies.Count; containerId++) {
-                containers[containerId] = _dependencies[containerId].context;
+        private DependencyContainer CreateContainer(List<IDependency> dependencies) {
+            DependencyContainer container = CreateContainer();
+
+            foreach (IDependency dependency in dependencies) {
+                container.dependencies.Add(dependency.GetType(), dependency);
             }
 
-            return containers;
+            return container;
+        }
+
+        private DependencyContainer CreateContainer() {
+            DependencyContainer container = new DependencyContainer(64);
+
+            foreach (DependencyContext context in _dependencies) {
+                foreach (KeyValuePair<Type, IDependency> contextDependencies in context.context.dependencies) {
+                    container.dependencies.Add(contextDependencies.Key, contextDependencies.Value);
+                }
+            }
+
+            return container;
         }
 
         private void InitScene(Scene scene, LoadSceneMode mode) {

@@ -7,6 +7,12 @@ namespace TinyMVC.ReactiveFields.Extensions {
             observed.listeners.Add(listener);
             return observed;
         }
+        
+        public static Observed<T> AddListener<T>(this Observed<T> observed, Action<T> listener, UnloadPool pool) {
+            observed.listeners.Add(listener);
+            pool.Add(new UnloadAction(() => observed.RemoveListener(listener)));
+            return observed;
+        }
 
         public static Observed<T> RemoveListener<T>(this Observed<T> observed, Action<T> listener) {
             observed.listeners.Remove(listener);

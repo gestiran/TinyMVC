@@ -82,18 +82,19 @@ namespace TinyMVC.Boot {
             }
             
             List<IDependency> dependencies = new List<IDependency>();
+            List<IDependency> bindDependencies = new List<IDependency>();
             
             _parameters.Create();
             _parameters.AddDependencies(dependencies);
+            _parameters.AddDependencies(bindDependencies);
             
-            context.ResolveWithoutApply(_models, new DependencyContainer(dependencies));
-
-            List<IDependency> bindDependencies = new List<IDependency>();
+            context.ResolveWithoutApply(_models, dependencies);
+            
             _models.CreateBinders();
 
             views.GetDependencies(bindDependencies);
-                
-            ResolveUtility.Resolve(_models.CreateResolving(), new DependencyContainer(bindDependencies));
+            
+            context.ResolveWithoutApply(_models.CreateResolving(), bindDependencies);
                 
             bindDependencies.Clear();
             _models.ApplyBindDependencies();

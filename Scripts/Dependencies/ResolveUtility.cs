@@ -8,9 +8,12 @@ namespace TinyMVC.Dependencies {
         
         static ResolveUtility() => _injectType = typeof(Inject);
 
-        internal static void ResolveWithoutApply(IResolving resolving, DependencyContainer container, DependencyContainer[] containers) {
+        internal static void ResolveWithoutApply(IResolving resolving, DependencyContainer container) {
             Resolve(resolving, container.dependencies, _injectType);
-            ResolveWithoutApply(resolving, containers);
+        }
+        
+        internal static void ResolveWithoutApply(List<IResolving> resolving, DependencyContainer container) {
+            Resolve(resolving, container.dependencies, _injectType);
         }
         
         internal static void Resolve(IResolving resolving, DependencyContainer container) {
@@ -18,28 +21,9 @@ namespace TinyMVC.Dependencies {
             TryApply(resolving);
         }
 
-        internal static void Resolve(List<IResolving> resolving, DependencyContainer[] containers) {
-            for (int containerId = 0; containerId < containers.Length; containerId++) {
-                Resolve(resolving, containers[containerId].dependencies, _injectType);
-            }
-
-            TryApply(resolving);
-        }
-        
         internal static void Resolve(List<IResolving> resolving, DependencyContainer containers) {
             Resolve(resolving, containers.dependencies, _injectType);
             TryApply(resolving);
-        }
-
-        internal static void Resolve(IResolving resolving, DependencyContainer[] containers) {
-            ResolveWithoutApply(resolving, containers);
-            TryApply(resolving);
-        }
-
-        internal static void ResolveWithoutApply(IResolving resolving, DependencyContainer[] containers) {
-            for (int containerId = 0; containerId < containers.Length; containerId++) {
-                Resolve(resolving, containers[containerId].dependencies, _injectType);
-            }
         }
 
         private static void TryApply(List<IResolving> resolving) {
@@ -62,7 +46,7 @@ namespace TinyMVC.Dependencies {
 
         private static void Resolve(IResolving resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
             FieldInfo[] fields = resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-
+                
             for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
                 if (!Attribute.IsDefined(fields[fieldId], injectType)) {
                     continue;

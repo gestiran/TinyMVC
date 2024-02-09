@@ -21,7 +21,7 @@ namespace TinyMVC.Boot.Contexts {
     [Serializable]
     public abstract class ViewsContext {
     #if ODIN_INSPECTOR && UNITY_EDITOR
-        [AssetsOnly, ListDrawerSettings(HideRemoveButton = true), AssetSelector(Paths = "Assets/Prefabs", ExpandAllMenuItems = false), Required]
+        [AssetsOnly, ListDrawerSettings(HideAddButton = true, ShowFoldout = false), Searchable, Required]
     #endif
         [SerializeField]
         private View[] _assets;
@@ -43,14 +43,8 @@ namespace TinyMVC.Boot.Contexts {
         }
 
         internal void GetDependencies(List<IDependency> dependencies) {
-            for (int assetId = 0; assetId < _assets.Length; assetId++) {
-                if (_assets[assetId] is IDependency dependency) {
-                    dependencies.Add(dependency);
-                }
-            }
-            
-            for (int generateId = 0; generateId < _generated.Length; generateId++) {
-                if (_generated[generateId] is IDependency dependency) {
+            for (int assetId = 0; assetId < _mainViews.Count; assetId++) {
+                if (_mainViews[assetId] is IDependency dependency) {
                     dependencies.Add(dependency);
                 }
             }
@@ -138,6 +132,8 @@ namespace TinyMVC.Boot.Contexts {
         /// <summary> Create and connect views to initialization </summary>
         protected abstract void Create();
 
+        protected virtual void Generate() { }
+        
     #if UNITY_EDITOR && ODIN_INSPECTOR
         
         internal void Generate_Editor() {
@@ -163,8 +159,9 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             _generated = generated.ToArray();
+            Generate();
         }
-
+        
     #endif
     }
 }
