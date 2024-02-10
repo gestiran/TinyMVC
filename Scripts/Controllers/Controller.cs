@@ -2,9 +2,16 @@
 using JetBrains.Annotations;
 
 namespace TinyMVC.Controllers {
+    /// <summary> Project logic container </summary>
+    /// <remarks>
+    /// First created on any <see cref="TinyMVC.Boot.SceneContext"/>.<see cref="TinyMVC.Boot.SceneContext.CreateControllers()"/>,
+    /// сan create additional controllers and add them to the initialization
+    /// </remarks>
     public abstract class Controller : IController {
+        /// <summary> Connect to initialization</summary>
         private Connector _connector;
 
+        /// <summary> Contains links to connect to initialization </summary>
         internal sealed class Connector {
             internal Action<IController> connect;
             internal Action<IController[]> connectArray;

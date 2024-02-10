@@ -12,10 +12,20 @@ using UnityEngine.SceneManagement;
 using Sirenix.OdinInspector;
 #endif
 
+#if UNITY_EDITOR && GES_MVC_PROFILING
+using Unity.Profiling;
+#endif
+
 namespace TinyMVC.Boot {
+    /// <summary> Global initialization context, auto created on any scene at start game </summary>
     [DisallowMultipleComponent]
     internal sealed class ProjectContext : MonoBehaviour {
+        /// <summary> Boot contexts list </summary>
+        /// <remarks> Scene can contain one or more <see cref="IContext"/> initializers, always, they will be invoked on <see cref="CreateContext"/> when scene is loaded </remarks>
         private List<BootstrapContext> _contexts;
+        
+        /// <summary> Controls updating process </summary>
+        /// <remarks> Run <see cref="Update"/>, <see cref="FixedUpdate"/>, <see cref="LateUpdate"/> all scenes </remarks>
         private LoopContext _loopContext;
 
     #if ODIN_INSPECTOR && UNITY_EDITOR
@@ -24,6 +34,12 @@ namespace TinyMVC.Boot {
     #endif
         private List<DependencyContext> _dependencies;
 
+    #if UNITY_EDITOR && GES_MVC_PROFILING
+        private ProfilerMarker _fixedUpdateMarker;
+        private ProfilerMarker _updateMarker;
+        private ProfilerMarker _lateUpdateMarker;
+    #endif
+        
         private sealed class BootstrapContext : ContextLink<IContext[]> {
             public BootstrapContext(int sceneId, IContext[] context) : base(sceneId, context) { }
         }
@@ -32,6 +48,7 @@ namespace TinyMVC.Boot {
             public DependencyContext(int sceneId, DependencyContainer context) : base(sceneId, context) { }
         }
 
+        /// <summary> First project context creating </summary>
         [RuntimeInitializeOnLoadMethod]
         internal static void CreateContext() {
             GameObject context = new GameObject("ProjectContext");
@@ -39,6 +56,12 @@ namespace TinyMVC.Boot {
         }
 
         private void Awake() {
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            _fixedUpdateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Project.FixedUpdate");
+            _updateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Project.Update");
+            _lateUpdateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Project.LateUpdate");
+        #endif
+            
             DontDestroyOnLoad(this);
 
             _contexts = new List<BootstrapContext>();
@@ -55,17 +78,45 @@ namespace TinyMVC.Boot {
             SceneManager.sceneUnloaded += UnloadScene;
         }
 
-        private void FixedUpdate() => _loopContext.FixedUpdate();
+        private void FixedUpdate() {
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            _fixedUpdateMarker.Begin();
+        #endif
+            
+            _loopContext.FixedUpdate();
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            _fixedUpdateMarker.End();
+        #endif
+        }
 
         private void Update() {
         #if UNITY_EDITOR
             ObservedTestUtility.Next();
         #endif
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            _updateMarker.Begin();
+        #endif
 
             _loopContext.Update();
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            _updateMarker.End();
+        #endif
         }
 
-        private void LateUpdate() => _loopContext.LateUpdate();
+        private void LateUpdate() {
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            _lateUpdateMarker.Begin();
+        #endif
+            
+            _loopContext.LateUpdate();
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            _lateUpdateMarker.End();
+        #endif
+        }
 
         internal void AddContainer(int sceneId, DependencyContainer container) {
             if (_dependencies.TryGetContext(sceneId, out DependencyContainer _, out int _)) {
@@ -93,9 +144,45 @@ namespace TinyMVC.Boot {
             ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));
         }
 
-        internal void ConnectLoop(int sceneId, ILoop loop) => _loopContext.ConnectLoop(sceneId, loop);
-        
-        internal void DisconnectLoop(int sceneId, ILoop loop) => _loopContext.DisconnectLoop(sceneId, loop);
+        internal void ConnectLoop(int sceneId, ILoop loop) {
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            ProfilerMarker initScene;
+
+            if (sceneId < 0) {
+                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.ConnectLoop(ID: {sceneId:00})");
+            } else {
+                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.ConnectLoop(Scene: {SceneManager.GetSceneByBuildIndex(sceneId).name})");
+            }
+            
+            initScene.Begin();
+        #endif
+            
+            _loopContext.ConnectLoop(sceneId, loop);
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            initScene.End();
+        #endif
+        }
+
+        internal void DisconnectLoop(int sceneId, ILoop loop) {
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            ProfilerMarker initScene;
+
+            if (sceneId < 0) {
+                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.DisconnectLoop(ID: {sceneId:00})");
+            } else {
+                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.DisconnectLoop(Scene: {SceneManager.GetSceneByBuildIndex(sceneId).name})");
+            }
+            
+            initScene.Begin();
+        #endif
+            
+            _loopContext.DisconnectLoop(sceneId, loop);
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            initScene.End();
+        #endif
+        }
 
         private DependencyContainer CreateContainer(List<IDependency> dependencies) {
             DependencyContainer container = CreateContainer();
@@ -128,15 +215,40 @@ namespace TinyMVC.Boot {
 
             if (!TryFindSceneContext(scene.GetRootGameObjects(), out IContext[] contexts)) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.LogError($"ProjectContext.InitScene() - {scene.name} not contain Bootstrap!");
+                Debug.LogWarning($"ProjectContext.InitScene() - {scene.name} not contain Bootstrap!");
             #endif
                 return;
             }
 
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            ProfilerMarker initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.InitScene(Scene: {scene.name})");
+            initScene.Begin();
+        #endif
+
             for (int contextId = contexts.Length - 1; contextId >= 0; contextId--) {
+            #if UNITY_EDITOR && GES_MVC_PROFILING
+                ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Create");
+                contextCreate.Begin();
+            #endif
+
                 contexts[contextId].Create();
+
+            #if UNITY_EDITOR && GES_MVC_PROFILING
+                contextCreate.End();
+                ProfilerMarker contextInit = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Init");
+                contextInit.Begin();
+            #endif
+
                 contexts[contextId].Init(this, sceneId);
+
+            #if UNITY_EDITOR && GES_MVC_PROFILING
+                contextInit.End();
+            #endif
             }
+
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            initScene.End();
+        #endif
 
             _contexts.Add(new BootstrapContext(sceneId, contexts));
         }
@@ -153,6 +265,7 @@ namespace TinyMVC.Boot {
             }
 
             contexts = null;
+
             return false;
         }
 
@@ -169,10 +282,28 @@ namespace TinyMVC.Boot {
                 }
             }
 
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            ProfilerMarker unloadScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.UnloadScene(Scene: {scene.name})");
+            unloadScene.Begin();
+        #endif
+            
             for (int i = contexts.Length - 1; i >= 0; i--) {
+            #if UNITY_EDITOR && GES_MVC_PROFILING
+                ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Unload");
+                contextCreate.Begin();
+            #endif
+                
                 contexts[i].Unload();
+                
+            #if UNITY_EDITOR && GES_MVC_PROFILING
+                contextCreate.End();
+            #endif
             }
             
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            unloadScene.End();
+        #endif
+
             if (_dependencies.TryGetContext(sceneId, out DependencyContainer _, out int modelsId)) {
                 _dependencies.RemoveAt(modelsId);
             }

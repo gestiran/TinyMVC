@@ -4,6 +4,11 @@ using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
 using TinyMVC.Extensions;
 
+#if UNITY_EDITOR
+using System;
+using UnityEngine;
+#endif
+
 namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains models initialization </summary>
     public abstract class ModelsContext : IResolving {
@@ -27,10 +32,20 @@ namespace TinyMVC.Boot.Contexts {
 
         internal void ApplyBindDependencies() {
             for (int bindId = 0; bindId < _binders.Count; bindId++) {
-                _models.Add(_binders[bindId].GetDependency());
+            #if UNITY_EDITOR
+                try {
+                #endif
+
+                    _models.Add(_binders[bindId].GetDependency());
+                    
+                #if UNITY_EDITOR
+                } catch (Exception e) {
+                    Debug.LogError($"BindError: {_binders[bindId].GetType().Name}\n{e}");
+                }
+            #endif
             }
         }
-        
+
         internal void Create() => Create(_models);
 
         internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(_models);

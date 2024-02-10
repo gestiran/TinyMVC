@@ -7,6 +7,10 @@ using TinyMVC.Loop;
 using TinyMVC.Views;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using System;
+#endif
+
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
@@ -14,13 +18,13 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Boot {
     /// <summary> Scene initialization order </summary>
     public abstract class SceneContext : SceneContext<ViewsEmptyContext> { }
-    
+
     /// <summary> Scene initialization order </summary>
     /// <typeparam name="TViews"> Serialized views class to store references to scene objects </typeparam>
     public abstract class SceneContext<TViews> : MonoBehaviour, IContext where TViews : ViewsContext {
         [field: SerializeField
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        ,BoxGroup("Views")
+            #if ODIN_INSPECTOR && UNITY_EDITOR
+                , BoxGroup("Views")
     #endif
         ]
         public TViews views { get; private set; }
@@ -33,7 +37,7 @@ namespace TinyMVC.Boot {
             _controllers = CreateControllers();
             _models = CreateModels();
             _parameters = CreateParameters();
-            
+
             views.Instantiate();
 
             _controllers.CreateControllers();
@@ -60,11 +64,11 @@ namespace TinyMVC.Boot {
             _controllers.CheckAndAdd(fixedTicks);
             _controllers.CheckAndAdd(ticks);
             _controllers.CheckAndAdd(lateTicks);
-            
+
             views.CheckAndAdd(fixedTicks);
             views.CheckAndAdd(ticks);
             views.CheckAndAdd(lateTicks);
-            
+
             context.AddFixedTicks(sceneId, fixedTicks);
             context.AddTicks(sceneId, ticks);
             context.AddLateTicks(sceneId, lateTicks);
@@ -86,41 +90,73 @@ namespace TinyMVC.Boot {
             if (_parameters is IResolving parametersResolving) {
                 context.Resolve(parametersResolving);
             }
-            
+
             List<IDependency> dependencies = new List<IDependency>();
             List<IDependency> bindDependencies = new List<IDependency>();
-            
-            _parameters.Create();
+
+        #if UNITY_EDITOR
+            try {
+            #endif
+
+                _parameters.Create();
+
+            #if UNITY_EDITOR
+            } catch (Exception e) {
+                Debug.LogError($"Parameters.Create.Error {e}");
+            }
+        #endif
+
             _parameters.AddDependencies(dependencies);
             _parameters.AddDependencies(bindDependencies);
-            
+
             context.ResolveWithoutApply(_models, dependencies);
-            
-            _models.CreateBinders();
+
+        #if UNITY_EDITOR
+            try {
+            #endif
+
+                _models.CreateBinders();
+
+            #if UNITY_EDITOR
+            } catch (Exception e) {
+                Debug.LogError($"Binders.Create.Error {e}");
+            }
+        #endif
 
             views.GetDependencies(bindDependencies);
-            
+
             context.ResolveWithoutApply(_models.CreateResolving(), bindDependencies);
-                
+
             bindDependencies.Clear();
             _models.ApplyBindDependencies();
             _models.AddDependencies(bindDependencies);
-                
+
             ResolveUtility.Resolve(_models, new DependencyContainer(bindDependencies));
+
+        #if UNITY_EDITOR
+            try {
+            #endif
+
+                _models.Create();
+
+            #if UNITY_EDITOR
+            } catch (Exception e) {
+                Debug.LogError($"Models.Create.Error {e}");
+            }
+        #endif
             
-            _models.Create();
             _models.AddDependencies(dependencies);
-            
+
             context.AddContainer(sceneId, new DependencyContainer(dependencies));
-            
+
             List<IResolving> resolvers = new List<IResolving>();
-            
+
             _controllers.CheckAndAdd(resolvers);
             views.CheckAndAdd(resolvers);
-            
+
             context.Resolve(resolvers);
         }
-        
+
         private Controller.Connector CreateControllerConnector(ProjectContext context, int sceneId) {
             Controller.Connector connector = new Controller.Connector();
 
@@ -131,7 +167,7 @@ namespace TinyMVC.Boot {
 
             return connector;
         }
-        
+
         private View.Connector CreateViewConnector(ProjectContext context, int sceneId) {
             View.Connector connector = new View.Connector();
 
@@ -146,7 +182,7 @@ namespace TinyMVC.Boot {
         private void Connect(IController controller, ProjectContext context, int sceneId) {
             _controllers.InitSubController(controller, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
-        
+
         private void Connect(IController[] controller, ProjectContext context, int sceneId) {
             _controllers.InitSubController(controller, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
@@ -154,26 +190,22 @@ namespace TinyMVC.Boot {
         private void Disconnect(IController controller, ProjectContext context, int sceneId) {
             _controllers.DeInitSubController(controller, loop => context.DisconnectLoop(sceneId, loop));
         }
-        
+
         private void Disconnect(IController[] controller, ProjectContext context, int sceneId) {
             _controllers.DeInitSubController(controller, loop => context.DisconnectLoop(sceneId, loop));
         }
-        
+
         private void Connect(IView view, ProjectContext context, int sceneId) {
             views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
-        
+
         private void Connect(IView[] view, ProjectContext context, int sceneId) {
             views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
 
-        private void Disconnect(IView view, ProjectContext context, int sceneId) {
-            views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
-        }
-        
-        private void Disconnect(IView[] view, ProjectContext context, int sceneId) {
-            views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
-        }
+        private void Disconnect(IView view, ProjectContext context, int sceneId) { views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop)); }
+
+        private void Disconnect(IView[] view, ProjectContext context, int sceneId) { views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop)); }
 
     #if UNITY_EDITOR
     #if ODIN_INSPECTOR
@@ -185,7 +217,7 @@ namespace TinyMVC.Boot {
             views.Generate_Editor();
             UnityEditor.EditorUtility.SetDirty(gameObject);
         }
-        
+
     #endif
     }
 }

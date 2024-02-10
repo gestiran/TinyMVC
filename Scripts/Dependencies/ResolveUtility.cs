@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Reflection;
 
+#if UNITY_EDITOR && GES_MVC_PROFILING
+using Unity.Profiling;
+#endif
+
 namespace TinyMVC.Dependencies {
     internal static class ResolveUtility {
         private static readonly Type _injectType;
@@ -46,7 +50,12 @@ namespace TinyMVC.Dependencies {
 
         private static void Resolve(IResolving resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
             FieldInfo[] fields = resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-                
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            ProfilerMarker resolvingMarker = new ProfilerMarker(ProfilerCategory.Scripts, $"Resolve(Resolving: {resolving.GetType().Name})");
+            resolvingMarker.Begin();
+        #endif
+            
             for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
                 if (!Attribute.IsDefined(fields[fieldId], injectType)) {
                     continue;
@@ -60,6 +69,10 @@ namespace TinyMVC.Dependencies {
 
                 fields[fieldId].SetValue(resolving, dependencies[fieldType]);
             }
+            
+        #if UNITY_EDITOR && GES_MVC_PROFILING
+            resolvingMarker.End();
+        #endif
         }
     }
 }
