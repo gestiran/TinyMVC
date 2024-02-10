@@ -60,10 +60,10 @@ namespace TinyMVC.Boot.Contexts {
             _mainViews.AddRange(_generated);
         }
 
-        internal void Init(Action<IView> connectView, Action<IView> disconnectView) {
+        internal void Init(View.Connector connector) {
             for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
                 if (_mainViews[viewId] is View view) {
-                    view.ConnectToContext(connectView, disconnectView);
+                    view.ApplyConnector(connector);
                 }
             }
             
@@ -109,6 +109,40 @@ namespace TinyMVC.Boot.Contexts {
 
             _subViews.Add(subView);
         }
+        
+        internal void InitSubView(IView[] subView, Action<List<IResolving>> resolve, Action<ILoop> addLoop) {
+            for (int viewId = 0; viewId < subView.Length; viewId++) {
+                if (subView[viewId] is IInit init) {
+                    init.Init();
+                }
+            }
+
+            List<IResolving> all = new List<IResolving>();
+            
+            for (int viewId = 0; viewId < subView.Length; viewId++) {
+                if (subView[viewId] is IResolving resolving) {
+                    all.Add(resolving);
+                }
+            }
+
+            if (all.Count > 0) {
+                resolve(all);   
+            }
+            
+            for (int viewId = 0; viewId < subView.Length; viewId++) {
+                if (subView[viewId] is IBeginPlay beginPlay) {
+                    beginPlay.BeginPlay();
+                }
+            }
+            
+            for (int viewId = 0; viewId < subView.Length; viewId++) {
+                if (subView[viewId] is ILoop loop) {
+                    addLoop(loop);
+                }
+            }
+            
+            _subViews.AddRange(subView);
+        }
 
         internal void DeInitSubView(IView subView, Action<ILoop> removeLoop) {
             if (subView is ILoop loop) {
@@ -120,6 +154,24 @@ namespace TinyMVC.Boot.Contexts {
             }
 
             _subViews.Remove(subView);
+        }
+        
+        internal void DeInitSubView(IView[] subView, Action<ILoop> removeLoop) {
+            for (int viewId = 0; viewId < subView.Length; viewId++) {
+                if (subView[viewId] is ILoop loop) {
+                    removeLoop(loop);
+                }
+            }
+            
+            for (int viewId = 0; viewId < subView.Length; viewId++) {
+                if (subView[viewId] is IUnload unload) {
+                    unload.Unload();
+                }
+            }
+            
+            for (int viewId = 0; viewId < subView.Length; viewId++) {
+                _subViews.Remove(subView[viewId]);
+            }
         }
 
         internal void Unload() {
@@ -134,7 +186,7 @@ namespace TinyMVC.Boot.Contexts {
 
         protected virtual void Generate() { }
         
-    #if UNITY_EDITOR && ODIN_INSPECTOR
+    #if UNITY_EDITOR
         
         internal void Generate_Editor() {
             View[] views = UnityObject.FindObjectsOfType<View>(includeInactive: true);

@@ -12,11 +12,11 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Boot {
+    /// <summary> Scene initialization order </summary>
     public abstract class SceneContext : SceneContext<ViewsEmptyContext> { }
     
     /// <summary> Scene initialization order </summary>
     /// <typeparam name="TViews"> Serialized views class to store references to scene objects </typeparam>
-    [DisallowMultipleComponent]
     public abstract class SceneContext<TViews> : MonoBehaviour, IContext where TViews : ViewsContext {
         [field: SerializeField
     #if ODIN_INSPECTOR && UNITY_EDITOR
@@ -45,8 +45,8 @@ namespace TinyMVC.Boot {
         }
 
         void IContext.Init(ProjectContext context, int sceneId) {
-            _controllers.Init(controller => Connect(controller, context, sceneId), controller => Disconnect(controller, context, sceneId));
-            views.Init(view => Connect(view, context, sceneId), view => Disconnect(view, context, sceneId));
+            _controllers.Init(CreateControllerConnector(context, sceneId));
+            views.Init(CreateViewConnector(context, sceneId));
 
             Resolve(context, sceneId);
 
@@ -75,6 +75,12 @@ namespace TinyMVC.Boot {
             views.Unload();
             _models.Unload();
         }
+
+        protected abstract ControllersContext CreateControllers();
+
+        protected abstract ModelsContext CreateModels();
+
+        protected abstract ParametersContext CreateParameters();
 
         private void Resolve(ProjectContext context, int sceneId) {
             if (_parameters is IResolving parametersResolving) {
@@ -114,14 +120,34 @@ namespace TinyMVC.Boot {
             
             context.Resolve(resolvers);
         }
+        
+        private Controller.Connector CreateControllerConnector(ProjectContext context, int sceneId) {
+            Controller.Connector connector = new Controller.Connector();
 
-        protected abstract ControllersContext CreateControllers();
+            connector.connect = controller => Connect(controller, context, sceneId);
+            connector.connectArray = controllers => Connect(controllers, context, sceneId);
+            connector.disconnect = controller => Disconnect(controller, context, sceneId);
+            connector.disconnectArray = controllers => Disconnect(controllers, context, sceneId);
 
-        protected abstract ModelsContext CreateModels();
+            return connector;
+        }
+        
+        private View.Connector CreateViewConnector(ProjectContext context, int sceneId) {
+            View.Connector connector = new View.Connector();
 
-        protected abstract ParametersContext CreateParameters();
+            connector.connect = controller => Connect(controller, context, sceneId);
+            connector.connectArray = controllers => Connect(controllers, context, sceneId);
+            connector.disconnect = controller => Disconnect(controller, context, sceneId);
+            connector.disconnectArray = controllers => Disconnect(controllers, context, sceneId);
+
+            return connector;
+        }
 
         private void Connect(IController controller, ProjectContext context, int sceneId) {
+            _controllers.InitSubController(controller, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
+        }
+        
+        private void Connect(IController[] controller, ProjectContext context, int sceneId) {
             _controllers.InitSubController(controller, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
 
@@ -129,17 +155,32 @@ namespace TinyMVC.Boot {
             _controllers.DeInitSubController(controller, loop => context.DisconnectLoop(sceneId, loop));
         }
         
+        private void Disconnect(IController[] controller, ProjectContext context, int sceneId) {
+            _controllers.DeInitSubController(controller, loop => context.DisconnectLoop(sceneId, loop));
+        }
+        
         private void Connect(IView view, ProjectContext context, int sceneId) {
+            views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
+        }
+        
+        private void Connect(IView[] view, ProjectContext context, int sceneId) {
             views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
 
         private void Disconnect(IView view, ProjectContext context, int sceneId) {
             views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
         }
+        
+        private void Disconnect(IView[] view, ProjectContext context, int sceneId) {
+            views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
+        }
 
     #if UNITY_EDITOR
-
+    #if ODIN_INSPECTOR
         [Button("Generate"), ShowIn(PrefabKind.InstanceInScene)]
+    #else
+        [ContextMenu("Generate")]
+    #endif
         private void Reset() {
             views.Generate_Editor();
             UnityEditor.EditorUtility.SetDirty(gameObject);

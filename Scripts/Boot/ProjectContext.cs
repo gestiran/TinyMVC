@@ -24,8 +24,8 @@ namespace TinyMVC.Boot {
     #endif
         private List<DependencyContext> _dependencies;
 
-        private sealed class BootstrapContext : ContextLink<IContext> {
-            public BootstrapContext(int sceneId, IContext context) : base(sceneId, context) { }
+        private sealed class BootstrapContext : ContextLink<IContext[]> {
+            public BootstrapContext(int sceneId, IContext[] context) : base(sceneId, context) { }
         }
 
         private sealed class DependencyContext : ContextLink<DependencyContainer> {
@@ -122,51 +122,56 @@ namespace TinyMVC.Boot {
         private void InitScene(Scene scene, LoadSceneMode mode) {
             int sceneId = scene.buildIndex;
 
-            if (_contexts.TryGetContext(sceneId, out IContext _, out int _)) {
+            if (_contexts.TryGetContext(sceneId, out IContext[] _, out int _)) {
                 return;
             }
 
-            if (!TryFindSceneContext(scene.GetRootGameObjects(), out IContext context)) {
+            if (!TryFindSceneContext(scene.GetRootGameObjects(), out IContext[] contexts)) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.LogError($"ProjectContext.InitScene() - {scene.name} not contain Bootstrap!");
             #endif
                 return;
             }
 
-            context.Create();
-            context.Init(this, sceneId);
+            for (int contextId = contexts.Length - 1; contextId >= 0; contextId--) {
+                contexts[contextId].Create();
+                contexts[contextId].Init(this, sceneId);
+            }
 
-            _contexts.Add(new BootstrapContext(sceneId, context));
+            _contexts.Add(new BootstrapContext(sceneId, contexts));
         }
 
-        private bool TryFindSceneContext(GameObject[] rootObjects, out IContext context) {
+        private bool TryFindSceneContext(GameObject[] rootObjects, out IContext[] contexts) {
             for (int rootId = 0; rootId < rootObjects.Length; rootId++) {
-                context = rootObjects[rootId].GetComponent<IContext>();
+                contexts = rootObjects[rootId].GetComponents<IContext>();
 
-                if (context == null) {
+                if (contexts.Length <= 0) {
                     continue;
                 }
 
                 return true;
             }
 
-            context = null;
-
+            contexts = null;
             return false;
         }
 
         private void UnloadScene(Scene scene) {
             int sceneId = scene.buildIndex;
 
-            if (!_contexts.TryGetContext(sceneId, out IContext context, out int contextId)) {
+            if (!_contexts.TryGetContext(sceneId, out IContext[] contexts, out int contextId)) {
                 return;
             }
 
-            if (context is IGlobalContext) {
-                return;
+            for (int i = 0; i < contexts.Length; i++) {
+                if (contexts[i] is IGlobalContext) {
+                    return;
+                }
             }
 
-            context.Unload();
+            for (int i = contexts.Length - 1; i >= 0; i--) {
+                contexts[i].Unload();
+            }
             
             if (_dependencies.TryGetContext(sceneId, out DependencyContainer _, out int modelsId)) {
                 _dependencies.RemoveAt(modelsId);
