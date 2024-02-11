@@ -1,5 +1,5 @@
 ﻿namespace TinyMVC.Boot.Contexts {
-    internal interface IContext {
+    public interface IContext {
         internal void Create();
 
         internal void Init(ProjectContext context, int sceneId);

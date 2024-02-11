@@ -6,9 +6,11 @@ using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Views;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
+using TinyMVC.Exceptions;
 #endif
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
@@ -49,29 +51,42 @@ namespace TinyMVC.Boot {
         }
 
         void IContext.Init(ProjectContext context, int sceneId) {
-            _controllers.Init(CreateControllerConnector(context, sceneId));
-            views.Init(CreateViewConnector(context, sceneId));
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+            #endif
+                _controllers.Init(CreateControllerConnector(context, sceneId));
+                views.Init(CreateViewConnector(context, sceneId));
 
-            Resolve(context, sceneId);
+                Resolve(context, sceneId);
 
-            _controllers.BeginPlay();
-            views.BeginPlay();
+                _controllers.BeginPlay();
+                views.BeginPlay();
 
-            List<IFixedTick> fixedTicks = new List<IFixedTick>();
-            List<ITick> ticks = new List<ITick>();
-            List<ILateTick> lateTicks = new List<ILateTick>();
+                List<IFixedTick> fixedTicks = new List<IFixedTick>();
+                List<ITick> ticks = new List<ITick>();
+                List<ILateTick> lateTicks = new List<ILateTick>();
 
-            _controllers.CheckAndAdd(fixedTicks);
-            _controllers.CheckAndAdd(ticks);
-            _controllers.CheckAndAdd(lateTicks);
+                _controllers.CheckAndAdd(fixedTicks);
+                _controllers.CheckAndAdd(ticks);
+                _controllers.CheckAndAdd(lateTicks);
 
-            views.CheckAndAdd(fixedTicks);
-            views.CheckAndAdd(ticks);
-            views.CheckAndAdd(lateTicks);
+                views.CheckAndAdd(fixedTicks);
+                views.CheckAndAdd(ticks);
+                views.CheckAndAdd(lateTicks);
 
-            context.AddFixedTicks(sceneId, fixedTicks);
-            context.AddTicks(sceneId, ticks);
-            context.AddLateTicks(sceneId, lateTicks);
+                context.AddFixedTicks(sceneId, fixedTicks);
+                context.AddTicks(sceneId, ticks);
+                context.AddLateTicks(sceneId, lateTicks);
+
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (Exception exception) {
+                if (sceneId < 0) {
+                    Debug.LogException(new SceneException($"(ID:{sceneId})", exception), this);
+                } else {
+                    Debug.LogException(new SceneException(SceneManager.GetSceneByBuildIndex(sceneId).name, exception), this);
+                }
+            }
+        #endif
         }
 
         void IContext.Unload() {
@@ -94,15 +109,15 @@ namespace TinyMVC.Boot {
             List<IDependency> dependencies = new List<IDependency>();
             List<IDependency> bindDependencies = new List<IDependency>();
 
-        #if UNITY_EDITOR
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
 
                 _parameters.Create();
 
             #if UNITY_EDITOR
-            } catch (Exception e) {
-                Debug.LogError($"Parameters.Create.Error {e}");
+            } catch (Exception exception) {
+                throw new Exception("Parameters.Create.Error", exception);
             }
         #endif
 
@@ -111,15 +126,15 @@ namespace TinyMVC.Boot {
 
             context.ResolveWithoutApply(_models, dependencies);
 
-        #if UNITY_EDITOR
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
 
                 _models.CreateBinders();
 
             #if UNITY_EDITOR
-            } catch (Exception e) {
-                Debug.LogError($"Binders.Create.Error {e}");
+            } catch (Exception exception) {
+                throw new Exception("Binders.Create.Error", exception);
             }
         #endif
 
@@ -133,18 +148,18 @@ namespace TinyMVC.Boot {
 
             ResolveUtility.Resolve(_models, new DependencyContainer(bindDependencies));
 
-        #if UNITY_EDITOR
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
 
                 _models.Create();
 
-            #if UNITY_EDITOR
-            } catch (Exception e) {
-                Debug.LogError($"Models.Create.Error {e}");
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (Exception exception) {
+                throw new Exception("Models.Create.Error", exception);
             }
         #endif
-            
+
             _models.AddDependencies(dependencies);
 
             context.AddContainer(sceneId, new DependencyContainer(dependencies));

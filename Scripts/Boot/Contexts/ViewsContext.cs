@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using TinyMVC.Dependencies;
-using TinyMVC.Extensions;
 using TinyMVC.Loop;
+using TinyMVC.Loop.Extensions;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using UnityEngine;

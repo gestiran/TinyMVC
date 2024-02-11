@@ -13,12 +13,13 @@ namespace TinyMVC.ReactiveFields {
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class ObservedList<T> : IEnumerator<T> {
+        public int count => _value.Count;
         public T Current => _value[_currentId];
         object IEnumerator.Current => _value[_currentId];
         
-        internal List<MultipleListener<T>> onAdd;
-        internal List<MultipleListener<T>> onRemove;
-        internal List<Action> onClear;
+        internal List<Listener<T>> onAdd;
+        internal List<Listener<T>> onRemove;
+        internal List<Listener> onClear;
 
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel, ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
@@ -39,9 +40,9 @@ namespace TinyMVC.ReactiveFields {
         
         public ObservedList(List<T> value) {
             _value = value;
-            onAdd = new List<MultipleListener<T>>();
-            onRemove = new List<MultipleListener<T>>();
-            onClear = new List<Action>();
+            onAdd = new List<Listener<T>>();
+            onRemove = new List<Listener<T>>();
+            onClear = new List<Listener>();
             _currentId = -1;
         }
 
@@ -50,9 +51,6 @@ namespace TinyMVC.ReactiveFields {
             set => _value[key] = value;
         }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [Button(Expanded = true), HorizontalGroup]
-    #endif
         public void Add([NotNull] params T[] values) {
             _value.AddRange(values);
             
@@ -69,17 +67,54 @@ namespace TinyMVC.ReactiveFields {
             _frameAddId = ObservedTestUtility.frameId;
         #endif
         }
-
+        
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button(Expanded = true), HorizontalGroup]
     #endif
+        public void Add([NotNull] T value) {
+            _value.Add(value);
+            
+            for (int i = onAdd.Count - 1; i >= 0; i--) {
+                onAdd[i].Invoke(value);
+            }
+            
+        #if UNITY_EDITOR
+            if (_frameAddId == ObservedTestUtility.frameId) {
+                Type type = typeof(T);
+                UnityEngine.Debug.LogWarning($"ObservedList {type.Name} in {type.Namespace} add called twice in one frame!");
+            }
+
+            _frameAddId = ObservedTestUtility.frameId;
+        #endif
+        }
+
         public void Remove([NotNull] params T[] values) {
-            for (int i = 0; i < values.Length; i++) {
+            for (int i = values.Length - 1; i >= 0; i--) {
                 _value.Remove(values[i]);
             }
             
             for (int i = onRemove.Count - 1; i >= 0; i--) {
                 onRemove[i].Invoke(values);
+            }
+            
+        #if UNITY_EDITOR
+            if (_frameRemoveId == ObservedTestUtility.frameId) {
+                Type type = typeof(T);
+                UnityEngine.Debug.LogWarning($"ObservedList {type.Name} in {type.Namespace} remove called twice in one frame!");
+            }
+
+            _frameRemoveId = ObservedTestUtility.frameId;
+        #endif
+        }
+        
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [Button(Expanded = true), HorizontalGroup]
+    #endif
+        public void Remove([NotNull] T value) {
+            _value.Remove(value);
+            
+            for (int i = onRemove.Count - 1; i >= 0; i--) {
+                onRemove[i].Invoke(value);
             }
             
         #if UNITY_EDITOR
@@ -109,6 +144,26 @@ namespace TinyMVC.ReactiveFields {
             }
 
             _frameClearId = ObservedTestUtility.frameId;
+        #endif
+        }
+
+        public int IndexOf(T element) => _value.IndexOf(element);
+
+        public void RemoveAt(int id) {
+            T element = _value[id];
+            _value.RemoveAt(id);
+
+            for (int i = onRemove.Count - 1; i >= 0; i--) {
+                onRemove[i].Invoke(element);
+            }
+            
+        #if UNITY_EDITOR
+            if (_frameRemoveId == ObservedTestUtility.frameId) {
+                Type type = typeof(T);
+                UnityEngine.Debug.LogWarning($"ObservedList {type.Name} in {type.Namespace} remove called twice in one frame!");
+            }
+
+            _frameRemoveId = ObservedTestUtility.frameId;
         #endif
         }
 

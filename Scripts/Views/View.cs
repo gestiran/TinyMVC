@@ -2,12 +2,7 @@
 using JetBrains.Annotations;
 using UnityEngine;
 
-#if UNITY_EDITOR && ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
-
 namespace TinyMVC.Views {
-    [DisallowMultipleComponent]
     public abstract class View : MonoBehaviour, IView {
         private Connector _connector;
         
@@ -26,7 +21,7 @@ namespace TinyMVC.Views {
             return view;
         }
         
-        protected void ConnectView([NotNull] IView[] views) {
+        protected void ConnectView([NotNull] params IView[] views) {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 TryApplyConnector(views[viewId]);
             }
@@ -36,7 +31,7 @@ namespace TinyMVC.Views {
 
         protected void DisconnectView<T>([NotNull] T view) where T : class, IView => _connector.disconnect(view);
         
-        protected void DisconnectView([NotNull] IView[] views) => _connector.disconnectArray(views);
+        protected void DisconnectView([NotNull] params IView[] views) => _connector.disconnectArray(views);
         
         private bool TryApplyConnector<T>(T controller) where T : class, IView {
             if (controller is not View root) {

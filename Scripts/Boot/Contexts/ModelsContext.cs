@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
-using TinyMVC.Extensions;
+using TinyMVC.Loop.Extensions;
 
 #if UNITY_EDITOR
 using System;

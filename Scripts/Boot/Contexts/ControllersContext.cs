@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using TinyMVC.Boot.Empty;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
-using TinyMVC.Extensions;
 using TinyMVC.Loop;
+using TinyMVC.Loop.Extensions;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using TinyMVC.Exceptions;
+#endif
 
 namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains controllers initialization </summary>
@@ -37,7 +41,21 @@ namespace TinyMVC.Boot.Contexts {
                 }
             }
 
-            _mainControllers.TryInit();
+            
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+            #endif
+                _mainControllers.TryInit();
+
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (InitException exception) {
+                if (exception.other is IController controller) {
+                    throw new ControllersException(controller, exception);
+                }
+
+                throw;
+            }
+        #endif
         }
 
         /// <summary> Begin play initialization stage </summary>

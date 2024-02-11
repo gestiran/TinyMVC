@@ -1,25 +1,24 @@
 ﻿using System.Collections.Generic;
-using TinyMVC.Loop;
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
-using UnityEngine;
+using TinyMVC.Exceptions;
 #endif
 
-namespace TinyMVC.Extensions {
+namespace TinyMVC.Loop.Extensions {
     public static class InitExtension {
         public static void TryInit<T>(this T[] objects) {
             for (int objId = 0; objId < objects.Length; objId++) {
                 if (objects[objId] is IInit other) {
-                #if UNITY_EDITOR
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     try {
                     #endif
                         
                         other.Init();
                         
-                    #if UNITY_EDITOR
-                    } catch (Exception e) {
-                        Debug.LogError($"Init.Error: {other.GetType().Name}\n{e}");
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    } catch (Exception exception) {
+                        throw new InitException(other, exception);
                     }
                 #endif
                 }
@@ -29,15 +28,15 @@ namespace TinyMVC.Extensions {
         public static void TryInit<T>(this List<T> objects) {
             for (int objId = 0; objId < objects.Count; objId++) {
                 if (objects[objId] is IInit other) {
-                #if UNITY_EDITOR
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     try {
                     #endif
                         
                         other.Init();
                         
-                    #if UNITY_EDITOR
-                    } catch (Exception e) {
-                        Debug.LogError($"Init.Error: {other.GetType().Name}\n{e}");
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    } catch (Exception exception) {
+                        throw new InitException(other, exception);
                     }
                 #endif
                 }
@@ -46,15 +45,15 @@ namespace TinyMVC.Extensions {
 
         public static void Init<TInit>(this TInit[] objects) where TInit : IInit {
             for (int objId = 0; objId < objects.Length; objId++) {
-            #if UNITY_EDITOR
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 try {
                 #endif
                     
                     objects[objId].Init();
                     
-                #if UNITY_EDITOR
-                } catch (Exception e) {
-                    Debug.LogError($"Init.Error: {objects[objId].GetType().Name}\n{e}");
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                } catch (Exception exception) {
+                    throw new InitException(objects[objId], exception);
                 }
             #endif
             }
@@ -62,15 +61,15 @@ namespace TinyMVC.Extensions {
 
         public static void Init<TInit>(this List<TInit> objects) where TInit : IInit {
             for (int objId = 0; objId < objects.Count; objId++) {
-            #if UNITY_EDITOR
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 try {
                 #endif
                     
                     objects[objId].Init();
                     
-                #if UNITY_EDITOR
-                } catch (Exception e) {
-                    Debug.LogError($"Init.Error: {objects[objId].GetType().Name}\n{e}");
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                } catch (Exception exception) {
+                    throw new InitException(objects[objId], exception);
                 }
             #endif
             }

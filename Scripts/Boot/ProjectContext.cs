@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 using Sirenix.OdinInspector;
 #endif
 
-#if UNITY_EDITOR && GES_MVC_PROFILING
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using Unity.Profiling;
 #endif
 
@@ -34,7 +34,7 @@ namespace TinyMVC.Boot {
     #endif
         private List<DependencyContext> _dependencies;
 
-    #if UNITY_EDITOR && GES_MVC_PROFILING
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
         private ProfilerMarker _fixedUpdateMarker;
         private ProfilerMarker _updateMarker;
         private ProfilerMarker _lateUpdateMarker;
@@ -56,7 +56,7 @@ namespace TinyMVC.Boot {
         }
 
         private void Awake() {
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _fixedUpdateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Project.FixedUpdate");
             _updateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Project.Update");
             _lateUpdateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Project.LateUpdate");
@@ -79,13 +79,13 @@ namespace TinyMVC.Boot {
         }
 
         private void FixedUpdate() {
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _fixedUpdateMarker.Begin();
         #endif
             
             _loopContext.FixedUpdate();
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _fixedUpdateMarker.End();
         #endif
         }
@@ -95,25 +95,25 @@ namespace TinyMVC.Boot {
             ObservedTestUtility.Next();
         #endif
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _updateMarker.Begin();
         #endif
 
             _loopContext.Update();
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _updateMarker.End();
         #endif
         }
 
         private void LateUpdate() {
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _lateUpdateMarker.Begin();
         #endif
             
             _loopContext.LateUpdate();
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _lateUpdateMarker.End();
         #endif
         }
@@ -145,7 +145,7 @@ namespace TinyMVC.Boot {
         }
 
         internal void ConnectLoop(int sceneId, ILoop loop) {
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker initScene;
 
             if (sceneId < 0) {
@@ -159,13 +159,13 @@ namespace TinyMVC.Boot {
             
             _loopContext.ConnectLoop(sceneId, loop);
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             initScene.End();
         #endif
         }
 
         internal void DisconnectLoop(int sceneId, ILoop loop) {
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker initScene;
 
             if (sceneId < 0) {
@@ -179,7 +179,7 @@ namespace TinyMVC.Boot {
             
             _loopContext.DisconnectLoop(sceneId, loop);
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             initScene.End();
         #endif
         }
@@ -220,20 +220,20 @@ namespace TinyMVC.Boot {
                 return;
             }
 
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.InitScene(Scene: {scene.name})");
             initScene.Begin();
         #endif
 
             for (int contextId = contexts.Length - 1; contextId >= 0; contextId--) {
-            #if UNITY_EDITOR && GES_MVC_PROFILING
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Create");
                 contextCreate.Begin();
             #endif
 
                 contexts[contextId].Create();
 
-            #if UNITY_EDITOR && GES_MVC_PROFILING
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 contextCreate.End();
                 ProfilerMarker contextInit = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Init");
                 contextInit.Begin();
@@ -241,12 +241,12 @@ namespace TinyMVC.Boot {
 
                 contexts[contextId].Init(this, sceneId);
 
-            #if UNITY_EDITOR && GES_MVC_PROFILING
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 contextInit.End();
             #endif
             }
 
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             initScene.End();
         #endif
 
@@ -282,25 +282,25 @@ namespace TinyMVC.Boot {
                 }
             }
 
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker unloadScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.UnloadScene(Scene: {scene.name})");
             unloadScene.Begin();
         #endif
             
             for (int i = contexts.Length - 1; i >= 0; i--) {
-            #if UNITY_EDITOR && GES_MVC_PROFILING
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Unload");
                 contextCreate.Begin();
             #endif
                 
                 contexts[i].Unload();
                 
-            #if UNITY_EDITOR && GES_MVC_PROFILING
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 contextCreate.End();
             #endif
             }
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             unloadScene.End();
         #endif
 

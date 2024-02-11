@@ -29,5 +29,13 @@ namespace TinyMVC.Dependencies {
             display = dependencies;
         #endif
         }
+        
+        internal DependencyContainer(IDependency dependency) : this(1) {
+            dependencies.Add(dependency.GetType(), dependency);
+            
+        #if ODIN_INSPECTOR && UNITY_EDITOR
+            display = new List<IDependency>() { dependency };
+        #endif
+        }
     }
 }

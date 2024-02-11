@@ -18,7 +18,7 @@ namespace TinyMVC.ReactiveFields {
     public sealed class Observed<T> : IUnload {
         public T value => _value;
 
-        internal List<Action<T>> listeners;
+        internal List<Listener<T>> listeners;
 
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel, OnValueChanged("@" + nameof(Set) + "(" + nameof(_value) + ")"), HideDuplicateReferenceBox, HideReferenceObjectPicker]
@@ -36,7 +36,7 @@ namespace TinyMVC.ReactiveFields {
 
         public Observed(T value) : this() => _value = value;
 
-        public Observed() => listeners = new List<Action<T>>();
+        public Observed() => listeners = new List<Listener<T>>();
 
         public void Set(T newValue) {
             _value = newValue;

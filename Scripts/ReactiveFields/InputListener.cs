@@ -12,7 +12,7 @@ namespace TinyMVC.ReactiveFields {
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener : IUnload {
-        internal List<Action> listeners = new List<Action>();
+        internal List<Listener> listeners = new List<Listener>();
         
     #if UNITY_EDITOR
         private uint _frameId;
@@ -42,7 +42,7 @@ namespace TinyMVC.ReactiveFields {
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T> : IUnload {
-        internal List<MultipleListener<T>> listeners = new List<MultipleListener<T>>();
+        internal List<Listener<T>> listeners = new List<Listener<T>>();
 
     #if UNITY_EDITOR
         private uint _frameId;
@@ -72,7 +72,7 @@ namespace TinyMVC.ReactiveFields {
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2> : IUnload {
-        internal List<Action<T1, T2>> listeners = new List<Action<T1, T2>>();
+        internal List<Listener<T1, T2>> listeners = new List<Listener<T1, T2>>();
 
     #if UNITY_EDITOR
         private uint _frameId;
@@ -102,7 +102,7 @@ namespace TinyMVC.ReactiveFields {
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2, T3> : IUnload {
-        internal List<Action<T1, T2, T3>> listeners = new List<Action<T1, T2, T3>>();
+        internal List<Listener<T1, T2, T3>> listeners = new List<Listener<T1, T2, T3>>();
 
     #if UNITY_EDITOR
         private uint _frameId;

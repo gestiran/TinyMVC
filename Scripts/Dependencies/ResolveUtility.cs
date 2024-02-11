@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-#if UNITY_EDITOR && GES_MVC_PROFILING
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using Unity.Profiling;
 #endif
 
@@ -51,7 +51,7 @@ namespace TinyMVC.Dependencies {
         private static void Resolve(IResolving resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
             FieldInfo[] fields = resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker resolvingMarker = new ProfilerMarker(ProfilerCategory.Scripts, $"Resolve(Resolving: {resolving.GetType().Name})");
             resolvingMarker.Begin();
         #endif
@@ -70,7 +70,7 @@ namespace TinyMVC.Dependencies {
                 fields[fieldId].SetValue(resolving, dependencies[fieldType]);
             }
             
-        #if UNITY_EDITOR && GES_MVC_PROFILING
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             resolvingMarker.End();
         #endif
         }

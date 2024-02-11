@@ -11,9 +11,20 @@ namespace TinyMVC.Boot.Binding {
 
         protected T Add<T>() where T : Binder, new() => new T();
         
+        protected T Add<T>([NotNull] IDependency dependency) where T : Binder, new() {
+            T binder = new T();
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
+            return binder;
+        }
+        
         protected T Add<T>([NotNull] params IDependency[] dependencies) where T : Binder, new() {
             T binder = new T();
             ResolveUtility.Resolve(binder, new DependencyContainer(dependencies.ToList()));
+            return binder;
+        }
+        
+        protected T Add<T>(T binder, [NotNull] IDependency dependency) where T : Binder {
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
             return binder;
         }
         
