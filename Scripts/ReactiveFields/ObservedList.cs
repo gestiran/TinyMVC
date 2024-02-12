@@ -46,11 +46,21 @@ namespace TinyMVC.ReactiveFields {
             _currentId = -1;
         }
 
-        public T this[int key] {
-            get => _value[key];
-            set => _value[key] = value;
+        public T this[int index] {
+            get => _value[index];
+            set {
+                for (int i = onRemove.Count - 1; i >= 0; i--) {
+                    onRemove[i].Invoke(_value[index]);
+                }
+            
+                _value[index] = value;
+
+                for (int i = onAdd.Count - 1; i >= 0; i--) {
+                    onAdd[i].Invoke(value);
+                }
+            }
         }
-        
+
         public void Add([NotNull] params T[] values) {
             _value.AddRange(values);
             
@@ -168,7 +178,7 @@ namespace TinyMVC.ReactiveFields {
             _frameRemoveId = ObservedTestUtility.frameId;
         #endif
         }
-
+        
         public IEnumerator<T> GetEnumerator() {
             foreach (T value in _value) {
                 yield return value;

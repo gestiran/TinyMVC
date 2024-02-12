@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class ListenerExtension {
-        public static void RemoveListener(this List<Listener> list, Action listener) {
+        public static void RemoveListener<T>(this List<T> list, Action listener) where T : Listener {
             int hash = listener.GetHashCode();
             
             for (int i = 0; i < list.Count; i++) {

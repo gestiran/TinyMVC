@@ -4,24 +4,46 @@ using TinyMVC.Loop;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class ObservedExtension {
+        public static Observed<T> AddListener<T>(this Observed<T> observed, Action listener, float frequency) {
+            observed.listeners.Add(LazyListener<T>.New(listener, frequency));
+            return observed;
+        }
+
+        public static Observed<T> AddListener<T>(this Observed<T> observed, Action<T> listener, float frequency) {
+            observed.listeners.Add(LazyListener<T>.New(listener, frequency));
+            return observed;
+        }
+
+        public static Observed<T> AddListener<T>(this Observed<T> observed, Action listener, float frequency, UnloadPool pool) {
+            observed.listeners.Add(LazyListener<T>.New(listener, frequency));
+            pool.Add(new UnloadAction(() => observed.RemoveListener(listener)));
+            return observed;
+        }
+        
+        public static Observed<T> AddListener<T>(this Observed<T> observed, Action<T> listener, float frequency, UnloadPool pool) {
+            observed.listeners.Add(LazyListener<T>.New(listener, frequency));
+            pool.Add(new UnloadAction(() => observed.RemoveListener(listener)));
+            return observed;
+        }
+        
         public static Observed<T> AddListener<T>(this Observed<T> observed, Action listener) {
-            observed.listeners.Add(listener);
+            observed.listeners.Add(Listener<T>.New(listener));
             return observed;
         }
 
         public static Observed<T> AddListener<T>(this Observed<T> observed, Action<T> listener) {
-            observed.listeners.Add(listener);
+            observed.listeners.Add(Listener<T>.New(listener));
             return observed;
         }
 
         public static Observed<T> AddListener<T>(this Observed<T> observed, Action listener, UnloadPool pool) {
-            observed.listeners.Add(listener);
+            observed.listeners.Add(Listener<T>.New(listener));
             pool.Add(new UnloadAction(() => observed.RemoveListener(listener)));
             return observed;
         }
         
         public static Observed<T> AddListener<T>(this Observed<T> observed, Action<T> listener, UnloadPool pool) {
-            observed.listeners.Add(listener);
+            observed.listeners.Add(Listener<T>.New(listener));
             pool.Add(new UnloadAction(() => observed.RemoveListener(listener)));
             return observed;
         }
