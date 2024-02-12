@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using TinyMVC.Loop;
 
 #if ODIN_SERIALIZATION
@@ -38,11 +39,28 @@ namespace TinyMVC.ReactiveFields {
 
         public Observed() => listeners = new List<Listener<T>>();
 
-        public void Set(T newValue) {
+        public void Set([NotNull] T newValue) {
             _value = newValue;
             
             for (int i = listeners.Count - 1; i >= 0; i--) {
                 listeners[i].Invoke(newValue);
+            }
+
+        #if UNITY_EDITOR
+            if (_frameId == ObservedTestUtility.frameId) {
+                Type type = typeof(T);
+                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!");
+            }
+
+            _frameId = ObservedTestUtility.frameId;
+        #endif
+        }
+        
+        public void SetNull() {
+            _value = default;
+            
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].InvokeNull();
             }
 
         #if UNITY_EDITOR

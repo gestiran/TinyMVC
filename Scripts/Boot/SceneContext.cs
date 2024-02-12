@@ -146,6 +146,7 @@ namespace TinyMVC.Boot {
             Controller.Connector connector = new Controller.Connector();
 
             connector.connect = controller => Connect(controller, context, sceneId);
+            connector.connectWithoutDependencies = controller => ConnectWithoutDependencies(controller, context, sceneId);
             connector.connectArray = controllers => Connect(controllers, context, sceneId);
             connector.disconnect = controller => Disconnect(controller, context, sceneId);
             connector.disconnectArray = controllers => Disconnect(controllers, context, sceneId);
@@ -157,6 +158,7 @@ namespace TinyMVC.Boot {
             View.Connector connector = new View.Connector();
 
             connector.connect = controller => Connect(controller, context, sceneId);
+            connector.connectWithoutDependencies = controller => ConnectWithoutDependencies(controller, context, sceneId);
             connector.connectArray = controllers => Connect(controllers, context, sceneId);
             connector.disconnect = controller => Disconnect(controller, context, sceneId);
             connector.disconnectArray = controllers => Disconnect(controllers, context, sceneId);
@@ -166,6 +168,10 @@ namespace TinyMVC.Boot {
 
         private void Connect(IController controller, ProjectContext context, int sceneId) {
             _controllers.InitSubController(controller, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
+        }
+        
+        private void ConnectWithoutDependencies(IController controller, ProjectContext context, int sceneId) {
+            _controllers.InitSubController(controller, _ => { }, loop => context.ConnectLoop(sceneId, loop));
         }
 
         private void Connect(IController[] controller, ProjectContext context, int sceneId) {
@@ -182,6 +188,10 @@ namespace TinyMVC.Boot {
 
         private void Connect(IView view, ProjectContext context, int sceneId) {
             views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
+        }
+        
+        private void ConnectWithoutDependencies(IView view, ProjectContext context, int sceneId) {
+            views.InitSubView(view, _ => { }, loop => context.ConnectLoop(sceneId, loop));
         }
 
         private void Connect(IView[] view, ProjectContext context, int sceneId) {

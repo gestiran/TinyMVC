@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
@@ -27,6 +28,16 @@ namespace TinyMVC.Dependencies {
             
         #if ODIN_INSPECTOR && UNITY_EDITOR
             display = dependencies;
+        #endif
+        }
+        
+        internal DependencyContainer(IDependency[] dependencies) : this(dependencies.Length) {
+            for (int i = 0; i < dependencies.Length; i++) {
+                this.dependencies.Add(dependencies[i].GetType(), dependencies[i]);
+            }
+            
+        #if ODIN_INSPECTOR && UNITY_EDITOR
+            display = dependencies.ToList();
         #endif
         }
         

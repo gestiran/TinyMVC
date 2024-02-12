@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using TinyMVC.Loop;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
+
+using NotNullSystem = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace TinyMVC.ReactiveFields {
 #if ODIN_INSPECTOR && UNITY_EDITOR
@@ -51,7 +52,7 @@ namespace TinyMVC.ReactiveFields {
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button]
     #endif
-        public void Send([NotNull] T data) {
+        public void Send([NotNullSystem] T data) {
             for (int i = listeners.Count - 1; i >= 0; i--) {
                 listeners[i].Invoke(data);
             }
@@ -65,9 +66,26 @@ namespace TinyMVC.ReactiveFields {
         #endif
         }
         
-        public void Send([NotNull] params T[] data) {
+        public void Send([NotNullSystem] params T[] data) {
             for (int i = listeners.Count - 1; i >= 0; i--) {
                 listeners[i].Invoke(data);
+            }
+            
+        #if UNITY_EDITOR
+            if (_frameId == ObservedTestUtility.frameId) {
+                UnityEngine.Debug.LogWarning($"{nameof(InputListener)}<{typeof(T).Name}> called twice in one frame!");
+            }
+
+            _frameId = ObservedTestUtility.frameId;
+        #endif
+        }
+        
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [Button]
+    #endif
+        public void SendNull() {
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].InvokeNull();
             }
             
         #if UNITY_EDITOR
@@ -95,9 +113,26 @@ namespace TinyMVC.ReactiveFields {
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button]
     #endif
-        public void Send(T1 data1, T2 data2) {
+        public void Send([NotNullSystem] T1 data1, [NotNullSystem] T2 data2) {
             for (int i = listeners.Count - 1; i >= 0; i--) {
                 listeners[i].Invoke(data1, data2);
+            }
+            
+        #if UNITY_EDITOR
+            if (_frameId == ObservedTestUtility.frameId) {
+                UnityEngine.Debug.LogWarning($"{nameof(InputListener)}<{typeof(T1).Name}, {typeof(T2).Name}> called twice in one frame!");
+            }
+
+            _frameId = ObservedTestUtility.frameId;
+        #endif
+        }
+        
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [Button]
+    #endif
+        public void SendNull([CanBeNull] T1 data1, [CanBeNull] T2 data2) {
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].InvokeNull(data1, data2);
             }
             
         #if UNITY_EDITOR
@@ -125,9 +160,26 @@ namespace TinyMVC.ReactiveFields {
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button]
     #endif
-        public void Send(T1 data1, T2 data2, T3 data3) {
+        public void Send([NotNullSystem] T1 data1, [NotNullSystem] T2 data2, [NotNullSystem] T3 data3) {
             for (int i = listeners.Count - 1; i >= 0; i--) {
                 listeners[i].Invoke(data1, data2, data3);
+            }
+            
+        #if UNITY_EDITOR
+            if (_frameId == ObservedTestUtility.frameId) {
+                UnityEngine.Debug.LogWarning($"{nameof(InputListener)}<{typeof(T1).Name}, {typeof(T2).Name}, {typeof(T3).Name}> called twice in one frame!");
+            }
+
+            _frameId = ObservedTestUtility.frameId;
+        #endif
+        }
+        
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [Button]
+    #endif
+        public void SendNull([CanBeNull] T1 data1, [CanBeNull] T2 data2, [CanBeNull] T3 data3) {
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].InvokeNull(data1, data2, data3);
             }
             
         #if UNITY_EDITOR

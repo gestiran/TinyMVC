@@ -10,7 +10,7 @@ namespace TinyMVC.ReactiveFields {
 
         internal static LazyListener New(Action action, float frequency) => new LazyListener(action, frequency, action.GetHashCode());
 
-        public override void Invoke() {
+        internal override void Invoke() {
             float time = Time.time;
 
             if (time - _lastTime < _frequency) {
@@ -44,7 +44,7 @@ namespace TinyMVC.ReactiveFields {
 
         internal static LazyListener<T> New(MultipleListener<T> action, float frequency) => new LazyListener<T>(action, frequency, action.GetHashCode());
 
-        public override void Invoke(T value) {
+        internal override void Invoke(T value) {
             float time = Time.time;
 
             if (time - _lastTime < _frequency) {
@@ -55,7 +55,7 @@ namespace TinyMVC.ReactiveFields {
             _lastTime = time;
         }
 
-        public override void Invoke(params T[] values) {
+        internal override void Invoke(params T[] values) {
             float time = Time.time;
 
             if (time - _lastTime < _frequency) {
@@ -63,6 +63,17 @@ namespace TinyMVC.ReactiveFields {
             }
 
             base.Invoke(values);
+            _lastTime = time;
+        }
+        
+        internal override void InvokeNull() {
+            float time = Time.time;
+
+            if (time - _lastTime < _frequency) {
+                return;
+            }
+
+            base.InvokeNull();
             _lastTime = time;
         }
 
@@ -83,7 +94,7 @@ namespace TinyMVC.ReactiveFields {
             return new LazyListener<T1, T2>(action, frequency, action.GetHashCode());
         }
 
-        public override void Invoke(T1 first, T2 second) {
+        internal override void Invoke(T1 first, T2 second) {
             float time = Time.time;
 
             if (time - _lastTime < _frequency) {
@@ -91,6 +102,17 @@ namespace TinyMVC.ReactiveFields {
             }
 
             base.Invoke(first, second);
+            _lastTime = time;
+        }
+        
+        internal override void InvokeNull(T1 first, T2 second) {
+            float time = Time.time;
+
+            if (time - _lastTime < _frequency) {
+                return;
+            }
+
+            base.InvokeNull(first, second);
             _lastTime = time;
         }
 
@@ -111,7 +133,7 @@ namespace TinyMVC.ReactiveFields {
             return new LazyListener<T1, T2, T3>(action, frequency, action.GetHashCode());
         }
 
-        public override void Invoke(T1 first, T2 second, T3 third) {
+        internal override void Invoke(T1 first, T2 second, T3 third) {
             float time = Time.time;
 
             if (time - _lastTime < _frequency) {
@@ -119,6 +141,17 @@ namespace TinyMVC.ReactiveFields {
             }
 
             base.Invoke(first, second, third);
+            _lastTime = time;
+        }
+        
+        internal override void InvokeNull(T1 first, T2 second, T3 third) {
+            float time = Time.time;
+
+            if (time - _lastTime < _frequency) {
+                return;
+            }
+
+            base.InvokeNull(first, second, third);
             _lastTime = time;
         }
 
