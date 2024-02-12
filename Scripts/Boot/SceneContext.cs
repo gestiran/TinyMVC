@@ -146,7 +146,7 @@ namespace TinyMVC.Boot {
             Controller.Connector connector = new Controller.Connector();
 
             connector.connect = controller => Connect(controller, context, sceneId);
-            connector.connectWithoutDependencies = controller => ConnectWithoutDependencies(controller, context, sceneId);
+            connector.connectWithoutDependencies = (controller, resolve) => Connect(controller, resolve, context, sceneId);
             connector.connectArray = controllers => Connect(controllers, context, sceneId);
             connector.disconnect = controller => Disconnect(controller, context, sceneId);
             connector.disconnectArray = controllers => Disconnect(controllers, context, sceneId);
@@ -157,11 +157,11 @@ namespace TinyMVC.Boot {
         private View.Connector CreateViewConnector(ProjectContext context, int sceneId) {
             View.Connector connector = new View.Connector();
 
-            connector.connect = controller => Connect(controller, context, sceneId);
-            connector.connectWithoutDependencies = controller => ConnectWithoutDependencies(controller, context, sceneId);
-            connector.connectArray = controllers => Connect(controllers, context, sceneId);
-            connector.disconnect = controller => Disconnect(controller, context, sceneId);
-            connector.disconnectArray = controllers => Disconnect(controllers, context, sceneId);
+            connector.connect = view => Connect(view, context, sceneId);
+            connector.connectWithoutDependencies = (view, resolve) => Connect(view, resolve, context, sceneId);
+            connector.connectArray = view => Connect(view, context, sceneId);
+            connector.disconnect = view => Disconnect(view, context, sceneId);
+            connector.disconnectArray = view => Disconnect(view, context, sceneId);
 
             return connector;
         }
@@ -170,8 +170,8 @@ namespace TinyMVC.Boot {
             _controllers.InitSubController(controller, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
         
-        private void ConnectWithoutDependencies(IController controller, ProjectContext context, int sceneId) {
-            _controllers.InitSubController(controller, _ => { }, loop => context.ConnectLoop(sceneId, loop));
+        private void Connect(IController controller, Action resolve, ProjectContext context, int sceneId) {
+            _controllers.InitSubController(controller, _ => resolve.Invoke(), loop => context.ConnectLoop(sceneId, loop));
         }
 
         private void Connect(IController[] controller, ProjectContext context, int sceneId) {
@@ -190,8 +190,8 @@ namespace TinyMVC.Boot {
             views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
         
-        private void ConnectWithoutDependencies(IView view, ProjectContext context, int sceneId) {
-            views.InitSubView(view, _ => { }, loop => context.ConnectLoop(sceneId, loop));
+        private void Connect(IView view, Action resolve, ProjectContext context, int sceneId) {
+            views.InitSubView(view, _ => resolve.Invoke(), loop => context.ConnectLoop(sceneId, loop));
         }
 
         private void Connect(IView[] view, ProjectContext context, int sceneId) {
