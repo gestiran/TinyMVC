@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using TinyMVC.Loop;
 
 namespace TinyMVC.Controllers {
     /// <summary> Project logic container </summary>
@@ -28,9 +29,24 @@ namespace TinyMVC.Controllers {
             return controller;
         }
         
+        protected T ConnectController<T>(UnloadPool pool) where T : class, IController, new() {
+            T controller = new T();
+            TryApplyConnector(controller);
+            _connector.connect(controller);
+            pool.Add(new UnloadAction(() => DisconnectController(controller)));
+            return controller;
+        }
+        
         protected T ConnectController<T>([NotNull] T controller) where T : class, IController {
             TryApplyConnector(controller);
             _connector.connect(controller);
+            return controller;
+        }
+        
+        protected T ConnectController<T>([NotNull] T controller, UnloadPool pool) where T : class, IController {
+            TryApplyConnector(controller);
+            _connector.connect(controller);
+            pool.Add(new UnloadAction(() => DisconnectController(controller)));
             return controller;
         }
         
@@ -40,6 +56,18 @@ namespace TinyMVC.Controllers {
             }
             
             _connector.connectArray(controllers);
+        }
+        
+        protected void ConnectController(UnloadPool pool, [NotNull] params IController[] controllers) {
+            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
+                TryApplyConnector(controllers[controllerId]);
+            }
+            
+            _connector.connectArray(controllers);
+
+            foreach (IController controller in controllers) {
+                pool.Add(new UnloadAction(() => DisconnectController(controller)));   
+            }
         }
 
         protected void DisconnectController<T>([NotNull] T controller) where T : class, IController => _connector.disconnect(controller);

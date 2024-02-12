@@ -51,6 +51,20 @@ namespace TinyMVC.ReactiveFields {
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button]
     #endif
+        public void Send([NotNull] T data) {
+            for (int i = listeners.Count - 1; i >= 0; i--) {
+                listeners[i].Invoke(data);
+            }
+            
+        #if UNITY_EDITOR
+            if (_frameId == ObservedTestUtility.frameId) {
+                UnityEngine.Debug.LogWarning($"{nameof(InputListener)}<{typeof(T).Name}> called twice in one frame!");
+            }
+
+            _frameId = ObservedTestUtility.frameId;
+        #endif
+        }
+        
         public void Send([NotNull] params T[] data) {
             for (int i = listeners.Count - 1; i >= 0; i--) {
                 listeners[i].Invoke(data);
