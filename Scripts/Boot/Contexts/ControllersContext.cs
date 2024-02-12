@@ -45,6 +45,7 @@ namespace TinyMVC.Boot.Contexts {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
+                
                 _mainControllers.TryInit();
 
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -60,7 +61,23 @@ namespace TinyMVC.Boot.Contexts {
 
         /// <summary> Begin play initialization stage </summary>
         /// <remarks> Check and run <see cref="TinyMVC.Loop.IBeginPlay"/> interface on <see cref="_mainControllers"/> </remarks>
-        internal void BeginPlay() => _mainControllers.TryBeginPlay();
+        internal void BeginPlay() {
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+            #endif
+                
+                _mainControllers.TryBeginPlay();
+
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (InitException exception) {
+                if (exception.other is IController controller) {
+                    throw new ControllersException(controller, exception);
+                }
+
+                throw;
+            }
+        #endif
+        }
 
         /// <summary> Add <see cref="_mainControllers"/> to list, if it contains a dependency of selected type </summary>
         /// <param name="list"> Reference list </param>

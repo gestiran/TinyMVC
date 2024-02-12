@@ -6,7 +6,7 @@
         public sealed class InitException : Exception {
             public readonly IInit other;
 
-            public InitException(IInit other, Exception innerException) : base($"Init.Error: {other.GetType().Name}", innerException) { this.other = other; }
+            public InitException(IInit other, Exception innerException) : base($"Init.Error: {LogUtility.Link(other)}", innerException) => this.other = other;
         }
     }
 #endif

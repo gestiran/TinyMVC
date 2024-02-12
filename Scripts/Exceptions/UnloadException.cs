@@ -6,7 +6,7 @@
         public sealed class UnloadException : Exception {
             public readonly IUnload other;
 
-            public UnloadException(IUnload other, Exception innerException) : base($"BeginPlay.Error: {other.GetType().Name}", innerException) {
+            public UnloadException(IUnload other, Exception innerException) : base($"BeginPlay.Error: {LogUtility.Link(other)}", innerException) {
                 this.other = other;
             }
         }

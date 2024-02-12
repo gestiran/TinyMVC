@@ -4,9 +4,9 @@ using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop.Extensions;
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using TinyMVC.Exceptions;
 using System;
-using UnityEngine;
 #endif
 
 namespace TinyMVC.Boot.Contexts {
@@ -22,7 +22,19 @@ namespace TinyMVC.Boot.Contexts {
         
         public static ModelsEmptyContext Empty() => new ModelsEmptyContext();
 
-        internal void CreateBinders() => Bind();
+        internal void CreateBinders() {
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+            #endif
+
+                Bind();
+
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (Exception exception) {
+                throw new BindException(exception);
+            }
+        #endif
+        }
 
         internal List<IResolving> CreateResolving() {
             List<IResolving> resolving = new List<IResolving>(_binders.Count);
@@ -32,21 +44,33 @@ namespace TinyMVC.Boot.Contexts {
 
         internal void ApplyBindDependencies() {
             for (int bindId = 0; bindId < _binders.Count; bindId++) {
-            #if UNITY_EDITOR
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 try {
                 #endif
 
                     _models.Add(_binders[bindId].GetDependency());
-                    
-                #if UNITY_EDITOR
-                } catch (Exception e) {
-                    Debug.LogError($"BindError: {_binders[bindId].GetType().Name}\n{e}");
+
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                } catch (Exception exception) {
+                    throw new BindException(exception);
                 }
             #endif
             }
         }
 
-        internal void Create() => Create(_models);
+        internal void Create() {
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+            #endif
+
+                Create(_models);
+
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (Exception exception) {
+                throw new ModelsException(exception);
+            }
+        #endif
+        }
 
         internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(_models);
 

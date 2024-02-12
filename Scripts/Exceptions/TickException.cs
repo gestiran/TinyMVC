@@ -6,7 +6,7 @@
         public sealed class TickException : Exception {
             public readonly ITick other;
 
-            public TickException(ITick other, Exception innerException) : base($"Tick.Error: {other.GetType().Name}", innerException) { this.other = other; }
+            public TickException(ITick other, Exception innerException) : base($"Tick.Error: {LogUtility.Link(other)}", innerException) => this.other = other;
         }
     }
 #endif

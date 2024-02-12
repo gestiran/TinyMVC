@@ -11,6 +11,10 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 #endif
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using TinyMVC.Exceptions;
+#endif
+
 using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.Boot.Contexts {
@@ -67,11 +71,41 @@ namespace TinyMVC.Boot.Contexts {
                 }
             }
             
-            _mainViews.TryInit();
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+            #endif
+                
+                _mainViews.TryInit();
+
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (InitException exception) {
+                if (exception.other is IView view) {
+                    throw new ViewsException(view, exception);
+                }
+
+                throw;
+            }
+        #endif
         }
 
-        internal void BeginPlay() => _mainViews.TryBeginPlay();
-        
+        internal void BeginPlay() {
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+            #endif
+                
+                _mainViews.TryBeginPlay();
+
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            } catch (InitException exception) {
+                if (exception.other is IView view) {
+                    throw new ViewsException(view, exception);
+                }
+
+                throw;
+            }
+        #endif
+        }
+
         internal void CheckAndAdd<T>(List<T> list) {
             list.Capacity += list.Count;
             

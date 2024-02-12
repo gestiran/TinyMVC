@@ -148,7 +148,9 @@ namespace TinyMVC.ReactiveFields {
         }
 
         public int IndexOf(T element) => _value.IndexOf(element);
-
+        
+        public bool Contains(T element) => _value.Contains(element);
+        
         public void RemoveAt(int id) {
             T element = _value[id];
             _value.RemoveAt(id);

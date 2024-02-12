@@ -4,11 +4,7 @@
 
     namespace TinyMVC.Exceptions {
         public sealed class ControllersException : Exception {
-            public readonly IController other;
-
-            public ControllersException(IController other, Exception innerException) : base($"Controller.Error: {other.GetType().Name}", innerException) {
-                this.other = other;
-            }
+            public ControllersException(IController other, Exception innerException) : base($"Controller.Error: {LogUtility.Link(other)}", innerException) { }
         }
     }
 #endif
