@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 
 namespace TinyMVC.Controllers {
@@ -15,6 +16,7 @@ namespace TinyMVC.Controllers {
         /// <summary> Contains links to connect to initialization </summary>
         internal sealed class Connector {
             internal Action<IController> connect;
+            internal Action<IController> connectWithoutDependencies;
             internal Action<IController[]> connectArray;
             internal Action<IController> disconnect;
             internal Action<IController[]> disconnectArray;
@@ -68,6 +70,39 @@ namespace TinyMVC.Controllers {
             foreach (IController controller in controllers) {
                 pool.Add(new UnloadAction(() => DisconnectController(controller)));   
             }
+        }
+        
+        protected T ConnectController<T>(UnloadPool pool, [NotNull] IDependency dependency) where T : class, IController, IResolving, new() {
+            T controller = new T();
+            TryApplyConnector(controller);
+            _connector.connectWithoutDependencies(controller);
+            ResolveUtility.Resolve(controller, new DependencyContainer(dependency));
+            pool.Add(new UnloadAction(() => DisconnectController(controller)));
+            return controller;
+        }
+        
+        protected T ConnectController<T>(UnloadPool pool, [NotNull] params IDependency[] dependencies) where T : class, IController, IResolving, new() {
+            T controller = new T();
+            TryApplyConnector(controller);
+            _connector.connectWithoutDependencies(controller);
+            ResolveUtility.Resolve(controller, new DependencyContainer(dependencies));
+            pool.Add(new UnloadAction(() => DisconnectController(controller)));
+            return controller;
+        }
+        
+        protected T ConnectController<T>([NotNull] T controller, [NotNull] IDependency dependency) where T : class, IController, IResolving {
+            TryApplyConnector(controller);
+            _connector.connectWithoutDependencies(controller);
+            ResolveUtility.Resolve(controller, new DependencyContainer(dependency));
+            return controller;
+        }
+        
+        protected T ConnectController<T>([NotNull] T controller, UnloadPool pool, [NotNull] params IDependency[] dependencies) where T : class, IController, IResolving {
+            TryApplyConnector(controller);
+            _connector.connectWithoutDependencies(controller);
+            ResolveUtility.Resolve(controller, new DependencyContainer(dependencies));
+            pool.Add(new UnloadAction(() => DisconnectController(controller)));
+            return controller;
         }
 
         protected void DisconnectController<T>([NotNull] T controller) where T : class, IController => _connector.disconnect(controller);
