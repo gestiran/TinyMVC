@@ -1,6 +1,8 @@
 ﻿using System;
 using JetBrains.Annotations;
 
+using NotNullSystem = System.Diagnostics.CodeAnalysis.NotNullAttribute;
+
 namespace TinyMVC.ReactiveFields {
     public class Listener : IEquatable<Listener>, IEquatable<Action> {
         private readonly Action _action;
@@ -45,11 +47,11 @@ namespace TinyMVC.ReactiveFields {
         
         internal static Listener<T> New(MultipleListener<T> action) => new Listener<T>(action, action.GetHashCode());
 
-        internal virtual void Invoke([NotNull] T value) => _action.Invoke(value);
+        internal virtual void Invoke([NotNullSystem] T value) => _action.Invoke(value);
 
-        internal virtual void Invoke([NotNull] params T[] values) => _action.Invoke(values);
-        
-        internal virtual void InvokeNull() => _action.Invoke();
+        internal virtual void Invoke([NotNullSystem] params T[] values) => _action.Invoke(values);
+
+        internal virtual void InvokeNull() => _action.Invoke(new T[] { default });
 
         public bool Equals(Listener<T> other) => other != null && other.hash == hash;
         
@@ -73,7 +75,7 @@ namespace TinyMVC.ReactiveFields {
 
         internal static Listener<T1, T2> New(Action<T1, T2> action) => new Listener<T1, T2>(action, action.GetHashCode());
 
-        internal virtual void Invoke([NotNull] T1 first, [NotNull] T2 second) => _action.Invoke(first, second);
+        internal virtual void Invoke([NotNullSystem] T1 first, [NotNullSystem] T2 second) => _action.Invoke(first, second);
         
         internal virtual void InvokeNull([CanBeNull] T1 first, [CanBeNull] T2 second) => _action.Invoke(first, second);
 
@@ -99,7 +101,7 @@ namespace TinyMVC.ReactiveFields {
 
         internal static Listener<T1, T2, T3> New(Action<T1, T2, T3> action) => new Listener<T1, T2, T3>(action, action.GetHashCode());
 
-        internal virtual void Invoke([NotNull] T1 first, [NotNull] T2 second, [NotNull] T3 third) => _action.Invoke(first, second, third);
+        internal virtual void Invoke([NotNullSystem] T1 first, [NotNullSystem] T2 second, [NotNullSystem] T3 third) => _action.Invoke(first, second, third);
         
         internal virtual void InvokeNull([CanBeNull] T1 first, [CanBeNull] T2 second, [CanBeNull] T3 third) => _action.Invoke(first, second, third);
 
