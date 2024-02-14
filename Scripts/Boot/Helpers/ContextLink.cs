@@ -1,6 +1,9 @@
 ﻿using System;
-using Sirenix.OdinInspector;
 using UnityEngine.SceneManagement;
+
+#if ODIN_INSPECTOR && UNITY_EDITOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Boot.Helpers {
     internal abstract class ContextLink<T> : IEquatable<ContextLink<T>> {

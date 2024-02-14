@@ -72,6 +72,13 @@ namespace TinyMVC.Controllers {
             }
         }
         
+        protected T ConnectController<T>([NotNull] params IDependency[] dependencies) where T : class, IController, IResolving, new() {
+            T controller = new T();
+            TryApplyConnector(controller);
+            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, new DependencyContainer(dependencies)));
+            return controller;
+        }
+        
         protected T ConnectController<T>(UnloadPool pool, [NotNull] IDependency dependency) where T : class, IController, IResolving, new() {
             T controller = new T();
             TryApplyConnector(controller);
@@ -85,6 +92,12 @@ namespace TinyMVC.Controllers {
             TryApplyConnector(controller);
             _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, new DependencyContainer(dependencies)));
             pool.Add(new UnloadAction(() => DisconnectController(controller)));
+            return controller;
+        }
+        
+        protected T ConnectController<T>([NotNull] T controller, [NotNull] params IDependency[] dependencies) where T : class, IController, IResolving {
+            TryApplyConnector(controller);
+            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, new DependencyContainer(dependencies)));
             return controller;
         }
         

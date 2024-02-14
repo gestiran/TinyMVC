@@ -171,7 +171,7 @@ namespace TinyMVC.Boot {
         }
         
         private void Connect(IController controller, Action resolve, ProjectContext context, int sceneId) {
-            _controllers.InitSubController(controller, _ => resolve.Invoke(), loop => context.ConnectLoop(sceneId, loop));
+            _controllers.InitSubController(controller, _ => resolve(), loop => context.ConnectLoop(sceneId, loop));
         }
 
         private void Connect(IController[] controller, ProjectContext context, int sceneId) {
@@ -191,16 +191,16 @@ namespace TinyMVC.Boot {
         }
         
         private void Connect(IView view, Action resolve, ProjectContext context, int sceneId) {
-            views.InitSubView(view, _ => resolve.Invoke(), loop => context.ConnectLoop(sceneId, loop));
+            views.InitSubView(view, _ => resolve(), loop => context.ConnectLoop(sceneId, loop));
         }
 
         private void Connect(IView[] view, ProjectContext context, int sceneId) {
             views.InitSubView(view, context.Resolve, loop => context.ConnectLoop(sceneId, loop));
         }
 
-        private void Disconnect(IView view, ProjectContext context, int sceneId) { views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop)); }
+        private void Disconnect(IView view, ProjectContext context, int sceneId) => views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
 
-        private void Disconnect(IView[] view, ProjectContext context, int sceneId) { views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop)); }
+        private void Disconnect(IView[] view, ProjectContext context, int sceneId) => views.DeInitSubView(view, loop => context.DisconnectLoop(sceneId, loop));
 
     #if UNITY_EDITOR
     #if ODIN_INSPECTOR
@@ -209,7 +209,10 @@ namespace TinyMVC.Boot {
         [ContextMenu("Generate")]
     #endif
         private void Reset() {
-            views.Generate_Editor();
+            if (views != null) {
+                views.Generate_Editor();    
+            }
+            
             UnityEditor.EditorUtility.SetDirty(gameObject);
         }
 
