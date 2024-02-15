@@ -189,7 +189,7 @@ namespace TinyMVC.ReactiveFields {
         private uint UpdateFrame(uint frame, string action) {
             if (frame == ObservedTestUtility.frameId) {
                 Type type = typeof(T);
-                UnityEngine.Debug.LogError($"ObservedList {type.Name} in {type.Namespace} {action} called twice in one frame!");
+                UnityEngine.Debug.LogWarning($"ObservedList {type.Name} in {type.Namespace} {action} called twice in one frame!");
             }
 
             return ObservedTestUtility.frameId;

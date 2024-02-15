@@ -237,7 +237,7 @@ namespace TinyMVC.Dependencies {
         private uint UpdateFrame(uint frame, string action) {
             if (frame == ObservedTestUtility.frameId) {
                 Type type = typeof(T);
-                UnityEngine.Debug.LogError($"ObservedDependencyList {type.Name} in {type.Namespace} {action} called twice in one frame!");
+                UnityEngine.Debug.LogWarning($"ObservedDependencyList {type.Name} in {type.Namespace} {action} called twice in one frame!");
             }
 
             return ObservedTestUtility.frameId;
