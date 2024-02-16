@@ -6,16 +6,34 @@
         public static class LogUtility {
             public static string Link(object context) {
             #if UNITY_EDITOR
+                if (TryGetPath(context, out string path)) {
+                    return $"<a href=\"{path}\">{context.GetType().Name}</a>";
+                }
+
+            #endif
+                return context.GetType().Name;
+            }
+
+            private static bool TryGetPath(object context, out string path) {
                 if (context is MonoBehaviour behavior) {
-                    return $"<a href=\"{AssetDatabase.GetAssetPath(MonoScript.FromMonoBehaviour(behavior))}\">{context.GetType().Name}</a>";
+                    path = AssetDatabase.GetAssetPath(MonoScript.FromMonoBehaviour(behavior));
+                    return true;
                 }
 
                 if (context is ScriptableObject scriptable) {
-                    return $"<a href=\"{AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(scriptable))}\">{context.GetType().Name}</a>";
+                    path = AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(scriptable));
+                    return true;
                 }
-                
-            #endif
-                return context.GetType().Name;
+
+                string[] scripts = AssetDatabase.FindAssets($"t:Script {context.GetType().Name}");
+
+                if (scripts.Length > 0) {
+                    path = AssetDatabase.GUIDToAssetPath(scripts[0]);
+                    return true;
+                }
+
+                path = "";
+                return false;
             }
         }
     }

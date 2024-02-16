@@ -4,6 +4,7 @@ using System.Reflection;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using Unity.Profiling;
+using TinyMVC.Exceptions;
 #endif
 
 namespace TinyMVC.Dependencies {
@@ -37,6 +38,10 @@ namespace TinyMVC.Dependencies {
         }
         
         private static void TryApply(IResolving resolving) {
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            ValidateFields(resolving, _injectType);
+        #endif
+            
             if (resolving is IApplyResolving applyResolving) {
                 applyResolving.ApplyResolving();
             }
@@ -49,7 +54,7 @@ namespace TinyMVC.Dependencies {
         }
 
         private static void Resolve(IResolving resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
-            FieldInfo[] fields = resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo[] fields = GetFields(resolving);
             
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker resolvingMarker = new ProfilerMarker(ProfilerCategory.Scripts, $"Resolve(Resolving: {resolving.GetType().Name})");
@@ -74,5 +79,44 @@ namespace TinyMVC.Dependencies {
             resolvingMarker.End();
         #endif
         }
+
+        private static FieldInfo[] GetFields(IResolving resolving) {
+            return resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+        }
+
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+
+        private static void ValidateFields(IResolving resolving, Type injectType) {
+            FieldInfo[] fields = GetFields(resolving);
+            
+            for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
+                if (!Attribute.IsDefined(fields[fieldId], injectType)) {
+                    continue;
+                }
+
+                Inject inject = fields[fieldId].GetCustomAttribute<Inject>();
+
+                if (!inject.isRequired) {
+                    continue;
+                }
+
+                if (fields[fieldId].GetValue(resolving) != null) {
+                    continue;
+                }
+                
+                if (resolving is UnityEngine.Object context) {
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]), context);
+                } else {
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]));
+                }
+            }
+        }
+
+        private static string Log(IResolving resolving, FieldInfo field) {
+            string access = field.IsPrivate ? "private" : "protected";
+            return $"Resolve {LogUtility.Link(resolving)} required [{nameof(Inject)}] {access} {field.FieldType.Name} {field.Name}";
+        }
+
+    #endif
     }
 }
