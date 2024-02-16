@@ -12,7 +12,7 @@ namespace TinyMVC.ReactiveFields {
 #if ODIN_INSPECTOR && UNITY_EDITOR
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
-    public sealed class ObservedList<T> : IEnumerator<T>, IObservedList<T> {
+    public sealed class ObservedList<T> : IEnumerable<T>, IEnumerator<T>, IObservedList<T> {
         public int count => _value.Count;
         public T Current => _value[_currentId];
         object IEnumerator.Current => _value[_currentId];
@@ -162,6 +162,8 @@ namespace TinyMVC.ReactiveFields {
             _frameRemoveId = UpdateFrame(_frameRemoveId, nameof(Remove));
         #endif
         }
+        
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         
         public IEnumerator<T> GetEnumerator() {
             foreach (T value in _value) {

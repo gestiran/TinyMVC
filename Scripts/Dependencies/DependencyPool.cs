@@ -11,7 +11,7 @@ namespace TinyMVC.Dependencies {
 #if ODIN_INSPECTOR && UNITY_EDITOR
     [HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
-    public sealed class DependencyPool<T> : IEnumerator<T>, IDependency where T : IDependency {
+    public sealed class DependencyPool<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
         public int length => _objects.Length;
         public T Current => _objects[_currentId];
         object IEnumerator.Current => _objects[_currentId];
@@ -67,6 +67,8 @@ namespace TinyMVC.Dependencies {
             set => _objects[index] = value;
         }
 
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
         public IEnumerator<T> GetEnumerator() {
             foreach (T value in _objects) {
                 yield return value;

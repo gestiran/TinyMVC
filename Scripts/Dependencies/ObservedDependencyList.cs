@@ -13,7 +13,7 @@ namespace TinyMVC.Dependencies {
 #if ODIN_INSPECTOR && UNITY_EDITOR
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
-    public sealed class ObservedDependencyList<T> : IEnumerator<T>, IObservedList<T>, IDependency where T : IDependency {
+    public sealed class ObservedDependencyList<T> : IEnumerable<T>, IEnumerator<T>, IObservedList<T>, IDependency where T : IDependency {
         public T Current => _value[_currentId];
         object IEnumerator.Current => _value[_currentId];
         public int length => _value.Count;
@@ -210,6 +210,8 @@ namespace TinyMVC.Dependencies {
             _frameAddId = UpdateFrame(_frameAddId, nameof(RemoveAt));
         #endif
         }
+        
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public IEnumerator<T> GetEnumerator() {
             foreach (T value in _value) {
