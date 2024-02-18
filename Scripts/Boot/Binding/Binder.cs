@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using TinyMVC.Dependencies;
 
 namespace TinyMVC.Boot.Binding {
@@ -7,6 +8,8 @@ namespace TinyMVC.Boot.Binding {
         /// <summary> Internal create first state dependency object </summary>
         /// <returns> Dependency object result created on <see cref="Binder{T}.Bind(T)"/> function </returns>
         internal abstract IDependency GetDependency();
+
+        internal abstract Type GetBindType();
 
         protected T Add<T>() where T : Binder, new() => new T();
         
@@ -43,6 +46,8 @@ namespace TinyMVC.Boot.Binding {
             Bind(model);
             return model;
         }
+
+        internal override Type GetBindType() => typeof(T);
 
         /// <summary> Create and load first state dependency object </summary>
         /// <returns> Dependency object result </returns>

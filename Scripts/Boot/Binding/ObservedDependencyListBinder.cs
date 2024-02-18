@@ -11,13 +11,15 @@ namespace TinyMVC.Boot.Binding {
         /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
         internal override IDependency GetDependency() => Bind();
 
+        internal override Type GetBindType() => typeof(ObservedDependencyList<T>);
+        
         public ObservedDependencyList<T> Bind() {
             ObservedDependencyList<T> model = new ObservedDependencyList<T>(_capacity);
             Bind(model);
             return model;
         }
 
-        private void AddCount(ObservedDependencyList<T> models, int count, Action<T, int> bind) {
+        protected void AddCount(ObservedDependencyList<T> models, int count, Action<T, int> bind) {
             for (int i = 0; i < count; i++) {
                 T model = new T();
                 bind(model, i);

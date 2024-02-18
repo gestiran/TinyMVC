@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TinyMVC.Boot.Empty;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
@@ -7,7 +8,7 @@ using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Exceptions;
+using TinyMVC.Debugging.Exceptions;
 #endif
 
 namespace TinyMVC.Boot.Contexts {
@@ -25,7 +26,7 @@ namespace TinyMVC.Boot.Contexts {
             _mainControllers = new List<IController>();
             _subControllers = new List<IController>();
         }
-        
+
         public static ControllersEmptyContext Empty() => new ControllersEmptyContext();
 
         /// <summary> Create initialization stage </summary>
@@ -34,19 +35,18 @@ namespace TinyMVC.Boot.Contexts {
 
         /// <summary> Init initialization stage </summary>
         /// <remarks> Check and run <see cref="TinyMVC.Loop.IInit"/> interface on <see cref="_mainControllers"/> </remarks>
-        internal void Init(Controller.Connector connector) {
+        internal async Task InitAsync(Controller.Connector connector) {
             for (int controllerId = 0; controllerId < _mainControllers.Count; controllerId++) {
                 if (_mainControllers[controllerId] is Controller controller) {
                     controller.ApplyConnector(connector);
                 }
             }
 
-            
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
-                
-                _mainControllers.TryInit();
+
+                await _mainControllers.TryInitAsync();
 
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
             } catch (InitException exception) {
@@ -55,21 +55,33 @@ namespace TinyMVC.Boot.Contexts {
                 }
 
                 throw;
-            }
+            } catch (InitAsyncException exception) {
+                if (exception.other is IController controller) {
+                    throw new ControllersException(controller, exception);
+                }
+
+                throw;
+            } 
         #endif
         }
 
         /// <summary> Begin play initialization stage </summary>
         /// <remarks> Check and run <see cref="TinyMVC.Loop.IBeginPlay"/> interface on <see cref="_mainControllers"/> </remarks>
-        internal void BeginPlay() {
+        internal async Task BeginPlay() {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
-                
-                _mainControllers.TryBeginPlay();
+
+                await _mainControllers.TryBeginPlayAsync();
 
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (InitException exception) {
+            } catch (BeginPlayException exception) {
+                if (exception.other is IController controller) {
+                    throw new ControllersException(controller, exception);
+                }
+
+                throw;
+            } catch (BeginPlayAsyncException exception) {
                 if (exception.other is IController controller) {
                     throw new ControllersException(controller, exception);
                 }
@@ -111,16 +123,16 @@ namespace TinyMVC.Boot.Contexts {
 
             _subControllers.Add(subController);
         }
-        
+
         internal void InitSubController(IController[] subControllers, Action<List<IResolving>> resolve, Action<ILoop> addLoop) {
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
                 if (subControllers[controllerId] is IInit init) {
                     init.Init();
                 }
             }
-            
+
             List<IResolving> all = new List<IResolving>();
-            
+
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
                 if (subControllers[controllerId] is IResolving resolving) {
                     all.Add(resolving);
@@ -130,13 +142,13 @@ namespace TinyMVC.Boot.Contexts {
             if (all.Count > 0) {
                 resolve(all);
             }
-            
+
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
                 if (subControllers[controllerId] is IBeginPlay beginPlay) {
                     beginPlay.BeginPlay();
                 }
             }
-            
+
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
                 if (subControllers[controllerId] is ILoop loop) {
                     addLoop(loop);
@@ -157,14 +169,14 @@ namespace TinyMVC.Boot.Contexts {
 
             _subControllers.Remove(subController);
         }
-        
+
         internal void DeInitSubController(IController[] subControllers, Action<ILoop> removeLoop) {
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
                 if (subControllers[controllerId] is ILoop loop) {
                     removeLoop(loop);
                 }
             }
-            
+
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
                 if (subControllers[controllerId] is IUnload unload) {
                     unload.Unload();
@@ -184,7 +196,7 @@ namespace TinyMVC.Boot.Contexts {
         }
 
         protected void Add<T>() where T : IController, new() => _mainControllers.Add(new T());
-        
+
         protected void Add<T>(T controller) where T : IController => _mainControllers.Add(controller);
 
         /// <summary> Create controllers and connect initialization </summary>

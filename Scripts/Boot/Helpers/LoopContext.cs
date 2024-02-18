@@ -2,11 +2,8 @@
 using TinyMVC.Loop;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using System;
-using Unity.Profiling;
-using TinyMVC.Exceptions;
-
-using UnityObject = UnityEngine.Object;
+using TinyMVC.Debugging;
+using TinyMVC.Debugging.Exceptions;
 #endif
 
 namespace TinyMVC.Boot.Helpers {
@@ -15,109 +12,61 @@ namespace TinyMVC.Boot.Helpers {
         private List<TickContext> _ticks;
         private List<LateTickContext> _lateTicks;
 
-    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        private ProfilerMarker _fixedUpdateMarker;
-        private ProfilerMarker _updateMarker;
-        private ProfilerMarker _lateUpdateMarker;
-    #endif
-
-        private sealed class FixedTickContext : ContextLink<List<IFixedTick>> {
+        internal sealed class FixedTickContext : ContextLink<List<IFixedTick>> {
             public FixedTickContext(int sceneId, List<IFixedTick> context) : base(sceneId, context) { }
         }
 
-        private sealed class TickContext : ContextLink<List<ITick>> {
+        internal sealed class TickContext : ContextLink<List<ITick>> {
             public TickContext(int sceneId, List<ITick> context) : base(sceneId, context) { }
         }
 
-        private sealed class LateTickContext : ContextLink<List<ILateTick>> {
+        internal sealed class LateTickContext : ContextLink<List<ILateTick>> {
             public LateTickContext(int sceneId, List<ILateTick> context) : base(sceneId, context) { }
         }
 
         internal void Init() {
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            _fixedUpdateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Loop.FixedUpdate");
-            _updateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Loop.Update");
-            _lateUpdateMarker = new ProfilerMarker(ProfilerCategory.Scripts, "Loop.LateUpdate");
-        #endif
-
             _fixedTicks = new List<FixedTickContext>();
             _ticks = new List<TickContext>();
             _lateTicks = new List<LateTickContext>();
         }
 
-        internal void FixedUpdate() {
+        internal void FixedTick() {
             foreach (FixedTickContext context in _fixedTicks) {
                 foreach (IFixedTick fixedTick in context.context) {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    if (fixedTick is UnityObject unityObject) {
-                        _fixedUpdateMarker.Begin(unityObject);
-                    } else {
-                        _fixedUpdateMarker.Begin();
-                    }
-
-                    try {
-                    #endif
-
-                        fixedTick.FixedTick();
-
-                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    } catch (Exception exception) {
-                        throw new FixedTickException(fixedTick, exception);
-                    }
-
-                    _fixedUpdateMarker.End();
+                    DebugUtility.ProfilerMarkerScripts(
+                        $"Loop.FixedUpdate:{fixedTick.GetType().Name}", () => fixedTick.FixedTick(), exception => new FixedTickException(fixedTick, exception)
+                    );
+                #else
+                    fixedTick.FixedTick();
                 #endif
                 }
             }
         }
 
-        internal void Update() {
+        internal void Tick() {
             foreach (TickContext context in _ticks) {
                 foreach (ITick tick in context.context) {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    if (tick is UnityObject unityObject) {
-                        _updateMarker.Begin(unityObject);
-                    } else {
-                        _updateMarker.Begin();
-                    }
-
-                    try {
-                    #endif
-
-                        tick.Tick();
-
-                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    } catch (Exception exception) {
-                        throw new TickException(tick, exception);
-                    }
-
-                    _updateMarker.End();
+                    DebugUtility.ProfilerMarkerScripts(
+                        $"Loop.Update:{tick.GetType().Name}", () => tick.Tick(), exception => new TickException(tick, exception)
+                    );
+                #else
+                    tick.Tick();
                 #endif
                 }
             }
         }
 
-        internal void LateUpdate() {
+        internal void LateTick() {
             foreach (LateTickContext context in _lateTicks) {
                 foreach (ILateTick lateTick in context.context) {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    if (lateTick is UnityObject unityObject) {
-                        _lateUpdateMarker.Begin(unityObject);
-                    } else {
-                        _lateUpdateMarker.Begin();
-                    }
-
-                    try {
-                    #endif
-
-                        lateTick.LateTick();
-
-                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    } catch (Exception exception) {
-                        throw new LateTickException(lateTick, exception);
-                    }
-
-                    _lateUpdateMarker.End();
+                    DebugUtility.ProfilerMarkerScripts(
+                        $"Loop.LateUpdate:{lateTick.GetType().Name}", () => lateTick.LateTick(), exception => new LateTickException(lateTick, exception)
+                    );
+                #else
+                    lateTick.LateTick();
                 #endif
                 }
             }

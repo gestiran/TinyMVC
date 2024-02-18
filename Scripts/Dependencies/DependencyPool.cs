@@ -87,6 +87,6 @@ namespace TinyMVC.Dependencies {
             _objects = null;
         }
 
-        public override string ToString() => $"{GetType().Name}<{typeof(T).Name}>";
+        public override string ToString() => $"DependencyPool<{typeof(T).Name}>";
     }
 }

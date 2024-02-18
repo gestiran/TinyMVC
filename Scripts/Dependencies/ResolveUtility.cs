@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+using System.Text;
 using Unity.Profiling;
-using TinyMVC.Exceptions;
+using TinyMVC.Debugging;
 #endif
 
 namespace TinyMVC.Dependencies {
@@ -105,16 +106,49 @@ namespace TinyMVC.Dependencies {
                 }
                 
                 if (resolving is UnityEngine.Object context) {
-                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]), context);
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]).Bold(), context);
                 } else {
-                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]));
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]).Bold());
                 }
             }
         }
 
         private static string Log(IResolving resolving, FieldInfo field) {
             string access = field.IsPrivate ? "private" : "protected";
-            return $"Resolve {LogUtility.Link(resolving)} required [{nameof(Inject)}] {access} {field.FieldType.Name} {field.Name}";
+            return $"Resolve {DebugUtility.Link(resolving)} required [{nameof(Inject)}] {access} {LogField(field)} {field.Name}";
+        }
+
+        private static string LogField(FieldInfo field) {
+            if (field.FieldType.IsGenericType) {
+                StringBuilder builder = new StringBuilder(4);
+
+                builder.Append(field.FieldType.Name[..^2]);
+                builder.Append("<");
+                
+                Type[] generic = field.FieldType.GenericTypeArguments;
+
+                if (generic.Length > 0) {
+                    int i = 0;
+                
+                    while (true) {
+                        builder.Append(DebugUtility.Link(generic[i].Name));
+                    
+                        i++;
+                    
+                        if (i < generic.Length) {
+                            builder.Append(", ");
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                
+                builder.Append(">");
+                
+                return builder.ToString();
+            }
+
+            return DebugUtility.Link(field.FieldType.Name);
         }
 
     #endif

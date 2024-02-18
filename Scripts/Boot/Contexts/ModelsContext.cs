@@ -5,8 +5,8 @@ using TinyMVC.Dependencies;
 using TinyMVC.Loop.Extensions;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Exceptions;
-using System;
+using TinyMVC.Debugging;
+using TinyMVC.Debugging.Exceptions;
 #endif
 
 namespace TinyMVC.Boot.Contexts {
@@ -24,15 +24,9 @@ namespace TinyMVC.Boot.Contexts {
 
         internal void CreateBinders() {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            try {
-            #endif
-
-                Bind();
-
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (Exception exception) {
-                throw new BindException(exception);
-            }
+            DebugUtility.ReThrow(Bind, exception => new BindException(exception));
+        #else
+            Bind();
         #endif
         }
 
@@ -45,30 +39,19 @@ namespace TinyMVC.Boot.Contexts {
         internal void ApplyBindDependencies() {
             for (int bindId = 0; bindId < _binders.Count; bindId++) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                try {
-                #endif
-
-                    _models.Add(_binders[bindId].GetDependency());
-
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                } catch (Exception exception) {
-                    throw new BindException(exception);
-                }
+                int id = bindId;
+                DebugUtility.ReThrow(() => _models.Add(_binders[id].GetDependency()), exception => new BindException(exception));
+            #else
+                _models.Add(_binders[bindId].GetDependency());
             #endif
             }
         }
 
         internal void Create() {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            try {
-            #endif
-
-                Create(_models);
-
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (Exception exception) {
-                throw new ModelsException(exception);
-            }
+            DebugUtility.ReThrow(() => Create(_models), exception => new ModelsException(exception));
+        #else
+            Create(_models);
         #endif
         }
 

@@ -2,7 +2,8 @@
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
-using TinyMVC.Exceptions;
+using TinyMVC.Debugging;
+using TinyMVC.Debugging.Exceptions;
 #endif
 
 namespace TinyMVC.Loop.Extensions {
@@ -11,15 +12,9 @@ namespace TinyMVC.Loop.Extensions {
             for (int objId = 0; objId < objects.Length; objId++) {
                 if (objects[objId] is IUnload other) {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    try {
-                    #endif
-                        
-                        other.Unload();
-                        
-                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    } catch (Exception exception) {
-                        throw new UnloadException(other, exception);
-                    }
+                    DebugUtility.ReThrow(() => other.Unload(), exception => new UnloadException(other, exception));
+                #else
+                    other.Unload();
                 #endif
                 }
             }
@@ -29,15 +24,9 @@ namespace TinyMVC.Loop.Extensions {
             for (int objId = 0; objId < objects.Count; objId++) {
                 if (objects[objId] is IUnload other) {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    try {
-                    #endif
-                        
-                        other.Unload();
-                        
-                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    } catch (Exception exception) {
-                        throw new UnloadException(other, exception);
-                    }
+                    DebugUtility.ReThrow(() => other.Unload(), exception => new UnloadException(other, exception));
+                #else
+                    other.Unload();
                 #endif
                 }
             }
@@ -46,15 +35,10 @@ namespace TinyMVC.Loop.Extensions {
         public static void Unload<TUnload>(this TUnload[] objects) where TUnload : IUnload {
             for (int objId = 0; objId < objects.Length; objId++) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                try {
-                #endif
-                        
-                    objects[objId].Unload();
-                        
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                } catch (Exception exception) {
-                    throw new UnloadException(objects[objId], exception);
-                }
+                int id = objId;
+                DebugUtility.ReThrow(() => objects[id].Unload(), exception => new UnloadException(objects[id], exception));
+            #else
+                objects[objId].Unload();
             #endif
             }
         }
@@ -62,15 +46,10 @@ namespace TinyMVC.Loop.Extensions {
         public static void Unload<TUnload>(this List<TUnload> objects) where TUnload : IUnload {
             for (int objId = 0; objId < objects.Count; objId++) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                try {
-                #endif
-                        
-                    objects[objId].Unload();
-                        
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                } catch (Exception exception) {
-                    throw new UnloadException(objects[objId], exception);
-                }
+                int id = objId;
+                DebugUtility.ReThrow(() => objects[id].Unload(), exception => new UnloadException(objects[id], exception));
+            #else
+                objects[objId].Unload();
             #endif
             }
         }
@@ -95,15 +74,9 @@ namespace TinyMVC.Loop.Extensions {
         public static void UnloadKeys<TUnload, T>(this Dictionary<TUnload, T> objects) where TUnload : IUnload {
             foreach (TUnload unload in objects.Keys) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                try {
-                #endif
-                        
-                    unload.Unload();
-                        
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                } catch (Exception exception) {
-                    throw new UnloadException(unload, exception);
-                }
+                DebugUtility.ReThrow(() => unload.Unload(), exception => new UnloadException(unload, exception));
+            #else
+                unload.Unload();
             #endif
             }
         }
@@ -111,15 +84,9 @@ namespace TinyMVC.Loop.Extensions {
         public static void UnloadValues<T, TUnload>(this Dictionary<T, TUnload> objects) where TUnload : IUnload {
             foreach (TUnload unload in objects.Values) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                try {
-                #endif
-                        
-                    unload.Unload();
-                        
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                } catch (Exception exception) {
-                    throw new UnloadException(unload, exception);
-                }
+                DebugUtility.ReThrow(() => unload.Unload(), exception => new UnloadException(unload, exception));
+            #else
+                unload.Unload();
             #endif
             }
         }

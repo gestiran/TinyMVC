@@ -234,6 +234,8 @@ namespace TinyMVC.Dependencies {
             _onClear = null;
         }
 
+        public override string ToString() => $"ObservedDependencyList<{typeof(T).Name}>";
+
     #if UNITY_EDITOR || DEVELOPMENT_BUILD
 
         private uint UpdateFrame(uint frame, string action) {

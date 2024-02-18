@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
@@ -12,7 +13,7 @@ using Sirenix.OdinInspector;
 #endif
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Exceptions;
+using TinyMVC.Debugging.Exceptions;
 #endif
 
 using UnityObject = UnityEngine.Object;
@@ -25,7 +26,7 @@ namespace TinyMVC.Boot.Contexts {
     [Serializable]
     public abstract class ViewsContext {
     #if ODIN_INSPECTOR && UNITY_EDITOR
-        [AssetsOnly, ListDrawerSettings(HideAddButton = true, ShowFoldout = false), Searchable, Required]
+        [ListDrawerSettings(HideAddButton = true, ShowFoldout = false), Searchable, Required]
     #endif
         [SerializeField]
         private View[] _assets;
@@ -64,7 +65,7 @@ namespace TinyMVC.Boot.Contexts {
             _mainViews.AddRange(_generated);
         }
 
-        internal void Init(View.Connector connector) {
+        internal async Task InitAsync(View.Connector connector) {
             for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
                 if (_mainViews[viewId] is View view) {
                     view.ApplyConnector(connector);
@@ -75,10 +76,16 @@ namespace TinyMVC.Boot.Contexts {
             try {
             #endif
                 
-                _mainViews.TryInit();
+                await _mainViews.TryInitAsync();
 
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
             } catch (InitException exception) {
+                if (exception.other is IView view) {
+                    throw new ViewsException(view, exception);
+                }
+
+                throw;
+            } catch (InitAsyncException exception) {
                 if (exception.other is IView view) {
                     throw new ViewsException(view, exception);
                 }
@@ -88,15 +95,21 @@ namespace TinyMVC.Boot.Contexts {
         #endif
         }
 
-        internal void BeginPlay() {
+        internal async Task BeginPlay() {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
                 
-                _mainViews.TryBeginPlay();
+                await _mainViews.TryBeginPlayAsync();
 
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (InitException exception) {
+            } catch (BeginPlayException exception) {
+                if (exception.other is IView view) {
+                    throw new ViewsException(view, exception);
+                }
+
+                throw;
+            } catch (BeginPlayAsyncException exception) {
                 if (exception.other is IView view) {
                     throw new ViewsException(view, exception);
                 }

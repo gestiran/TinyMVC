@@ -3,8 +3,8 @@ using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using System;
-using TinyMVC.Exceptions;
+using TinyMVC.Debugging.Exceptions;
+using TinyMVC.Debugging;
 #endif
 
 namespace TinyMVC.Boot.Contexts {
@@ -18,15 +18,9 @@ namespace TinyMVC.Boot.Contexts {
 
         internal void Create() {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            try {
-            #endif
-
-                Create(_parameters);
-
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (Exception exception) {
-                throw new ParametersException(exception);
-            }
+            DebugUtility.ReThrow(() => Create(_parameters), exception => new ParametersException(exception));
+        #else
+            Create(_parameters);
         #endif
         }
 

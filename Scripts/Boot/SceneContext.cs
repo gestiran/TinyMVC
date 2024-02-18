@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Empty;
 using TinyMVC.Controllers;
@@ -10,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
-using TinyMVC.Exceptions;
+using TinyMVC.Debugging.Exceptions;
 #endif
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
@@ -50,17 +51,17 @@ namespace TinyMVC.Boot {
             }
         }
 
-        void IContext.Init(ProjectContext context, int sceneId) {
+        async Task IContext.InitAsync(ProjectContext context, int sceneId) {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
-                _controllers.Init(CreateControllerConnector(context, sceneId));
-                views.Init(CreateViewConnector(context, sceneId));
+                await _controllers.InitAsync(CreateControllerConnector(context, sceneId));
+                await views.InitAsync(CreateViewConnector(context, sceneId));
 
                 Resolve(context, sceneId);
 
-                _controllers.BeginPlay();
-                views.BeginPlay();
+                await _controllers.BeginPlay();
+                await views.BeginPlay();
 
                 List<IFixedTick> fixedTicks = new List<IFixedTick>();
                 List<ITick> ticks = new List<ITick>();
