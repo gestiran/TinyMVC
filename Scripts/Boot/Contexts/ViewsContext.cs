@@ -159,7 +159,9 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void InitSubView(IView[] subView, Action<List<IResolving>> resolve, Action<ILoop> addLoop) {
             for (int viewId = 0; viewId < subView.Length; viewId++) {
-                if (subView[viewId] is IInit init) {
+                if (subView[viewId] is IInitAsync initAsync) {
+                    initAsync.Init();
+                } else if (subView[viewId] is IInit init) {
                     init.Init();
                 }
             }
@@ -177,7 +179,9 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             for (int viewId = 0; viewId < subView.Length; viewId++) {
-                if (subView[viewId] is IBeginPlay beginPlay) {
+                if (subView[viewId] is IBeginPlayAsync beginPlayAsync) {
+                    beginPlayAsync.BeginPlay();
+                } else if (subView[viewId] is IBeginPlay beginPlay) {
                     beginPlay.BeginPlay();
                 }
             }

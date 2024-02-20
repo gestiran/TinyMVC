@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using TinyMVC.Boot.Binding;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using UnityEngine;
@@ -76,7 +77,19 @@ namespace TinyMVC.Views {
             pool.Add(new UnloadAction(() => DisconnectView(view)));
             return view;
         }
+
+        protected T Bind<T>([NotNull] Binder<T> binder) where T : class, IDependency, new() => binder.GetDependency() as T;
+
+        protected T Bind<T>([NotNull] Binder<T> binder, [NotNull] IDependency dependency) where T : class, IDependency, new() {
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
+            return binder.GetDependency() as T;
+        }
         
+        protected T Bind<T>([NotNull] Binder<T> binder, [NotNull] params IDependency[] dependencies) where T : class, IDependency, new() {
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependencies));
+            return binder.GetDependency() as T;
+        }
+
         protected void DisconnectView<T>([NotNull] T view) where T : class, IView => _connector.disconnect(view);
         
         protected void DisconnectView([NotNull] params IView[] views) => _connector.disconnectArray(views);

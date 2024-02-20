@@ -126,7 +126,9 @@ namespace TinyMVC.Boot.Contexts {
 
         internal void InitSubController(IController[] subControllers, Action<List<IResolving>> resolve, Action<ILoop> addLoop) {
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is IInit init) {
+                if (subControllers[controllerId] is IInitAsync initAsync) {
+                    initAsync.Init();
+                } else if (subControllers[controllerId] is IInit init) {
                     init.Init();
                 }
             }
@@ -144,7 +146,9 @@ namespace TinyMVC.Boot.Contexts {
             }
 
             for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is IBeginPlay beginPlay) {
+                if (subControllers[controllerId] is IBeginPlayAsync beginPlayAsync) {
+                    beginPlayAsync.BeginPlay();
+                } else if (subControllers[controllerId] is IBeginPlay beginPlay) {
                     beginPlay.BeginPlay();
                 }
             }

@@ -2,12 +2,7 @@
     "name": "TinyMVC.Runtime",
     "rootNamespace": "TinyMVC",
     "references": [],
-    "includePlatforms": [
-        "Android",
-        "Editor",
-        "iOS",
-        "WindowsStandalone64"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
