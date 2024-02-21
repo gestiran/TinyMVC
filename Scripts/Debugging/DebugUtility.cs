@@ -53,6 +53,10 @@
             }
 
             public static string Link(object context) {
+                if (context == null) {
+                    return "null";
+                }
+                
             #if UNITY_EDITOR
                 if (TryGetPath(context, out string path)) {
                     return $"<a href=\"{path}\">{context.GetType().Name}</a>";
