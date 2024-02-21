@@ -15,30 +15,30 @@ namespace TinyMVC.Boot.Binding {
         
         protected T Add<T>([NotNull] IDependency dependency) where T : Binder, new() {
             T binder = new T();
-            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
+            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependency));
             return binder;
         }
         
         protected T Add<T>([NotNull] params IDependency[] dependencies) where T : Binder, new() {
             T binder = new T();
-            ResolveUtility.Resolve(binder, new DependencyContainer(dependencies));
+            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependencies));
             return binder;
         }
         
         protected T Add<T>(T binder, [NotNull] IDependency dependency) where T : Binder {
-            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
+            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependency));
             return binder;
         }
         
         protected T Add<T>(T binder, [NotNull] params IDependency[] dependencies) where T : Binder {
-            ResolveUtility.Resolve(binder, new DependencyContainer(dependencies));
+            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependencies));
             return binder;
         }
     }
     
     /// <summary> Dependency objects factory </summary>
     /// <typeparam name="T"> Dependency object type </typeparam>
-    public abstract class Binder<T> : Binder where T : IDependency, new() {
+    public abstract class Binder<T> : Binder where T : class, IDependency, new() {
         /// <summary> Internal create first state dependency object </summary>
         /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
         internal override IDependency GetDependency() {
@@ -48,6 +48,8 @@ namespace TinyMVC.Boot.Binding {
         }
 
         internal override Type GetBindType() => typeof(T);
+
+        public T Bind() => GetDependency() as T;
 
         /// <summary> Create and load first state dependency object </summary>
         /// <returns> Dependency object result </returns>

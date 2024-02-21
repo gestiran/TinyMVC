@@ -114,9 +114,9 @@ namespace TinyMVC.Boot {
 
         internal void AddLateTicks(int sceneId, List<ILateTick> ticks) => _loopContext.AddLateTicks(sceneId, ticks);
 
-        internal void Resolve(IResolving resolving) => ResolveUtility.Resolve(resolving, CreateContainer());
+        internal void Resolve(IResolving resolving) => ResolveUtility.Resolve(resolving, this, CreateContainer());
 
-        internal void Resolve(List<IResolving> resolving) => ResolveUtility.Resolve(resolving, CreateContainer());
+        internal void Resolve(List<IResolving> resolving) => ResolveUtility.Resolve(resolving, this, CreateContainer());
 
         internal void ResolveWithoutApply(IResolving resolving, List<IDependency> dependencies) {
             ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));

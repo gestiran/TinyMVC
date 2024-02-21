@@ -127,7 +127,7 @@ namespace TinyMVC.Boot {
             _models.ApplyBindDependencies();
             _models.AddDependencies(bindDependencies);
 
-            ResolveUtility.Resolve(_models, new DependencyContainer(bindDependencies));
+            ResolveUtility.Resolve(_models, this, new DependencyContainer(bindDependencies));
 
             _models.Create();
             

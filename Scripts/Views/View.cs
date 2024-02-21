@@ -54,26 +54,26 @@ namespace TinyMVC.Views {
         
         protected T ConnectView<T>([NotNull] T view, IDependency dependency) where T : class, IView, IResolving {
             TryApplyConnector(view);
-            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, new DependencyContainer(dependency)));
+            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependency)));
             return view;
         }
         
         protected T ConnectView<T>([NotNull] T view, UnloadPool pool, IDependency dependency) where T : class, IView, IResolving {
             TryApplyConnector(view);
-            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, new DependencyContainer(dependency)));
+            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependency)));
             pool.Add(new UnloadAction(() => DisconnectView(view)));
             return view;
         }
         
         protected T ConnectView<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : class, IView, IResolving {
             TryApplyConnector(view);
-            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, new DependencyContainer(dependencies)));
+            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependencies)));
             return view;
         }
         
         protected T ConnectView<T>([NotNull] T view, UnloadPool pool, [NotNull] params IDependency[] dependencies) where T : class, IView, IResolving {
             TryApplyConnector(view);
-            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, new DependencyContainer(dependencies)));
+            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependencies)));
             pool.Add(new UnloadAction(() => DisconnectView(view)));
             return view;
         }
@@ -81,12 +81,12 @@ namespace TinyMVC.Views {
         protected T Bind<T>([NotNull] Binder<T> binder) where T : class, IDependency, new() => binder.GetDependency() as T;
 
         protected T Bind<T>([NotNull] Binder<T> binder, [NotNull] IDependency dependency) where T : class, IDependency, new() {
-            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
+            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependency));
             return binder.GetDependency() as T;
         }
         
         protected T Bind<T>([NotNull] Binder<T> binder, [NotNull] params IDependency[] dependencies) where T : class, IDependency, new() {
-            ResolveUtility.Resolve(binder, new DependencyContainer(dependencies));
+            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependencies));
             return binder.GetDependency() as T;
         }
 

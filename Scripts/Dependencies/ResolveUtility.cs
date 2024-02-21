@@ -22,25 +22,25 @@ namespace TinyMVC.Dependencies {
             Resolve(resolving, container.dependencies, _injectType);
         }
         
-        internal static void Resolve(IResolving resolving, DependencyContainer container) {
+        internal static void Resolve(IResolving resolving, object owner, DependencyContainer container) {
             Resolve(resolving, container.dependencies, _injectType);
-            TryApply(resolving);
+            TryApply(resolving, owner);
         }
 
-        internal static void Resolve(List<IResolving> resolving, DependencyContainer containers) {
+        internal static void Resolve(List<IResolving> resolving, object owner, DependencyContainer containers) {
             Resolve(resolving, containers.dependencies, _injectType);
-            TryApply(resolving);
+            TryApply(resolving, owner);
         }
 
-        private static void TryApply(List<IResolving> resolving) {
+        private static void TryApply(List<IResolving> resolving, object owner) {
             for (int resolvingId = 0; resolvingId < resolving.Count; resolvingId++) {
-                TryApply(resolving[resolvingId]);
+                TryApply(resolving[resolvingId], owner);
             }
         }
         
-        private static void TryApply(IResolving resolving) {
+        private static void TryApply(IResolving resolving, object owner) {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ValidateFields(resolving, _injectType);
+            ValidateFields(resolving, _injectType, owner);
         #endif
             
             if (resolving is IApplyResolving applyResolving) {
@@ -87,7 +87,7 @@ namespace TinyMVC.Dependencies {
 
     #if UNITY_EDITOR || DEVELOPMENT_BUILD
 
-        private static void ValidateFields(IResolving resolving, Type injectType) {
+        private static void ValidateFields(IResolving resolving, Type injectType, object owner) {
             FieldInfo[] fields = GetFields(resolving);
             
             for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
@@ -106,16 +106,17 @@ namespace TinyMVC.Dependencies {
                 }
                 
                 if (resolving is UnityEngine.Object context) {
-                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]).Bold(), context);
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId], owner).Bold(), context);
                 } else {
-                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]).Bold());
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId], owner).Bold());
                 }
             }
         }
 
-        private static string Log(IResolving resolving, FieldInfo field) {
+        private static string Log(IResolving resolving, FieldInfo field, object owner) {
             string access = field.IsPrivate ? "private" : "protected";
-            return $"Resolve {DebugUtility.Link(resolving)} required [{nameof(Inject)}] {access} {LogField(field)} {field.Name}";
+            string ownerName = owner == null ? "" : $" {owner.GetType().Name}";
+            return $"Resolve{ownerName} {DebugUtility.Link(resolving)} required [{nameof(Inject)}] {access} {LogField(field)} {field.Name}";
         }
 
         private static string LogField(FieldInfo field) {
