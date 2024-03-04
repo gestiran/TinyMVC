@@ -8,9 +8,9 @@ using TinyMVC.Loop;
 using TinyMVC.Views;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using System;
 using TinyMVC.Debugging.Exceptions;
 #endif
 
@@ -55,6 +55,8 @@ namespace TinyMVC.Boot {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
             #endif
+                PreInitResolve(context);
+                
                 await _controllers.InitAsync(CreateControllerConnector(context, sceneId));
                 await views.InitAsync(CreateViewConnector(context, sceneId));
 
@@ -102,6 +104,15 @@ namespace TinyMVC.Boot {
 
         protected abstract ParametersContext CreateParameters();
 
+        private void PreInitResolve(ProjectContext context) {
+            List<IResolving> resolvers = new List<IResolving>();
+
+            _controllers.CheckAndAdd(resolvers);
+            views.CheckAndAdd(resolvers);
+
+            context.ResolveWithoutApply(resolvers);
+        }
+        
         private void Resolve(ProjectContext context, int sceneId) {
             if (_parameters is IResolving parametersResolving) {
                 context.Resolve(parametersResolving);

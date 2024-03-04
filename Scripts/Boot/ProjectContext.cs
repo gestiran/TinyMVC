@@ -118,12 +118,20 @@ namespace TinyMVC.Boot {
 
         internal void Resolve(List<IResolving> resolving) => ResolveUtility.Resolve(resolving, this, CreateContainer());
 
+        internal void ResolveWithoutApply(IResolving resolving) {
+            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer());
+        }
+        
         internal void ResolveWithoutApply(IResolving resolving, List<IDependency> dependencies) {
             ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));
         }
 
         internal void ResolveWithoutApply(List<IResolving> resolving, List<IDependency> dependencies) {
             ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));
+        }
+        
+        internal void ResolveWithoutApply(List<IResolving> resolving) {
+            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer());
         }
 
         internal void ConnectLoop(int sceneId, ILoop loop) {

@@ -19,6 +19,15 @@ namespace TinyMVC.Views {
         
         internal void ApplyConnector(Connector connector) => _connector = connector;
 
+        protected void InitSingle(ref bool token, Action init) {
+            if (token) {
+                return;
+            }
+
+            token = true;
+            init();
+        }
+        
         protected T ConnectView<T>([NotNull] T view) where T : class, IView {
             TryApplyConnector(view);
             _connector.connect(view);

@@ -33,18 +33,16 @@ namespace TinyMVC.ReactiveFields {
             this.hash = hash;
         }
 
-        internal static Listener<T> New(Action action) {
-            return new Listener<T>(_ => action(), action.GetHashCode());
+        internal static Listener<T> New(Action action) => new Listener<T>(_ => action(), action.GetHashCode());
+        
+        internal static Listener<T> New(Action<T> action) => new Listener<T>(values => InvokeAll(action, values), action.GetHashCode());
+
+        private static void InvokeAll(Action<T> action, T[] values) {
+            for (int i = 0; i < values.Length; i++) {
+                action(values[i]);
+            }
         }
 
-        internal static Listener<T> New(Action<T> action) {
-            return new Listener<T>(values => {
-                for (int i = 0; i < values.Length; i++) {
-                    action(values[i]);
-                }
-            }, action.GetHashCode());
-        }
-        
         internal static Listener<T> New(MultipleListener<T> action) => new Listener<T>(action, action.GetHashCode());
 
         internal virtual void Invoke([NotNullSystem] T value) => _action.Invoke(value);
