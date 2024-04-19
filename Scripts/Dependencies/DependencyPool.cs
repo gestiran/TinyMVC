@@ -51,7 +51,7 @@ namespace TinyMVC.Dependencies {
             _currentId = -1;
         }
         
-        public DependencyPool([NotNull] T[] pool) {
+        public DependencyPool([NotNull] params T[] pool) {
             _objects = pool;
             _currentId = -1;
         }

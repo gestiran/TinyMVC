@@ -106,5 +106,57 @@ namespace TinyMVC.ReactiveFields.Extensions {
                 return;
             }
         }
+        
+        internal static void Invoke(this List<Listener> listeners, Action<Listener> invoke) {
+            Action[] actions = new Action[listeners.Count];
+
+            for (int actionId = 0; actionId < actions.Length; actionId++) {
+                Listener listener = listeners[actionId];
+                actions[actionId] = () => invoke(listener);
+            }
+            
+            for (int i = actions.Length - 1; i >= 0; i--) {
+                actions[i].Invoke();
+            }
+        }
+        
+        internal static void Invoke<T>(this List<Listener<T>> listeners, Action<Listener<T>> invoke) {
+            Action[] actions = new Action[listeners.Count];
+
+            for (int actionId = 0; actionId < actions.Length; actionId++) {
+                Listener<T> listener = listeners[actionId];
+                actions[actionId] = () => invoke(listener);
+            }
+            
+            for (int i = actions.Length - 1; i >= 0; i--) {
+                actions[i].Invoke();
+            }
+        }
+        
+        internal static void Invoke<T1, T2>(this List<Listener<T1, T2>> listeners, Action<Listener<T1, T2>> invoke) {
+            Action[] actions = new Action[listeners.Count];
+
+            for (int actionId = 0; actionId < actions.Length; actionId++) {
+                Listener<T1, T2> listener = listeners[actionId];
+                actions[actionId] = () => invoke(listener);
+            }
+            
+            for (int i = actions.Length - 1; i >= 0; i--) {
+                actions[i].Invoke();
+            }
+        }
+        
+        internal static void Invoke<T1, T2, T3>(this List<Listener<T1, T2, T3>> listeners, Action<Listener<T1, T2, T3>> invoke) {
+            Action[] actions = new Action[listeners.Count];
+
+            for (int actionId = 0; actionId < actions.Length; actionId++) {
+                Listener<T1, T2, T3> listener = listeners[actionId];
+                actions[actionId] = () => invoke(listener);
+            }
+            
+            for (int i = actions.Length - 1; i >= 0; i--) {
+                actions[i].Invoke();
+            }
+        }
     }
 }

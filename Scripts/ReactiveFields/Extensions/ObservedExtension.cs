@@ -57,7 +57,7 @@ namespace TinyMVC.ReactiveFields.Extensions {
             observed.listeners.RemoveListener(listener);
             return observed;
         }
-
+        
         public static void AddValue(this Observed<int> observed, int value) => observed.Set(observed.value + value);
 
         public static void AddValue(this Observed<int> observed, [NotNull] params int[] values) {
@@ -106,12 +106,53 @@ namespace TinyMVC.ReactiveFields.Extensions {
             observed.Set(value);
         }
 
+        public static void AddValueListener<T>(this Observed<T> observed, Action<T> listener, T value, UnloadPool unload) {
+            observed.AddListener(newValue => {
+                if (newValue.Equals(value)) {
+                    listener.Invoke(newValue);
+                }
+            }, unload);
+        }
+        
+        public static void AddValueListener<T>(this Observed<T> observed, Action listener, T value, UnloadPool unload) {
+            observed.AddListener(newValue => {
+                if (newValue.Equals(value)) {
+                    listener.Invoke();
+                }
+            }, unload);
+        }
+
+        public static void AddValueListener<T>(this Observed<T> observed, Action<T> listener, T value) {
+            observed.AddListener(newValue => {
+                if (newValue.Equals(value)) {
+                    listener.Invoke(newValue);
+                }
+            });
+        }
+        
+        public static void AddValueListener<T>(this Observed<T> observed, Action listener, T value) {
+            observed.AddListener(newValue => {
+                if (newValue.Equals(value)) {
+                    listener.Invoke();
+                }
+            });
+        }
+        
         public static bool TrySet<T>(this Observed<T> observed, T value) {
             if (observed.value.Equals(value)) {
                 return false;
             }
             
             observed.Set(value);
+            return true;
+        }
+        
+        public static bool TryChange<T>(this Observed<T> observed, T value) {
+            if (observed.isDirty) {
+                return false;
+            }
+            
+            observed.Change(value);
             return true;
         }
     }

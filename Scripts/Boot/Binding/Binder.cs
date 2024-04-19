@@ -4,10 +4,12 @@ using TinyMVC.Dependencies;
 
 namespace TinyMVC.Boot.Binding {
     /// <summary> Dependency objects factory </summary>
-    public abstract class Binder : IResolving {
+    public abstract class Binder : IBinder, IResolving {
         /// <summary> Internal create first state dependency object </summary>
         /// <returns> Dependency object result created on <see cref="Binder{T}.Bind(T)"/> function </returns>
-        internal abstract IDependency GetDependency();
+        public abstract IDependency GetDependency();
+
+        public Binder binder => this;
 
         internal abstract Type GetBindType();
 
@@ -41,7 +43,7 @@ namespace TinyMVC.Boot.Binding {
     public abstract class Binder<T> : Binder where T : class, IDependency, new() {
         /// <summary> Internal create first state dependency object </summary>
         /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
-        internal override IDependency GetDependency() {
+        public override IDependency GetDependency() {
             T model = new T();
             Bind(model);
             return model;

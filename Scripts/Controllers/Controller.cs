@@ -113,6 +113,8 @@ namespace TinyMVC.Controllers {
             pool.Add(new UnloadAction(() => DisconnectController(controller)));
             return controller;
         }
+        
+        protected void DisconnectController() => _connector.disconnect(this);
 
         protected void DisconnectController<T>([NotNull] T controller) where T : class, IController => _connector.disconnect(controller);
         

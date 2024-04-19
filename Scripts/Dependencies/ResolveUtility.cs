@@ -12,7 +12,7 @@ namespace TinyMVC.Dependencies {
     internal static class ResolveUtility {
         private static readonly Type _injectType;
         
-        static ResolveUtility() => _injectType = typeof(Inject);
+        static ResolveUtility() => _injectType = typeof(InjectAttribute);
 
         internal static void ResolveWithoutApply(IResolving resolving, DependencyContainer container) {
             Resolve(resolving, container.dependencies, _injectType);
@@ -72,7 +72,7 @@ namespace TinyMVC.Dependencies {
                 if (!dependencies.ContainsKey(fieldType)) {
                     continue;
                 }
-
+                
                 fields[fieldId].SetValue(resolving, dependencies[fieldType]);
             }
             
@@ -95,7 +95,7 @@ namespace TinyMVC.Dependencies {
                     continue;
                 }
 
-                Inject inject = fields[fieldId].GetCustomAttribute<Inject>();
+                InjectAttribute inject = fields[fieldId].GetCustomAttribute<InjectAttribute>();
 
                 if (!inject.isRequired) {
                     continue;
@@ -116,7 +116,7 @@ namespace TinyMVC.Dependencies {
         private static string Log(IResolving resolving, FieldInfo field, object owner) {
             string access = field.IsPrivate ? "private" : "protected";
             string ownerName = owner == null ? "" : $" {owner.GetType().Name}";
-            return $"Resolve{ownerName} {DebugUtility.Link(resolving)} required [{nameof(Inject)}] {access} {LogField(field)} {field.Name}";
+            return $"Resolve{ownerName} {DebugUtility.Link(resolving)} required [{nameof(InjectAttribute)}] {access} {LogField(field)} {field.Name}";
         }
 
         private static string LogField(FieldInfo field) {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Empty;
@@ -12,11 +13,11 @@ using TinyMVC.Debugging.Exceptions;
 namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains models initialization </summary>
     public abstract class ModelsContext : IResolving {
-        private readonly List<Binder> _binders;
+        private readonly List<IBinder> _binders;
         private readonly List<IDependency> _models;
 
         protected ModelsContext() {
-            _binders = new List<Binder>();
+            _binders = new List<IBinder>();
             _models = new List<IDependency>();
         }
         
@@ -32,7 +33,13 @@ namespace TinyMVC.Boot.Contexts {
 
         internal List<IResolving> CreateResolving() {
             List<IResolving> resolving = new List<IResolving>(_binders.Count);
-            resolving.AddRange(_binders);
+
+            for (int binderId = 0; binderId < _binders.Count; binderId++) {
+                if (_binders[binderId].binder is IResolving bindResolving) {
+                    resolving.Add(bindResolving);
+                }
+            }
+            
             return resolving;
         }
 
@@ -61,7 +68,11 @@ namespace TinyMVC.Boot.Contexts {
 
         protected void Add<T>() where T : Binder, new() => _binders.Add(new T());
         
+        protected void Add<T>(params Type[] types) where T : Binder, new() => _binders.Add(new BinderLink(new T(), types));
+        
         protected void Add<T>(T binder) where T : Binder => _binders.Add(binder);
+        
+        protected void Add<T>(T binder, params Type[] types) where T : Binder => _binders.Add(binder.AsLink(types));
 
         /// <summary> Create and execute binders, created models will be added by the time Create is called </summary>
         protected abstract void Bind();

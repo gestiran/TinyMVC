@@ -6,8 +6,16 @@ using TinyMVC.Loop;
 using UnityEngine;
 
 namespace TinyMVC.Views {
-    public abstract class View : MonoBehaviour, IView {
+    public abstract class View : MonoBehaviour, IView, IViewConnector {
+        public ConnectState connectState { get; private set; }
+
         private Connector _connector;
+
+        public enum ConnectState : byte {
+            None,
+            Connected,
+            Disconnected
+        }
         
         internal sealed class Connector {
             internal Action<IView> connect;
@@ -16,8 +24,11 @@ namespace TinyMVC.Views {
             internal Action<IView> disconnect;
             internal Action<IView[]> disconnectArray;
         }
-        
-        internal void ApplyConnector(Connector connector) => _connector = connector;
+
+        internal void ApplyConnector(Connector connector) {
+            _connector = connector;
+            connectState = ConnectState.Connected;
+        }
 
         protected void InitSingle(ref bool token, Action init) {
             if (token) {
@@ -28,20 +39,20 @@ namespace TinyMVC.Views {
             init();
         }
         
-        protected T ConnectView<T>([NotNull] T view) where T : class, IView {
+        public T ConnectView<T>(T view) where T : class, IView {
             TryApplyConnector(view);
             _connector.connect(view);
             return view;
         }
         
-        protected T ConnectView<T>([NotNull] T view, UnloadPool pool) where T : class, IView {
+        public T ConnectView<T>(T view, UnloadPool pool) where T : class, IView {
             TryApplyConnector(view);
             _connector.connect(view);
             pool.Add(new UnloadAction(() => DisconnectView(view)));
             return view;
         }
         
-        protected void ConnectView([NotNull] params IView[] views) {
+        public void ConnectView(params IView[] views) {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 TryApplyConnector(views[viewId]);
             }
@@ -49,7 +60,25 @@ namespace TinyMVC.Views {
             _connector.connectArray(views);
         }
         
-        protected void ConnectView(UnloadPool pool, [NotNull] params IView[] views) {
+        public void ConnectView(params View[] views) {
+            for (int viewId = 0; viewId < views.Length; viewId++) {
+                views[viewId].ApplyConnector(_connector);
+            }
+            
+            _connector.connectArray(views);
+        }
+        
+        public void ConnectView<T>(T[] views, params IDependency[] dependencies) where T : class, IView, IResolving {
+            DependencyContainer container = new DependencyContainer(dependencies);
+            
+            for (int viewId = 0; viewId < views.Length; viewId++) {
+                T view = views[viewId];
+                TryApplyConnector(view);
+                _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, container));
+            }
+        }
+        
+        public void ConnectView(UnloadPool pool, params IView[] views) {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 TryApplyConnector(views[viewId]);
             }
@@ -61,32 +90,54 @@ namespace TinyMVC.Views {
             }
         }
         
-        protected T ConnectView<T>([NotNull] T view, IDependency dependency) where T : class, IView, IResolving {
+        public T ReconnectView<T>(T view, IDependency dependency) where T : View, IResolving {
+            if (view.connectState == ConnectState.Connected) {
+                DisconnectView(view);
+            }
+            
+            return ConnectView(view, dependency);
+        }
+        
+        public T ReconnectView<T>(T view, params IDependency[] dependencies) where T : View, IResolving {
+            if (view.connectState == ConnectState.Connected) {
+                DisconnectView(view);
+            }
+            
+            return ConnectView(view, dependencies);
+        }
+        
+        public T ConnectView<T>(T view, IDependency dependency) where T : class, IView, IResolving {
             TryApplyConnector(view);
             _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependency)));
             return view;
         }
         
-        protected T ConnectView<T>([NotNull] T view, UnloadPool pool, IDependency dependency) where T : class, IView, IResolving {
+        public T ConnectView<T>(T view, UnloadPool pool, IDependency dependency) where T : class, IView, IResolving {
             TryApplyConnector(view);
             _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependency)));
             pool.Add(new UnloadAction(() => DisconnectView(view)));
             return view;
         }
         
-        protected T ConnectView<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : class, IView, IResolving {
+        public T ConnectView<T>(T view, params IDependency[] dependencies) where T : class, IView, IResolving {
             TryApplyConnector(view);
             _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependencies)));
             return view;
         }
         
-        protected T ConnectView<T>([NotNull] T view, UnloadPool pool, [NotNull] params IDependency[] dependencies) where T : class, IView, IResolving {
+        public T ConnectView<T>(T view, DependencyContainer container) where T : class, IView, IResolving {
+            TryApplyConnector(view);
+            _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, container));
+            return view;
+        }
+        
+        public T ConnectView<T>(T view, UnloadPool pool, params IDependency[] dependencies) where T : class, IView, IResolving {
             TryApplyConnector(view);
             _connector.connectWithoutDependencies(view, () => ResolveUtility.Resolve(view, this, new DependencyContainer(dependencies)));
             pool.Add(new UnloadAction(() => DisconnectView(view)));
             return view;
         }
-
+        
         protected T Bind<T>([NotNull] Binder<T> binder) where T : class, IDependency, new() => binder.GetDependency() as T;
 
         protected T Bind<T>([NotNull] Binder<T> binder, [NotNull] IDependency dependency) where T : class, IDependency, new() {
@@ -99,9 +150,24 @@ namespace TinyMVC.Views {
             return binder.GetDependency() as T;
         }
 
-        protected void DisconnectView<T>([NotNull] T view) where T : class, IView => _connector.disconnect(view);
-        
-        protected void DisconnectView([NotNull] params IView[] views) => _connector.disconnectArray(views);
+        public void DisconnectView<T>(T view) where T : class, IView {
+            TryApplyDisconnectState(view);
+            _connector.disconnect(view);
+        }
+
+        public void DisconnectView(params IView[] views) {
+            for (int viewId = 0; viewId < views.Length; viewId++) {
+                TryApplyDisconnectState(views[viewId]);
+            }
+            
+            _connector.disconnectArray(views);
+        }
+
+        private void TryApplyDisconnectState<T>(T view) where T : class, IView {
+            if (view is View root) {
+                root.connectState = ConnectState.Disconnected;
+            }
+        }
         
         private bool TryApplyConnector<T>(T controller) where T : class, IView {
             if (controller is not View root) {

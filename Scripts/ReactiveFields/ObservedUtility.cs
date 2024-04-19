@@ -1,8 +1,7 @@
-﻿#if UNITY_EDITOR
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace TinyMVC.ReactiveFields {
-    internal static class ObservedTestUtility {
+    internal static class ObservedUtility {
         public static uint frameId { get; private set; } = 1;
         
         public static void Next() => frameId++;
@@ -11,4 +10,3 @@ namespace TinyMVC.ReactiveFields {
         public static void Reset() => frameId = 1;
     }
 }
-#endif

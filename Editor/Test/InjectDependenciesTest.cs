@@ -35,7 +35,7 @@ namespace TinyMVC.Tests {
             _assemblies = assemblies.ToArray();
         }
         
-        [TestCase(typeof(IResolving), typeof(Inject), typeof(IDependency))]
+        [TestCase(typeof(IResolving), typeof(InjectAttribute), typeof(IDependency))]
         public void InterfaceImplementation(Type interfaceType, Type injectAttributeType, Type dependencyType) {
             for (int assemblyId = 0; assemblyId < _assemblies.Length; assemblyId++) {
                 CheckTypes(_assemblies[assemblyId].GetTypes(), interfaceType, injectAttributeType, dependencyType);

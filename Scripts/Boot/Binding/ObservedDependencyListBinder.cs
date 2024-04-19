@@ -9,7 +9,7 @@ namespace TinyMVC.Boot.Binding {
 
         /// <summary> Internal create first state dependency object </summary>
         /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
-        internal override IDependency GetDependency() => Bind();
+        public override IDependency GetDependency() => Bind();
 
         internal override Type GetBindType() => typeof(ObservedDependencyList<T>);
         

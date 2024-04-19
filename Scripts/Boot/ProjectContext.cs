@@ -47,6 +47,27 @@ namespace TinyMVC.Boot {
             public DependencyContext(int sceneId, DependencyContainer context) : base(sceneId, context) { }
         }
 
+        public void LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single) {
+            if (mode == LoadSceneMode.Single) {
+                UnloadScene(SceneManager.GetActiveScene());
+            }
+            
+            SceneManager.LoadScene(sceneBuildIndex, mode);
+        }
+
+    #if UNITY_EDITOR
+        
+        public void LoadSceneEditor(string path, LoadSceneMode mode = LoadSceneMode.Single) {
+            if (mode == LoadSceneMode.Single) {
+                UnloadScene(SceneManager.GetActiveScene());
+            }
+            
+            LoadSceneParameters parameters = new LoadSceneParameters(mode, LocalPhysicsMode.None);
+            UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
+        }
+        
+    #endif
+        
         /// <summary> First project context creating </summary>
         [RuntimeInitializeOnLoadMethod]
         internal static void CreateContext() {
@@ -70,7 +91,6 @@ namespace TinyMVC.Boot {
             InitScene(SceneManager.GetActiveScene(), LoadSceneMode.Single);
 
             SceneManager.sceneLoaded += InitScene;
-            SceneManager.sceneUnloaded += UnloadScene;
         }
 
         private void FixedTick() {
@@ -82,10 +102,8 @@ namespace TinyMVC.Boot {
         }
 
         private void Tick() {
+            ObservedUtility.Next();
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        #if UNITY_EDITOR
-            ObservedTestUtility.Next();
-        #endif
             DebugUtility.ProfilerMarkerScripts("Project.Tick", () => _loopContext.Tick());
         #else
             _loopContext.Tick();
