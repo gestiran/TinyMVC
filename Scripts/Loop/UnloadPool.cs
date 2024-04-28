@@ -3,6 +3,8 @@ using JetBrains.Annotations;
 
 namespace TinyMVC.Loop {
     public sealed class UnloadPool : IUnload {
+        public bool isUnloaded { get; private set; }
+
         private readonly List<IUnload> _unloads;
 
         public UnloadPool(int capacity = 4) => _unloads = new List<IUnload>(capacity);
@@ -25,6 +27,8 @@ namespace TinyMVC.Loop {
             foreach (IUnload unload in _unloads) {
                 unload.Unload(); 
             }
+            
+            isUnloaded = true;
         }
     }
 

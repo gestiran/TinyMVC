@@ -29,7 +29,7 @@ namespace TinyMVC.ReactiveFields {
     #endif
         private T _value;
         
-    #if PERFORMANCE_DEBUG
+    #if UNITY_EDITOR
         private uint _frameId;
     #endif
 
@@ -48,7 +48,7 @@ namespace TinyMVC.ReactiveFields {
                 _listeners[i].Invoke(newValue);
             }
             
-        #if PERFORMANCE_DEBUG
+        #if UNITY_EDITOR
             if (_frameId == ObservedUtility.frameId) {
                 Type type = typeof(T);
                 UnityEngine.Debug.LogWarning($"ObservedDisposable {type.Name} in {type.Namespace} called twice in one frame!");

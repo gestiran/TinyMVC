@@ -1,4 +1,5 @@
-﻿using TinyMVC.Dependencies;
+﻿using TinyMVC.Boot;
+using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 using TinyMVC.Samples.Models;
@@ -20,7 +21,7 @@ namespace TinyMVC.Samples.Views {
 #endif
     [RequireComponent(typeof(Camera))]
     [DisallowMultipleComponent]
-    public sealed class MainCameraView : View, IInit, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
+    public sealed class MainCameraView : View, IApplyResolving, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public Vector3 position => thisTransform.position;
         
         [field: SerializeField
@@ -46,23 +47,19 @@ namespace TinyMVC.Samples.Views {
         public UniversalAdditionalCameraData thisCameraData { get; private set; }
     #endif
         
-        private UnloadPool _unload;
-        
         [Inject] private MainCameraModel _model;
 
-        public void Init() => _unload = new UnloadPool();
-
         public void ApplyResolving() {
+            ProjectContext.current.TryGetGlobalUnload(out UnloadPool unload);
+            
             ChangePosition(_model.position.value);
             
-            _model.position.AddListener(ChangePosition, _unload);
+            _model.position.AddListener(ChangePosition, unload);
             
         #if URP_RENDER_PIPELINE
-            _model.addToStack.AddListener(AddToStack, _unload);
+            _model.addToStack.AddListener(AddToStack, unload);
         #endif
         }
-        
-        public void Unload() => _unload.Unload();
         
         private void ChangePosition(Vector3 newPosition) => thisTransform.position = newPosition;
         
@@ -74,6 +71,8 @@ namespace TinyMVC.Samples.Views {
         }
     #endif
 
+    #if UNITY_EDITOR
+        
         [ContextMenu("Soft reset")]
         public void Reset() {
             thisCamera = GetComponent<Camera>();
@@ -83,5 +82,7 @@ namespace TinyMVC.Samples.Views {
             thisCameraData = GetComponent<UniversalAdditionalCameraData>();
         #endif
         }
+        
+    #endif
     }
 }

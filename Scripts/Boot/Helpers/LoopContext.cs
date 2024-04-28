@@ -2,15 +2,20 @@
 using TinyMVC.Loop;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+using System;
 using TinyMVC.Debugging;
 using TinyMVC.Debugging.Exceptions;
 #endif
 
 namespace TinyMVC.Boot.Helpers {
     internal sealed class LoopContext {
+        private List<Action> _actions;
         private List<FixedTickContext> _fixedTicks;
         private List<TickContext> _ticks;
         private List<LateTickContext> _lateTicks;
+
+        private const int _CONTEXTS_CAPACITY = 16;
+        private const int _TICKS_CAPACITY = 512;
 
         internal sealed class FixedTickContext : ContextLink<List<IFixedTick>> {
             public FixedTickContext(int sceneId, List<IFixedTick> context) : base(sceneId, context) { }
@@ -23,53 +28,51 @@ namespace TinyMVC.Boot.Helpers {
         internal sealed class LateTickContext : ContextLink<List<ILateTick>> {
             public LateTickContext(int sceneId, List<ILateTick> context) : base(sceneId, context) { }
         }
-
+        
         internal void Init() {
-            _fixedTicks = new List<FixedTickContext>();
-            _ticks = new List<TickContext>();
-            _lateTicks = new List<LateTickContext>();
+            _actions = new List<Action>(_TICKS_CAPACITY);
+            _fixedTicks = new List<FixedTickContext>(_CONTEXTS_CAPACITY);
+            _ticks = new List<TickContext>(_CONTEXTS_CAPACITY);
+            _lateTicks = new List<LateTickContext>(_CONTEXTS_CAPACITY);
         }
 
         internal void FixedTick() {
-            foreach (FixedTickContext context in _fixedTicks) {
-                foreach (IFixedTick fixedTick in context.context) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    DebugUtility.ProfilerMarkerScripts(
-                        $"Loop.FixedUpdate:{fixedTick.GetType().Name}", () => fixedTick.FixedTick(), exception => new FixedTickException(fixedTick, exception)
-                    );
-                #else
-                    fixedTick.FixedTick();
-                #endif
+            for (int contextId = 0; contextId < _fixedTicks.Count; contextId++) {
+                List<IFixedTick> ticks = _fixedTicks[contextId].context;
+                
+                for (int tickId = 0; tickId < ticks.Count; tickId++) {
+                    _actions.Add(ticks[tickId].FixedTick);
                 }
             }
+
+            Invoke(_actions);
+            _actions.Clear();
         }
 
         internal void Tick() {
-            foreach (TickContext context in _ticks) {
-                foreach (ITick tick in context.context) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    DebugUtility.ProfilerMarkerScripts(
-                        $"Loop.Update:{tick.GetType().Name}", () => tick.Tick(), exception => new TickException(tick, exception)
-                    );
-                #else
-                    tick.Tick();
-                #endif
+            for (int contextId = 0; contextId < _ticks.Count; contextId++) {
+                List<ITick> ticks = _ticks[contextId].context;
+                
+                for (int tickId = 0; tickId < ticks.Count; tickId++) {
+                    _actions.Add(ticks[tickId].Tick);
                 }
             }
+            
+            Invoke(_actions);
+            _actions.Clear();
         }
 
         internal void LateTick() {
-            foreach (LateTickContext context in _lateTicks) {
-                foreach (ILateTick lateTick in context.context) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    DebugUtility.ProfilerMarkerScripts(
-                        $"Loop.LateUpdate:{lateTick.GetType().Name}", () => lateTick.LateTick(), exception => new LateTickException(lateTick, exception)
-                    );
-                #else
-                    lateTick.LateTick();
-                #endif
+            for (int contextId = 0; contextId < _lateTicks.Count; contextId++) {
+                List<ILateTick> ticks = _lateTicks[contextId].context;
+                
+                for (int tickId = 0; tickId < ticks.Count; tickId++) {
+                    _actions.Add(ticks[tickId].LateTick);
                 }
             }
+            
+            Invoke(_actions);
+            _actions.Clear();
         }
 
         internal void AddFixedTicks(int sceneId, List<IFixedTick> ticks) {
@@ -189,6 +192,12 @@ namespace TinyMVC.Boot.Helpers {
         private void DisconnectLateTick(int sceneId, ILateTick tick) {
             if (_lateTicks.TryGetContext(sceneId, out List<ILateTick> current, out int _)) {
                 current.Remove(tick);
+            }
+        }
+
+        private void Invoke(List<Action> actions) {
+            foreach (Action action in actions) {
+                action.Invoke();
             }
         }
     }

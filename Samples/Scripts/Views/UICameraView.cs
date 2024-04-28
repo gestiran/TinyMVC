@@ -43,10 +43,14 @@ namespace TinyMVC.Samples.Views {
         #endif
         }
 
+    #if UNITY_EDITOR
+        
         [ContextMenu("Soft reset")]
         public void Reset() {
             thisTransform = transform;
             thisCamera = GetComponent<Camera>();
         }
+        
+    #endif
     }
 }

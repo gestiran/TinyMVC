@@ -1,4 +1,5 @@
-﻿using TinyMVC.Dependencies;
+﻿using TinyMVC.Boot;
+using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 using TinyMVC.Samples.Models;
@@ -13,7 +14,7 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Samples.Views {
     [RequireComponent(typeof(AudioListener))]
     [DisallowMultipleComponent]
-    public sealed class AudioListenerView : View, IInit, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
+    public sealed class AudioListenerView : View, IApplyResolving, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public bool isActive => thisAudioListener.enabled;
         public Vector3 position => thisTransform.position;
 
@@ -33,23 +34,19 @@ namespace TinyMVC.Samples.Views {
         ]
         public Transform thisTransform { get; private set; }
 
-        private UnloadPool _unload;
-        
         [Inject] private AudioListenerModel _model;
 
-        public void Init() => _unload = new UnloadPool();
-
         public void ApplyResolving() {
+            ProjectContext.current.TryGetGlobalUnload(out UnloadPool unload);
+            
             ChangePosition(_model.position.value);
             ChangeActiveState(_model.isActive.value);
             ChangeVelocityUpdateMode(_model.velocityUpdateMode.value);
 
-            _model.position.AddListener(ChangePosition, _unload);
-            _model.isActive.AddListener(ChangeActiveState, _unload);
-            _model.velocityUpdateMode.AddListener(ChangeVelocityUpdateMode, _unload);
+            _model.position.AddListener(ChangePosition, unload);
+            _model.isActive.AddListener(ChangeActiveState, unload);
+            _model.velocityUpdateMode.AddListener(ChangeVelocityUpdateMode, unload);
         }
-        
-        public void Unload() => _unload.Unload();
         
         private void ChangePosition(Vector3 newPosition) => thisTransform.position = newPosition;
         
@@ -57,10 +54,14 @@ namespace TinyMVC.Samples.Views {
         
         private void ChangeVelocityUpdateMode(AudioVelocityUpdateMode mode) => thisAudioListener.velocityUpdateMode = mode;
 
+    #if UNITY_EDITOR
+        
         [ContextMenu("Soft reset")]
         public void Reset() {
             thisAudioListener = GetComponent<AudioListener>();
             thisTransform = transform;
         }
+        
+    #endif
     }
 }

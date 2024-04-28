@@ -1,4 +1,5 @@
-﻿using TinyMVC.Dependencies;
+﻿using TinyMVC.Boot;
+using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 using TinyMVC.Samples.Models;
@@ -14,7 +15,7 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Samples.Views {
     [RequireComponent(typeof(EventSystem))]
     [DisallowMultipleComponent]
-    public sealed class EventSystemView : View, IInit, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
+    public sealed class EventSystemView : View, IApplyResolving, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public bool isActive => thisEventSystem.enabled;
 
         [field: SerializeField
@@ -24,23 +25,23 @@ namespace TinyMVC.Samples.Views {
         ]
         public EventSystem thisEventSystem { get; private set; }
 
-        private UnloadPool _unload;
-
-        public void Init() => _unload = new UnloadPool();
-
         [Inject] private EventSystemModel _model;
 
         public void ApplyResolving() {
+            ProjectContext.current.TryGetGlobalUnload(out UnloadPool unload);
+            
             ChangeActiveState(_model.isActive.value);
             
-            _model.isActive.AddListener(ChangeActiveState, _unload);
+            _model.isActive.AddListener(ChangeActiveState, unload);
         }
-
-        public void Unload() => _unload.Unload();
 
         private void ChangeActiveState(bool state) => thisEventSystem.enabled = state;
 
+    #if UNITY_EDITOR
+        
         [ContextMenu("Soft reset")]
         public void Reset() => thisEventSystem = GetComponent<EventSystem>();
+        
+    #endif
     }
 }
