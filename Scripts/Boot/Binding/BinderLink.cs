@@ -4,7 +4,7 @@ using TinyMVC.Dependencies;
 
 namespace TinyMVC.Boot.Binding {
     internal sealed class BinderLink : IBinder {
-        public Binder binder => _binder;
+        public Binder current => _binder;
         
         private readonly Binder _binder;
         private readonly Type[] _types;

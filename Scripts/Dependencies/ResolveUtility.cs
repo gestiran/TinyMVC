@@ -22,25 +22,40 @@ namespace TinyMVC.Dependencies {
             Resolve(resolving, container.dependencies, _injectType);
         }
         
-        internal static void Resolve(IResolving resolving, object owner, DependencyContainer container) {
+        internal static void ResolveWithoutApply(IResolving[] resolving, DependencyContainer container) {
             Resolve(resolving, container.dependencies, _injectType);
-            TryApply(resolving, owner);
+        }
+        
+        internal static void Resolve(IResolving resolving, DependencyContainer container) {
+            Resolve(resolving, container.dependencies, _injectType);
+            TryApply(resolving);
         }
 
-        internal static void Resolve(List<IResolving> resolving, object owner, DependencyContainer containers) {
+        internal static void Resolve(List<IResolving> resolving, DependencyContainer containers) {
             Resolve(resolving, containers.dependencies, _injectType);
-            TryApply(resolving, owner);
+            TryApply(resolving);
+        }
+        
+        internal static void Resolve(IResolving[] resolving, DependencyContainer containers) {
+            Resolve(resolving, containers.dependencies, _injectType);
+            TryApply(resolving);
         }
 
-        private static void TryApply(List<IResolving> resolving, object owner) {
+        private static void TryApply(List<IResolving> resolving) {
             for (int resolvingId = 0; resolvingId < resolving.Count; resolvingId++) {
-                TryApply(resolving[resolvingId], owner);
+                TryApply(resolving[resolvingId]);
             }
         }
         
-        private static void TryApply(IResolving resolving, object owner) {
+        private static void TryApply(IResolving[] resolving) {
+            for (int resolvingId = 0; resolvingId < resolving.Length; resolvingId++) {
+                TryApply(resolving[resolvingId]);
+            }
+        }
+        
+        private static void TryApply(IResolving resolving) {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ValidateFields(resolving, _injectType, owner);
+            ValidateFields(resolving, _injectType);
         #endif
             
             if (resolving is IApplyResolving applyResolving) {
@@ -50,6 +65,12 @@ namespace TinyMVC.Dependencies {
         
         private static void Resolve(List<IResolving> resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
             for (int resolvingId = 0; resolvingId < resolving.Count; resolvingId++) {
+                Resolve(resolving[resolvingId], dependencies, injectType);
+            }
+        }
+        
+        private static void Resolve(IResolving[] resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
+            for (int resolvingId = 0; resolvingId < resolving.Length; resolvingId++) {
                 Resolve(resolving[resolvingId], dependencies, injectType);
             }
         }
@@ -87,7 +108,7 @@ namespace TinyMVC.Dependencies {
 
     #if UNITY_EDITOR || DEVELOPMENT_BUILD
 
-        private static void ValidateFields(IResolving resolving, Type injectType, object owner) {
+        private static void ValidateFields(IResolving resolving, Type injectType) {
             FieldInfo[] fields = GetFields(resolving);
             
             for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
@@ -106,17 +127,16 @@ namespace TinyMVC.Dependencies {
                 }
                 
                 if (resolving is UnityEngine.Object context) {
-                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId], owner).Bold(), context);
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]).Bold(), context);
                 } else {
-                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId], owner).Bold());
+                    UnityEngine.Debug.LogError(Log(resolving, fields[fieldId]).Bold());
                 }
             }
         }
 
-        private static string Log(IResolving resolving, FieldInfo field, object owner) {
+        private static string Log(IResolving resolving, FieldInfo field) {
             string access = field.IsPrivate ? "private" : "protected";
-            string ownerName = owner == null ? "" : $" {owner.GetType().Name}";
-            return $"Resolve{ownerName} {DebugUtility.Link(resolving)} required [{nameof(InjectAttribute)}] {access} {LogField(field)} {field.Name}";
+            return $"Resolve {DebugUtility.Link(resolving)} required [{nameof(InjectAttribute)}] {access} {LogField(field)} {field.Name}";
         }
 
         private static string LogField(FieldInfo field) {

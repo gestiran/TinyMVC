@@ -1,132 +1,96 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using TinyMVC.Boot;
 using TinyMVC.Dependencies;
-using TinyMVC.Loop;
 
 namespace TinyMVC.Controllers {
     /// <summary> Project logic container </summary>
     /// <remarks>
-    /// First created on any <see cref="TinyMVC.Boot.SceneContext"/>.<see cref="TinyMVC.Boot.SceneContext.CreateControllers()"/>,
+    /// First created on any <see cref="TinyMVC.Boot.SceneContext"/>.<see cref="TinyMVC.Boot.SceneContext{T}.CreateControllers()"/>,
     /// сan create additional controllers and add them to the initialization
     /// </remarks>
     public abstract class Controller : IController {
-        /// <summary> Connect to initialization</summary>
-        private Connector _connector;
+        public ConnectState connectState { get; private set; }
 
-        /// <summary> Contains links to connect to initialization </summary>
-        internal sealed class Connector {
-            internal Action<IController> connect;
-            internal Action<IController, Action> connectWithoutDependencies;
-            internal Action<IController[]> connectArray;
-            internal Action<IController> disconnect;
-            internal Action<IController[]> disconnectArray;
+        internal int sceneId;
+
+        public enum ConnectState : byte {
+            Disconnected,
+            Connected
         }
         
-        internal void ApplyConnector(Connector connector) => _connector = connector;
-
         protected T ConnectController<T>() where T : class, IController, new() {
             T controller = new T();
-            TryApplyConnector(controller);
-            _connector.connect(controller);
-            return controller;
-        }
-        
-        protected T ConnectController<T>(UnloadPool pool) where T : class, IController, new() {
-            T controller = new T();
-            TryApplyConnector(controller);
-            _connector.connect(controller);
-            pool.Add(new UnloadAction(() => DisconnectController(controller)));
+            TryApply(controller, ConnectState.Connected);
+            SceneContext.GetContext(sceneId).Connect(controller, sceneId, ProjectContext.data.Resolve);
             return controller;
         }
         
         protected T ConnectController<T>([NotNull] T controller) where T : class, IController {
-            TryApplyConnector(controller);
-            _connector.connect(controller);
-            return controller;
-        }
-        
-        protected T ConnectController<T>([NotNull] T controller, UnloadPool pool) where T : class, IController {
-            TryApplyConnector(controller);
-            _connector.connect(controller);
-            pool.Add(new UnloadAction(() => DisconnectController(controller)));
+            TryApply(controller, ConnectState.Connected);
+            SceneContext.GetContext(sceneId).Connect(controller, sceneId, ProjectContext.data.Resolve);
             return controller;
         }
         
         protected void ConnectController([NotNull] params IController[] controllers) {
             for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
-                TryApplyConnector(controllers[controllerId]);
-            }
-            
-            _connector.connectArray(controllers);
-        }
-        
-        protected void ConnectController(UnloadPool pool, [NotNull] params IController[] controllers) {
-            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
-                TryApplyConnector(controllers[controllerId]);
-            }
-            
-            _connector.connectArray(controllers);
-
-            foreach (IController controller in controllers) {
-                pool.Add(new UnloadAction(() => DisconnectController(controller)));   
+                TryApply(controllers[controllerId], ConnectState.Connected);
+                SceneContext.GetContext(sceneId).Connect(controllers[controllerId], sceneId, ProjectContext.data.Resolve);
             }
         }
         
         protected T ConnectController<T>([NotNull] params IDependency[] dependencies) where T : class, IController, IResolving, new() {
-            T controller = new T();
-            TryApplyConnector(controller);
-            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, this, new DependencyContainer(dependencies)));
-            return controller;
-        }
-        
-        protected T ConnectController<T>(UnloadPool pool, [NotNull] IDependency dependency) where T : class, IController, IResolving, new() {
-            T controller = new T();
-            TryApplyConnector(controller);
-            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, this, new DependencyContainer(dependency)));
-            pool.Add(new UnloadAction(() => DisconnectController(controller)));
-            return controller;
-        }
-        
-        protected T ConnectController<T>(UnloadPool pool, [NotNull] params IDependency[] dependencies) where T : class, IController, IResolving, new() {
-            T controller = new T();
-            TryApplyConnector(controller);
-            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, this, new DependencyContainer(dependencies)));
-            pool.Add(new UnloadAction(() => DisconnectController(controller)));
-            return controller;
+            return ConnectController(new T(), dependencies);
         }
         
         protected T ConnectController<T>([NotNull] T controller, [NotNull] params IDependency[] dependencies) where T : class, IController, IResolving {
-            TryApplyConnector(controller);
-            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, this, new DependencyContainer(dependencies)));
-            return controller;
+            return ConnectController(controller, new DependencyContainer(dependencies));
         }
         
         protected T ConnectController<T>([NotNull] T controller, [NotNull] IDependency dependency) where T : class, IController, IResolving {
-            TryApplyConnector(controller);
-            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, this, new DependencyContainer(dependency)));
+            return ConnectController(controller, new DependencyContainer(dependency));
+        }
+        
+        protected T ConnectController<T>([NotNull] T controller, [NotNull] DependencyContainer container) where T : class, IController, IResolving {
+            TryApply(controller, ConnectState.Connected);
+            SceneContext.GetContext(sceneId).Connect(controller, sceneId, resolving => ProjectContext.data.Resolve(container, resolving));
             return controller;
         }
         
-        protected T ConnectController<T>([NotNull] T controller, UnloadPool pool, [NotNull] params IDependency[] dependencies) where T : class, IController, IResolving {
-            TryApplyConnector(controller);
-            _connector.connectWithoutDependencies(controller, () => ResolveUtility.Resolve(controller, this, new DependencyContainer(dependencies)));
-            pool.Add(new UnloadAction(() => DisconnectController(controller)));
-            return controller;
+        protected void DisconnectController() => DisconnectController(this);
+
+        protected void DisconnectController<T>([NotNull] T controller) where T : class, IController {
+            SceneContext.GetContext(sceneId).Disconnect(controller, sceneId);
+            TryApply(controller, ConnectState.Disconnected);
         }
-        
-        protected void DisconnectController() => _connector.disconnect(this);
 
-        protected void DisconnectController<T>([NotNull] T controller) where T : class, IController => _connector.disconnect(controller);
-        
-        protected void DisconnectController([NotNull] params IController[] controllers) => _connector.disconnectArray(controllers);
-
-        private bool TryApplyConnector<T>(T controller) where T : class, IController {
-            if (controller is not Controller root) {
-                return false;
+        protected void DisconnectController([NotNull] params IController[] controllers) {
+            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
+                SceneContext.GetContext(sceneId).Disconnect(controllers[controllerId], sceneId);
+                TryApply(controllers[controllerId], ConnectState.Disconnected);
             }
+        }
 
-            root.ApplyConnector(_connector);
-            return true;
+        public T ReconnectController<T>([NotNull] T controllers, [NotNull] IDependency dependency) where T : Controller, IResolving {
+            if (controllers.connectState == ConnectState.Connected) {
+                DisconnectController(controllers);
+            }
+            
+            return ConnectController(controllers, dependency);
+        }
+        
+        public T ReconnectController<T>([NotNull] T controller, [NotNull] params IDependency[] dependencies) where T : Controller, IResolving {
+            if (controller.connectState == ConnectState.Connected) {
+                DisconnectController(controller);
+            }
+            
+            return ConnectController(controller, dependencies);
+        }
+        
+        private void TryApply<T>(T controller, ConnectState state) where T : class, IController {
+            if (controller is Controller link) {
+                link.sceneId = sceneId;
+                link.connectState = state;
+            }
         }
     }
 }

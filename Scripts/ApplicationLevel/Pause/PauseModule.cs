@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.ApplicationLevel.Pause {
-    public struct PauseModule : IApplicationModule {
+    public sealed class PauseModule : IApplicationModule {
         public bool isEnable { get; private set; }
         
         public event Action<bool> onApplicationPause;

@@ -7,8 +7,8 @@
 
     namespace TinyMVC {
         internal class ProjectContextWindow : OdinEditorWindow {
-            [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowIf("@_context != null && EditorApplication.isPlaying")]
-            private static ProjectContext _context;
+            [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowIf("@_data != null && EditorApplication.isPlaying")]
+            private static ProjectData _data;
 
             [ShowInInspector, ReadOnly, HideLabel, HideInPlayMode]
             private string _label = "Active only in PlayMode";
@@ -28,11 +28,11 @@
                 
                 await Task.Yield();
 
-                _context = ProjectContext.current;
+                _data = ProjectContext.data;
             }
 
-            [Button("Reset"), HideInEditorMode, ShowIf("@_context == null && EditorApplication.isPlaying")]
-            private void Reset() => _context = ProjectContext.current;
+            [Button("Reset"), HideInEditorMode, ShowIf("@_data == null && EditorApplication.isPlaying")]
+            private void Reset() => _data = ProjectContext.data;
         }
     }
 

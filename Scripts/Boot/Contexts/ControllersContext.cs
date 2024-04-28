@@ -35,10 +35,10 @@ namespace TinyMVC.Boot.Contexts {
 
         /// <summary> Init initialization stage </summary>
         /// <remarks> Check and run <see cref="TinyMVC.Loop.IInit"/> interface on <see cref="_mainControllers"/> </remarks>
-        internal async Task InitAsync(Controller.Connector connector) {
+        internal async Task InitAsync(int sceneId) {
             for (int controllerId = 0; controllerId < _mainControllers.Count; controllerId++) {
                 if (_mainControllers[controllerId] is Controller controller) {
-                    controller.ApplyConnector(connector);
+                    controller.sceneId = sceneId;
                 }
             }
 
@@ -104,7 +104,7 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
 
-        internal void InitSubController(IController subController, Action<IResolving> resolve, Action<ILoop> addLoop) {
+        internal void Connect(IController subController, int sceneId, Action<IResolving> resolve) {
             if (subController is IInit init) {
                 init.Init();
             }
@@ -118,53 +118,15 @@ namespace TinyMVC.Boot.Contexts {
             }
 
             if (subController is ILoop loop) {
-                addLoop(loop);
+                ProjectContext.current.ConnectLoop(sceneId, loop);
             }
 
             _subControllers.Add(subController);
         }
-
-        internal void InitSubController(IController[] subControllers, Action<List<IResolving>> resolve, Action<ILoop> addLoop) {
-            for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is IInitAsync initAsync) {
-                    initAsync.Init();
-                } else if (subControllers[controllerId] is IInit init) {
-                    init.Init();
-                }
-            }
-
-            List<IResolving> all = new List<IResolving>();
-
-            for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is IResolving resolving) {
-                    all.Add(resolving);
-                }
-            }
-
-            if (all.Count > 0) {
-                resolve(all);
-            }
-
-            for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is IBeginPlayAsync beginPlayAsync) {
-                    beginPlayAsync.BeginPlay();
-                } else if (subControllers[controllerId] is IBeginPlay beginPlay) {
-                    beginPlay.BeginPlay();
-                }
-            }
-
-            for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is ILoop loop) {
-                    addLoop(loop);
-                }
-            }
-
-            _subControllers.AddRange(subControllers);
-        }
-
-        internal void DeInitSubController(IController subController, Action<ILoop> removeLoop) {
+        
+        internal void Disconnect(IController subController, int sceneId) {
             if (subController is ILoop loop) {
-                removeLoop(loop);
+                ProjectContext.current.DisconnectLoop(sceneId, loop);
             }
 
             if (subController is IUnload unload) {
@@ -172,24 +134,6 @@ namespace TinyMVC.Boot.Contexts {
             }
 
             _subControllers.Remove(subController);
-        }
-
-        internal void DeInitSubController(IController[] subControllers, Action<ILoop> removeLoop) {
-            for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is ILoop loop) {
-                    removeLoop(loop);
-                }
-            }
-
-            for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                if (subControllers[controllerId] is IUnload unload) {
-                    unload.Unload();
-                }
-            }
-
-            for (int controllerId = 0; controllerId < subControllers.Length; controllerId++) {
-                _subControllers.Remove(subControllers[controllerId]);
-            }
         }
 
         /// <summary> Unload initialization stage </summary>

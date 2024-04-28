@@ -35,7 +35,7 @@ namespace TinyMVC.Boot.Contexts {
             List<IResolving> resolving = new List<IResolving>(_binders.Count);
 
             for (int binderId = 0; binderId < _binders.Count; binderId++) {
-                if (_binders[binderId].binder is IResolving bindResolving) {
+                if (_binders[binderId].current is IResolving bindResolving) {
                     resolving.Add(bindResolving);
                 }
             }

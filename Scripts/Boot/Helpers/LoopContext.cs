@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using TinyMVC.Loop;
+using System;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using System;
 using TinyMVC.Debugging;
 using TinyMVC.Debugging.Exceptions;
 #endif

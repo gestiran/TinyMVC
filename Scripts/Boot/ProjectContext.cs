@@ -1,17 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Helpers;
-using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
-#if ODIN_INSPECTOR && UNITY_EDITOR
-using Sirenix.OdinInspector;
-#endif
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using TinyMVC.Debugging;
@@ -20,9 +15,6 @@ using Unity.Profiling;
 
 namespace TinyMVC.Boot {
     /// <summary> Global initialization context, auto created on any scene at start game </summary>
-#if ODIN_INSPECTOR && UNITY_EDITOR
-    [ShowInInspector, InlineProperty, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-#endif
     public sealed class ProjectContext {
         /// <summary> Boot contexts list </summary>
         /// <remarks> Scene can contain one or more <see cref="IContext"/> initializers, always, they will be invoked on <see cref="CreateContext"/> when scene is loaded </remarks>
@@ -32,12 +24,8 @@ namespace TinyMVC.Boot {
         /// <remarks> Run <see cref="Tick"/>, <see cref="FixedTick"/>, <see cref="LateTick"/> all scenes </remarks>
         private LoopContext _loopContext;
 
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false)]
-    #endif
-        private List<DependencyContext> _dependencies;
-
+        public static BindAPI binding { get; private set; }
+        public static ProjectData data { get; private set; }
         public static ProjectContext current { get; private set; }
 
         private sealed class BootstrapContext : ContextLink<IContext[]> {
@@ -47,11 +35,7 @@ namespace TinyMVC.Boot {
                 unload = new UnloadPool();
             }
         }
-
-        private sealed class DependencyContext : ContextLink<DependencyContainer> {
-            public DependencyContext(int sceneId, DependencyContainer context) : base(sceneId, context) { }
-        }
-
+        
         public async void LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single) {
             if (mode == LoadSceneMode.Single) {
                 UnloadScene(SceneManager.GetActiveScene());
@@ -89,6 +73,8 @@ namespace TinyMVC.Boot {
         /// <summary> First project context creating </summary>
         [RuntimeInitializeOnLoadMethod]
         internal static void CreateContext() {
+            binding = new BindAPI();
+            data = new ProjectData();
             current = new ProjectContext();
 
             current.Init();
@@ -99,7 +85,6 @@ namespace TinyMVC.Boot {
 
         private void Init() {
             _contexts = new List<BootstrapContext>();
-            _dependencies = new List<DependencyContext>();
             _loopContext = new LoopContext();
 
             _loopContext.Init();
@@ -115,7 +100,6 @@ namespace TinyMVC.Boot {
 
         private void Unload() {
             _contexts = null;
-            _dependencies = null;
             _loopContext = null;
             
             SceneManager.sceneLoaded -= InitScene;
@@ -147,39 +131,11 @@ namespace TinyMVC.Boot {
         #endif
         }
 
-        internal void AddContainer(int sceneId, DependencyContainer container) {
-            if (_dependencies.TryGetContext(sceneId, out DependencyContainer _, out int _)) {
-                return;
-            }
-
-            _dependencies.Add(new DependencyContext(sceneId, container));
-        }
-
         internal void AddFixedTicks(int sceneId, List<IFixedTick> ticks) => _loopContext.AddFixedTicks(sceneId, ticks);
 
         internal void AddTicks(int sceneId, List<ITick> ticks) => _loopContext.AddTicks(sceneId, ticks);
 
         internal void AddLateTicks(int sceneId, List<ILateTick> ticks) => _loopContext.AddLateTicks(sceneId, ticks);
-
-        internal void Resolve(IResolving resolving) => ResolveUtility.Resolve(resolving, this, CreateContainer());
-
-        internal void Resolve(List<IResolving> resolving) => ResolveUtility.Resolve(resolving, this, CreateContainer());
-
-        internal void ResolveWithoutApply(IResolving resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer());
-        }
-        
-        internal void ResolveWithoutApply(IResolving resolving, List<IDependency> dependencies) {
-            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));
-        }
-
-        internal void ResolveWithoutApply(List<IResolving> resolving, List<IDependency> dependencies) {
-            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer(dependencies));
-        }
-        
-        internal void ResolveWithoutApply(List<IResolving> resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, CreateContainer());
-        }
 
         internal void ConnectLoop(int sceneId, ILoop loop) {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -219,28 +175,6 @@ namespace TinyMVC.Boot {
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             initScene.End();
         #endif
-        }
-
-        private DependencyContainer CreateContainer(List<IDependency> dependencies) {
-            DependencyContainer container = CreateContainer();
-
-            foreach (IDependency dependency in dependencies) {
-                container.dependencies.Add(dependency.GetType(), dependency);
-            }
-
-            return container;
-        }
-
-        private DependencyContainer CreateContainer() {
-            DependencyContainer container = new DependencyContainer(64);
-
-            foreach (DependencyContext context in _dependencies) {
-                foreach (KeyValuePair<Type, IDependency> contextDependencies in context.context.dependencies) {
-                    container.dependencies.Add(contextDependencies.Key, contextDependencies.Value);
-                }
-            }
-
-            return container;
         }
 
         private async void InitScene(Scene scene, LoadSceneMode mode) {
@@ -341,9 +275,7 @@ namespace TinyMVC.Boot {
             unloadScene.End();
         #endif
 
-            if (_dependencies.TryGetContext(sceneId, out DependencyContainer _, out int modelsId)) {
-                _dependencies.RemoveAt(modelsId);
-            }
+            data.Remove(sceneId);
 
             _contexts[contextId].unload.Unload();
             

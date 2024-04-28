@@ -9,7 +9,7 @@ namespace TinyMVC.Boot.Binding {
         /// <returns> Dependency object result created on <see cref="Binder{T}.Bind(T)"/> function </returns>
         public abstract IDependency GetDependency();
 
-        public Binder binder => this;
+        public Binder current => this;
 
         internal abstract Type GetBindType();
 
@@ -17,23 +17,23 @@ namespace TinyMVC.Boot.Binding {
         
         protected T Add<T>([NotNull] IDependency dependency) where T : Binder, new() {
             T binder = new T();
-            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependency));
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
             return binder;
         }
         
         protected T Add<T>([NotNull] params IDependency[] dependencies) where T : Binder, new() {
             T binder = new T();
-            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependencies));
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependencies));
             return binder;
         }
         
         protected T Add<T>(T binder, [NotNull] IDependency dependency) where T : Binder {
-            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependency));
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependency));
             return binder;
         }
         
         protected T Add<T>(T binder, [NotNull] params IDependency[] dependencies) where T : Binder {
-            ResolveUtility.Resolve(binder, this, new DependencyContainer(dependencies));
+            ResolveUtility.Resolve(binder, new DependencyContainer(dependencies));
             return binder;
         }
     }
