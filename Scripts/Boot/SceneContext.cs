@@ -32,7 +32,7 @@ namespace TinyMVC.Boot {
         private ModelsContext _models;
         private ParametersContext _parameters;
 
-        void IContext.Create() {
+        async Task IContext.Create() {
             Add(this);
 
             _controllers = CreateControllers();
@@ -41,7 +41,7 @@ namespace TinyMVC.Boot {
 
             views.Instantiate();
 
-            _controllers.CreateControllers();
+            await _controllers.CreateControllers();
             views.CreateViews();
 
             if (this is IGlobalContext) {

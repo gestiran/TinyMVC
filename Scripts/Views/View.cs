@@ -53,6 +53,15 @@ namespace TinyMVC.Views {
             }
         }
         
+        public void ConnectView(View[] views, params IDependency[] dependencies) {
+            DependencyContainer container = new DependencyContainer(dependencies);
+            
+            for (int viewId = 0; viewId < views.Length; viewId++) {
+                TryApply(views[viewId], ConnectState.Connected);
+                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, resolving => ProjectContext.data.Resolve(container, resolving));
+            }
+        }
+        
         public T ConnectView<T>([NotNull] T view, [NotNull] IDependency dependency) where T : Component, IView, IResolving {
             return ConnectView(view, new DependencyContainer(dependency));
         }

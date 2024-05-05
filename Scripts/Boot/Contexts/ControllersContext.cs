@@ -31,7 +31,7 @@ namespace TinyMVC.Boot.Contexts {
 
         /// <summary> Create initialization stage </summary>
         /// <remarks> First create <see cref="_mainControllers"/> and fill pool </remarks>
-        internal void CreateControllers() => Create();
+        internal async Task CreateControllers() => await Create();
 
         /// <summary> Init initialization stage </summary>
         /// <remarks> Check and run <see cref="TinyMVC.Loop.IInit"/> interface on <see cref="_mainControllers"/> </remarks>
@@ -148,6 +148,6 @@ namespace TinyMVC.Boot.Contexts {
         protected void Add<T>(T controller) where T : IController => _mainControllers.Add(controller);
 
         /// <summary> Create controllers and connect initialization </summary>
-        protected abstract void Create();
+        protected abstract Task Create();
     }
 }

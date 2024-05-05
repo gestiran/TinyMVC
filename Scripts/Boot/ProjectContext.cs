@@ -204,7 +204,7 @@ namespace TinyMVC.Boot {
                 contextCreate.Begin();
             #endif
 
-                contexts[contextId].Create();
+                await contexts[contextId].Create();
 
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 contextCreate.End();
