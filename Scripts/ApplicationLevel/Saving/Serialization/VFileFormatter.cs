@@ -1,7 +1,7 @@
-﻿using Project.ApplicationLevel.Saving.VirtualFiles;
+﻿using TinyMVC.ApplicationLevel.Saving.VirtualFiles;
 using Sirenix.Serialization;
 
-namespace Project.ApplicationLevel.Saving.Serialization {
+namespace TinyMVC.ApplicationLevel.Saving.Serialization {
     public sealed class VFileFormatter : BaseFormatter<VFile> {
         private static readonly VFileSerializer _serializer = new VFileSerializer();
         

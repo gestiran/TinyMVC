@@ -1,33 +1,43 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Project.ApplicationLevel.Saving.Extensions;
-using Project.ApplicationLevel.Saving.VirtualFiles;
+using TinyMVC.ApplicationLevel.Saving.Extensions;
+using TinyMVC.ApplicationLevel.Saving.VirtualFiles;
 using Sirenix.Serialization;
-using TinyMVC.ApplicationLevel;
 using UnityEngine;
 
 using SirenixSerializationUtility = Sirenix.Serialization.SerializationUtility;
 
-namespace Project.ApplicationLevel.Saving {
+namespace TinyMVC.ApplicationLevel.Saving {
     public sealed class SaveModule : IApplicationModule {
-        private VDirectory _main;
+        private readonly VDirectory _main;
         private readonly string _rootPath;
+        private readonly string _tempPath;
 
         private const string _ROOT = "UserData";
         private const string _VERSION = "V_02"; // TODO : Temp version value
-        private const string _EXTENSION = "sbf";
 
         public SaveModule() {
-            _rootPath = GetRootPath();
-
+            _rootPath = GetPath("sbf");
+            _tempPath = GetPath("sbt");
+            
             if (File.Exists(_rootPath)) {
-                _main = LoadRoot();
+                try {
+                    _main = LoadRoot(_rootPath);
+                } catch (Exception) {
+                    try {
+                        if (File.Exists(_tempPath)) {
+                            _main = LoadRoot(_tempPath);
+                        }
+                    } catch (Exception exception) {
+                        Debug.LogException(exception);
+                    }
+                }
             } else {
                 _main = new VDirectory(_ROOT);
             }
             
-            _main.InitializeCache();
             SaveProcess();
         }
 
@@ -129,22 +139,24 @@ namespace Project.ApplicationLevel.Saving {
         
         private async Task SaveRoot() {
             byte[] bytes = SirenixSerializationUtility.SerializeValue(_main, DataFormat.Binary);
-            await File.WriteAllBytesAsync(_rootPath, bytes);
+            await Task.Run(() => File.WriteAllBytesAsync(_tempPath, bytes));
+            File.Delete(_rootPath);
+            File.Move(_tempPath, _rootPath);
         }
 
-        private VDirectory LoadRoot() {
-            using FileStream fileStream = new FileStream(_rootPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
+        private VDirectory LoadRoot(string path) {
+            using FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
             return SerializationUtility.DeserializeValue<VDirectory>(fileStream, DataFormat.Binary);
         }
         
-        private string GetRootPath() {
+        private string GetPath(string extension) {
             string path = Path.Combine(Application.persistentDataPath, _ROOT);
             
             if (Directory.Exists(path) == false) {
                 Directory.CreateDirectory(path);
             }
 
-            return Path.Combine(path, $"{_VERSION}.{_EXTENSION}");
+            return Path.Combine(path, $"{_VERSION}.{extension}");
         }
     }
 }

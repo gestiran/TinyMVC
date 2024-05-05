@@ -1,49 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
-using Project.ApplicationLevel.Saving.VirtualFiles;
+using TinyMVC.ApplicationLevel.Saving.VirtualFiles;
 
-namespace Project.ApplicationLevel.Saving.Extensions {
+namespace TinyMVC.ApplicationLevel.Saving.Extensions {
     public static class VDirectoryExtension {
-        public static void InitializeCache(this VDirectory directory) {
-            directory.directoriesCache = ConvertToCache(directory.directories);
-            directory.filesCache = ConvertToCache(directory.files);
-        }
-
         public static VDirectory AddDirectory(this VDirectory directory, string name) {
             VDirectory result = new VDirectory(name);
-            result.InitializeCache();
-
-            directory.directories.Add(result);
-            directory.directoriesCache.Add(name, result);
+            
+            directory.directories.Add(name, result);
 
             return result;
         }
 
         public static VFile WriteOrCreateFile(this VDirectory directory, string name, byte[] data) {
-            if (directory.filesCache.TryGetValue(name, out VFile file)) {
+            if (directory.files.TryGetValue(name, out VFile file)) {
                 file.data = data;
                 return file;
             }
 
             VFile result = new VFile(name, data);
 
-            directory.files.Add(result);
-            directory.filesCache.Add(name, result);
+            directory.files.Add(name, result);
                 
             return result;
         }
 
-        public static byte[] GetFile(this VDirectory directory, string name) => directory.filesCache[name].data;
+        public static byte[] GetFile(this VDirectory directory, string name) => directory.files[name].data;
         
         public static bool HasDirectory(this VDirectory directory, params string[] group) => directory.HasDirectory(out _, group);
 
-        public static bool HasFile(this VDirectory directory, string name) => directory.filesCache.ContainsKey(name); 
+        public static bool HasFile(this VDirectory directory, string name) => directory.files.ContainsKey(name); 
         
         public static bool HasDirectory(this VDirectory directory, out VDirectory root, params string[] group) {
             root = directory;
             
             for (int groupId = 0; groupId < group.Length; groupId++) {
-                if (root.directoriesCache.TryGetValue(group[groupId], out VDirectory other)) {
+                if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
                     root = other;
                 } else {
                     return false;
@@ -60,7 +51,7 @@ namespace Project.ApplicationLevel.Saving.Extensions {
             for (int groupId = 0; groupId < group.Length; groupId++) {
                 directory = root;
                 
-                if (root.directoriesCache.TryGetValue(group[groupId], out VDirectory other)) {
+                if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
                     root = other;
                 } else {
                     return;
@@ -69,13 +60,11 @@ namespace Project.ApplicationLevel.Saving.Extensions {
                 directoryName = group[groupId];
             }
             
-            directory.directoriesCache.Remove(directoryName);
-            directory.directories.RemoveAt(directory.directories.FindIndex(other => other.name.Equals(directoryName)));
+            directory.directories.Remove(directoryName);
         }
         
         public static void DeleteFile(this VDirectory directory, string name) {
-            directory.filesCache.Remove(name);
-            directory.files.RemoveAt(directory.files.FindIndex(other => other.name.Equals(name)));
+            directory.files.Remove(name);
         }
         
         public static string[] GetAllDirectories(this VDirectory directory, params string[] group) {
@@ -84,9 +73,10 @@ namespace Project.ApplicationLevel.Saving.Extensions {
             }
 
             string[] result = new string[root.directories.Count];
+            int i = 0;
             
-            for (int i = 0; i < root.directories.Count; i++) {
-                result[i] = root.directories[i].name;
+            foreach (VDirectory other in root.directories.Values) {
+                result[i++] = other.name;
             }
             
             return result;
@@ -98,9 +88,10 @@ namespace Project.ApplicationLevel.Saving.Extensions {
             }
 
             string[] result = new string[root.files.Count];
+            int i = 0;
             
-            for (int i = 0; i < root.files.Count; i++) {
-                result[i] = root.files[i].name;
+            foreach (VFile other in root.files.Values) {
+                result[i++] = other.name;
             }
             
             return result;
@@ -110,7 +101,7 @@ namespace Project.ApplicationLevel.Saving.Extensions {
             VDirectory root = directory;
             
             for (int groupId = 0; groupId < group.Length; groupId++) {
-                root = root.directoriesCache[group[groupId]];
+                root = root.directories[group[groupId]];
             }
 
             return root;
@@ -120,7 +111,7 @@ namespace Project.ApplicationLevel.Saving.Extensions {
             VDirectory root = directory;
             
             for (int groupId = 0; groupId < group.Length; groupId++) {
-                if (root.directoriesCache.TryGetValue(group[groupId], out VDirectory other)) {
+                if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
                     root = other;
                 } else {
                     root = root.AddDirectory(group[groupId]);
@@ -128,29 +119,6 @@ namespace Project.ApplicationLevel.Saving.Extensions {
             }
 
             return root;
-        }
-
-        private static Dictionary<string, VDirectory> ConvertToCache(List<VDirectory> data) {
-            Dictionary<string, VDirectory> cache = new Dictionary<string, VDirectory>(data.Count);
-
-            for (int dataId = 0; dataId < data.Count; dataId++) {
-                VDirectory directory = data[dataId];
-                cache.Add(directory.name, directory);
-                directory.InitializeCache();
-            }
-
-            return cache;
-        }
-
-        private static Dictionary<string, VFile> ConvertToCache(List<VFile> data) {
-            Dictionary<string, VFile> cache = new Dictionary<string, VFile>(data.Count);
-
-            for (int dataId = 0; dataId < data.Count; dataId++) {
-                VFile file = data[dataId];
-                cache.Add(file.name, file);
-            }
-
-            return cache;
         }
     }
 }

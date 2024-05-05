@@ -1,22 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
 
-namespace Project.ApplicationLevel.Saving.VirtualFiles {
-    [Serializable]
+namespace TinyMVC.ApplicationLevel.Saving.VirtualFiles {
     public sealed class VDirectory {
-        public string name;
-            
-        [SerializeField] internal List<VDirectory> directories;
-        [SerializeField] internal List<VFile> files;
-
-        [NonSerialized] internal Dictionary<string, VDirectory> directoriesCache;
-        [NonSerialized] internal Dictionary<string, VFile> filesCache;
+        public readonly string name;
+        public readonly Dictionary<string, VDirectory> directories;
+        public readonly Dictionary<string, VFile> files;
         
         public VDirectory(string name) {
             this.name = name;
-            directories = new List<VDirectory>();
-            files = new List<VFile>();
+            directories = new Dictionary<string, VDirectory>();
+            files = new Dictionary<string, VFile>();
+        }
+        
+        public VDirectory(string name, VDirectory[] directories, VFile[] files) {
+            this.name = name;
+            this.directories = new Dictionary<string, VDirectory>(directories.Length);
+            
+            for (int i = 0; i < directories.Length; i++) {
+                VDirectory directory = directories[i];
+                this.directories.Add(directory.name, directory);
+            }
+            
+            this.files = new Dictionary<string, VFile>(files.Length);
+            
+            for (int i = 0; i < files.Length; i++) {
+                VFile file = files[i];
+                this.files.Add(file.name, file);
+            }
         }
     }
 }

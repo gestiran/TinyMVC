@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
-using Project.ApplicationLevel.Saving.VirtualFiles;
+using TinyMVC.ApplicationLevel.Saving.VirtualFiles;
 using Sirenix.Serialization;
 
-namespace Project.ApplicationLevel.Saving.Serialization {
+namespace TinyMVC.ApplicationLevel.Saving.Serialization {
     public sealed class VFileSerializer : Serializer<VFile> {
         public override VFile ReadValue(IDataReader reader) {
             reader.ReadPrimitiveArray(out byte[] data);
