@@ -3,7 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
 using TinyMVC.ReactiveFields.Extensions;
+using TinyMVC.Utilities.Async;
+using UnityEngine;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
@@ -34,13 +37,16 @@ namespace TinyMVC.ReactiveFields {
         private List<T> _value;
         
         private int _currentId;
+        private bool _lock;
         
-    #if UNITY_EDITOR
+    #if PERFORMANCE_DEBUG
         private uint _frameAddId;
         private uint _frameRemoveId;
         private uint _frameClearId;
     #endif
 
+        private const int _ASYNC_ANR_MS = 64;
+        
         public ObservedList() : this(new List<T>()) { }
 
         public ObservedList(T[] value) : this(value.ToList()) { }
@@ -58,7 +64,7 @@ namespace TinyMVC.ReactiveFields {
             set {
                 _onRemove.Invoke(listener => listener.Invoke(_value[index]));
             
-            #if UNITY_EDITOR
+            #if PERFORMANCE_DEBUG
                 _frameRemoveId = UpdateFrame(_frameRemoveId, nameof(Remove));
             #endif
                 
@@ -66,7 +72,7 @@ namespace TinyMVC.ReactiveFields {
 
                 _onAdd.Invoke(listener => listener.Invoke(value));
                 
-            #if UNITY_EDITOR
+            #if PERFORMANCE_DEBUG
                 _frameAddId = UpdateFrame(_frameAddId, nameof(Add));
             #endif
             }
@@ -76,7 +82,7 @@ namespace TinyMVC.ReactiveFields {
             _value.AddRange(values);
             _onAdd.Invoke(listener => listener.Invoke(values));
             
-        #if UNITY_EDITOR
+        #if PERFORMANCE_DEBUG
             _frameAddId = UpdateFrame(_frameAddId, nameof(Add));
         #endif
         }
@@ -88,7 +94,93 @@ namespace TinyMVC.ReactiveFields {
             _value.Add(value);
             _onAdd.Invoke(listener => listener.Invoke(value));
             
-        #if UNITY_EDITOR
+        #if PERFORMANCE_DEBUG
+            _frameAddId = UpdateFrame(_frameAddId, nameof(Add));
+        #endif
+        }
+
+        public Task AddAsync([NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
+        
+        public Task AddAsync(ICancellation cancellation, [NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, cancellation, values);
+
+        public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
+            if (_lock) {
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
+                Debug.LogError("ObservedList is locked!");
+            #endif
+                return;
+            }
+
+            _lock = true;
+            _value.AddRange(values);
+            DateTime now = DateTime.Now;
+
+            for (int i = _onAdd.Count - 1; i >= 0; i--) {
+                _onAdd[i].Invoke(values);
+
+                if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
+                    if (cancellation.isCancel) {
+                        return;
+                    }
+                    
+                    continue;
+                }
+
+                await Task.Yield();
+
+                if (cancellation.isCancel) {
+                    return;
+                }
+                
+                now = DateTime.Now;
+            }
+
+            _lock = false;
+
+        #if PERFORMANCE_DEBUG
+            _frameAddId = UpdateFrame(_frameAddId, nameof(Add));
+        #endif
+        }
+
+        public  Task AddAsync([NotNull] T value) => AddAsync(_ASYNC_ANR_MS, new AsyncCancellation(), value);
+        
+        public  Task AddAsync(ICancellation cancellation, [NotNull] T value) => AddAsync(_ASYNC_ANR_MS, cancellation, value);
+
+        public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] T value) {
+            if (_lock) {
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
+                Debug.LogError("ObservedList is locked!");
+            #endif
+                return;
+            }
+
+            _lock = true;
+            _value.Add(value);
+            DateTime now = DateTime.Now;
+
+            for (int i = _onAdd.Count - 1; i >= 0; i--) {
+                _onAdd[i].Invoke(value);
+
+                if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
+                    if (cancellation.isCancel) {
+                        return;
+                    }
+                    
+                    continue;
+                }
+
+                await Task.Yield();
+
+                if (cancellation.isCancel) {
+                    return;
+                }
+                
+                now = DateTime.Now;
+            }
+
+            _lock = false;
+
+        #if PERFORMANCE_DEBUG
             _frameAddId = UpdateFrame(_frameAddId, nameof(Add));
         #endif
         }
@@ -100,7 +192,7 @@ namespace TinyMVC.ReactiveFields {
             
             _onRemove.Invoke(listener => listener.Invoke(values));
             
-        #if UNITY_EDITOR
+        #if PERFORMANCE_DEBUG
             _frameRemoveId = UpdateFrame(_frameRemoveId, nameof(Remove));
         #endif
         }
@@ -112,7 +204,97 @@ namespace TinyMVC.ReactiveFields {
             _value.Remove(value);
             _onRemove.Invoke(listener => listener.Invoke(value));
             
-        #if UNITY_EDITOR
+        #if PERFORMANCE_DEBUG
+            _frameRemoveId = UpdateFrame(_frameRemoveId, nameof(Remove));
+        #endif
+        }
+        
+        public Task RemoveAsync([NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
+        
+        public Task RemoveAsync(ICancellation cancellation, [NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, cancellation, values);
+        
+        public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
+            if (_lock) {
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
+                Debug.LogError("ObservedList is locked!");
+            #endif
+                return;
+            }
+
+            _lock = true;
+
+            for (int i = values.Length - 1; i >= 0; i--) {
+                _value.Remove(values[i]);
+            }
+
+            DateTime now = DateTime.Now;
+
+            for (int i = _onRemove.Count - 1; i >= 0; i--) {
+                _onRemove[i].Invoke(values);
+
+                if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
+                    if (cancellation.isCancel) {
+                        return;
+                    }
+                    
+                    continue;
+                }
+
+                await Task.Yield();
+                
+                if (cancellation.isCancel) {
+                    return;
+                }
+                
+                now = DateTime.Now;
+            }
+
+            _lock = false;
+
+        #if PERFORMANCE_DEBUG
+            _frameRemoveId = UpdateFrame(_frameRemoveId, nameof(Remove));
+        #endif
+        }
+        
+        public  Task RemoveAsync([NotNull] T value) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), value);
+        
+        public  Task RemoveAsync(ICancellation cancellation, [NotNull] T value) => RemoveAsync(_ASYNC_ANR_MS, cancellation, value);
+
+        public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] T value) {
+            if (_lock) {
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
+                Debug.LogError("ObservedList is locked!");
+            #endif
+                return;
+            }
+
+            _lock = true;
+            _value.Remove(value);
+            DateTime now = DateTime.Now;
+
+            for (int i = _onRemove.Count - 1; i >= 0; i--) {
+                _onRemove[i].Invoke(value);
+
+                if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
+                    if (cancellation.isCancel) {
+                        return;
+                    }
+                    
+                    continue;
+                }
+
+                await Task.Yield();
+                
+                if (cancellation.isCancel) {
+                    return;
+                }
+                
+                now = DateTime.Now;
+            }
+
+            _lock = false;
+
+        #if PERFORMANCE_DEBUG
             _frameRemoveId = UpdateFrame(_frameRemoveId, nameof(Remove));
         #endif
         }
@@ -124,7 +306,7 @@ namespace TinyMVC.ReactiveFields {
             _value.Clear();
             _onClear.Invoke(listener => listener.Invoke());
             
-        #if UNITY_EDITOR
+        #if PERFORMANCE_DEBUG
             _frameClearId = UpdateFrame(_frameClearId, nameof(Clear));
         #endif
         }
@@ -138,7 +320,7 @@ namespace TinyMVC.ReactiveFields {
             _value.RemoveAt(id);
             _onRemove.Invoke(listener => listener.Invoke(element));
             
-        #if UNITY_EDITOR
+        #if PERFORMANCE_DEBUG
             _frameRemoveId = UpdateFrame(_frameRemoveId, nameof(Remove));
         #endif
         }
@@ -166,7 +348,7 @@ namespace TinyMVC.ReactiveFields {
             _onClear = null;
         }
         
-    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+    #if PERFORMANCE_DEBUG
 
         private uint UpdateFrame(uint frame, string action) {
             if (frame == ObservedUtility.frameId) {
