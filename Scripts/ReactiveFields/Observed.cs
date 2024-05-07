@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
+using TinyMVC.Utilities;
 
 #if ODIN_SERIALIZATION
 using Sirenix.Serialization;
@@ -19,7 +20,7 @@ namespace TinyMVC.ReactiveFields {
     [Serializable]
     public sealed class Observed<T> : IUnload {
         public T value => _value;
-        public bool isDirty => _frameId == ObservedUtility.frameId;
+        public bool isDirty => _frameId == TimelineUtility.frameId;
 
         internal List<Listener<T>> listeners;
 
@@ -44,41 +45,38 @@ namespace TinyMVC.ReactiveFields {
         #if PERFORMANCE_DEBUG
             if (_frameId == ObservedUtility.frameId) {
                 Type type = typeof(T);
-                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!"); // TODO : Debug
+                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!");
             }
         #endif
-            _frameId = ObservedUtility.frameId;
+            _frameId = TimelineUtility.frameId;
         }
         
         public void Set([NotNull] T newValue) {
-            Change(newValue);
+            _value = newValue;
+            listeners.Invoke(listener => listener.Invoke(newValue));
 
         #if PERFORMANCE_DEBUG
             if (_frameId == ObservedUtility.frameId) {
                 Type type = typeof(T);
-                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!"); // TODO : Debug
+                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!");
             }
         #endif
-            _frameId = ObservedUtility.frameId;
+            _frameId = TimelineUtility.frameId;
         }
 
         public void SetNull() {
-            Change(default);
+            _value = default;
+            listeners.Invoke(listener => listener.Invoke(_value));
 
         #if PERFORMANCE_DEBUG
             if (_frameId == ObservedUtility.frameId) {
                 Type type = typeof(T);
-                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!"); // TODO : Debug
+                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!");
             }
         #endif
-            _frameId = ObservedUtility.frameId;
+            _frameId = TimelineUtility.frameId;
         }
         
-        public void Change(T newValue) {
-            _value = newValue;
-            listeners.Invoke(listener => listener.Invoke(newValue));
-        }
-
         public void Unload() => listeners.Clear();
 
         public static implicit operator T(Observed<T> value) => value._value;

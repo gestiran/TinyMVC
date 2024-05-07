@@ -152,7 +152,7 @@ namespace TinyMVC.ReactiveFields.Extensions {
                 return false;
             }
             
-            observed.Change(value);
+            observed.Set(value);
             return true;
         }
     }

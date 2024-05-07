@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using TinyMVC.Utilities;
 
 #if ODIN_SERIALIZATION
 using Sirenix.Serialization;
@@ -49,12 +50,12 @@ namespace TinyMVC.ReactiveFields {
             }
             
         #if UNITY_EDITOR
-            if (_frameId == ObservedUtility.frameId) {
+            if (_frameId == TimelineUtility.frameId) {
                 Type type = typeof(T);
                 UnityEngine.Debug.LogWarning($"ObservedDisposable {type.Name} in {type.Namespace} called twice in one frame!");
             }
 
-            _frameId = ObservedUtility.frameId;
+            _frameId = TimelineUtility.frameId;
         #endif
         }
 

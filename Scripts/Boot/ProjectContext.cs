@@ -5,6 +5,7 @@ using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Helpers;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
+using TinyMVC.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -115,7 +116,7 @@ namespace TinyMVC.Boot {
         }
 
         private void Tick() {
-            ObservedUtility.Next();
+            TimelineUtility.Next();
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
             DebugUtility.ProfilerMarkerScripts("Project.Tick", () => _loopContext.Tick());
         #else
@@ -137,45 +138,9 @@ namespace TinyMVC.Boot {
 
         internal void AddLateTicks(int sceneId, List<ILateTick> ticks) => _loopContext.AddLateTicks(sceneId, ticks);
 
-        internal void ConnectLoop(int sceneId, ILoop loop) {
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ProfilerMarker initScene;
+        internal void ConnectLoop(int sceneId, ILoop loop) => _loopContext.ConnectLoop(sceneId, loop);
 
-            if (sceneId < 0) {
-                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.ConnectLoop(ID: {sceneId:00})");
-            } else {
-                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.ConnectLoop(Scene: {SceneManager.GetSceneByBuildIndex(sceneId).name})");
-            }
-
-            initScene.Begin();
-        #endif
-
-            _loopContext.ConnectLoop(sceneId, loop);
-
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            initScene.End();
-        #endif
-        }
-
-        internal void DisconnectLoop(int sceneId, ILoop loop) {
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ProfilerMarker initScene;
-
-            if (sceneId < 0) {
-                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.DisconnectLoop(ID: {sceneId:00})");
-            } else {
-                initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.DisconnectLoop(Scene: {SceneManager.GetSceneByBuildIndex(sceneId).name})");
-            }
-
-            initScene.Begin();
-        #endif
-
-            _loopContext.DisconnectLoop(sceneId, loop);
-
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            initScene.End();
-        #endif
-        }
+        internal void DisconnectLoop(int sceneId, ILoop loop) => _loopContext.DisconnectLoop(sceneId, loop);
 
         private async void InitScene(Scene scene, LoadSceneMode mode) {
             int sceneId = scene.buildIndex;
@@ -192,36 +157,11 @@ namespace TinyMVC.Boot {
             }
             
             _contexts.Add(new BootstrapContext(sceneId, contexts));
-
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ProfilerMarker initScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.InitScene(Scene: {scene.name})");
-            initScene.Begin();
-        #endif
-
+            
             for (int contextId = contexts.Length - 1; contextId >= 0; contextId--) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Create");
-                contextCreate.Begin();
-            #endif
-
                 await contexts[contextId].Create();
-
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                contextCreate.End();
-                ProfilerMarker contextInit = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Init");
-                contextInit.Begin();
-            #endif
-
                 await contexts[contextId].InitAsync(this, sceneId);
-
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                contextInit.End();
-            #endif
             }
-
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            initScene.End();
-        #endif
         }
 
         private bool TryFindSceneContext(GameObject[] rootObjects, out IContext[] contexts) {
@@ -253,11 +193,6 @@ namespace TinyMVC.Boot {
                 }
             }
             
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ProfilerMarker unloadScene = new ProfilerMarker(ProfilerCategory.Scripts, $"Project.UnloadScene(Scene: {scene.name})");
-            unloadScene.Begin();
-        #endif
-
             for (int i = contexts.Length - 1; i >= 0; i--) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Unload");
@@ -270,10 +205,6 @@ namespace TinyMVC.Boot {
                 contextCreate.End();
             #endif
             }
-
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            unloadScene.End();
-        #endif
 
             data.Remove(sceneId);
 

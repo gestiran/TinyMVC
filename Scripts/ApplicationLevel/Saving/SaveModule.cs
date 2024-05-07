@@ -42,7 +42,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
         }
 
     #if UNITY_EDITOR
-        [UnityEditor.MenuItem("Edit/Clear All Saves", false, 280)]
+        //[UnityEditor.MenuItem("Edit/Clear All Saves", false, 280)]
         public static void DeleteAll() {
             string path = Path.Combine(Application.persistentDataPath, _ROOT);
 
