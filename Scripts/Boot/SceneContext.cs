@@ -202,5 +202,14 @@ namespace TinyMVC.Boot {
         internal abstract void Disconnect(IView view, int sceneId);
 
         internal abstract void Disconnect(IController controller, int sceneId);
+
+    #if UNITY_EDITOR
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void RevertChanges() {
+            _contexts.Clear();
+        }
+        
+    #endif
     }
 }

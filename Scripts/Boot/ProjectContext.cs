@@ -4,7 +4,6 @@ using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Helpers;
 using TinyMVC.Loop;
-using TinyMVC.ReactiveFields;
 using TinyMVC.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -72,7 +71,7 @@ namespace TinyMVC.Boot {
     #endif
         
         /// <summary> First project context creating </summary>
-        [RuntimeInitializeOnLoadMethod]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         internal static void CreateContext() {
             binding = new BindAPI();
             data = new ProjectData();

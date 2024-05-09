@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using TinyMVC.Loop;
-using TinyMVC.ReactiveFields.Extensions;
-using TinyMVC.Utilities;
 
 #if ODIN_SERIALIZATION
 using Sirenix.Serialization;
@@ -20,9 +17,9 @@ namespace TinyMVC.ReactiveFields {
     [Serializable]
     public sealed class Observed<T> : IUnload {
         public T value => _value;
-        public bool isDirty => _frameId == TimelineUtility.frameId;
 
-        internal List<Listener<T>> listeners;
+        private List<Action> _listeners;
+        private List<Action<T>> _valueListeners;
 
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel, OnValueChanged("@" + nameof(Set) + "(" + nameof(_value) + ")"), HideDuplicateReferenceBox, HideReferenceObjectPicker]
@@ -33,54 +30,60 @@ namespace TinyMVC.ReactiveFields {
         [UnityEngine.SerializeField]
     #endif
         private T _value;
-        private uint _frameId;
+
+        private const int _CAPACITY = 16;
 
         public Observed(T value) : this() => _value = value;
 
-        public Observed() => listeners = new List<Listener<T>>();
+        public Observed() {
+            _listeners = new List<Action>(_CAPACITY);
+            _valueListeners = new List<Action<T>>(_CAPACITY);
+        }
 
-        public void SetSilent([NotNull] T newValue) {
+        public void SetSilent(T newValue) => _value = newValue;
+
+        public void Set(T newValue) {
             _value = newValue;
+
+            Action listeners = null;
             
-        #if PERFORMANCE_DEBUG
-            if (_frameId == ObservedUtility.frameId) {
-                Type type = typeof(T);
-                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!");
+            foreach (Action listener in _listeners) {
+                listeners += listener;
             }
-        #endif
-            _frameId = TimelineUtility.frameId;
-        }
-        
-        public void Set([NotNull] T newValue) {
-            _value = newValue;
-            listeners.Invoke(listener => listener.Invoke(newValue));
+            
+            Action<T> valueListeners = null;
 
-        #if PERFORMANCE_DEBUG
-            if (_frameId == ObservedUtility.frameId) {
-                Type type = typeof(T);
-                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!");
+            foreach (Action<T> listener in _valueListeners) {
+                valueListeners += listener;
             }
-        #endif
-            _frameId = TimelineUtility.frameId;
+            
+            listeners?.Invoke();
+            valueListeners?.Invoke(newValue);
         }
 
-        public void SetNull() {
-            _value = default;
-            listeners.Invoke(listener => listener.Invoke(_value));
+        public void AddListener(Action listener) => _listeners.Add(listener);
 
-        #if PERFORMANCE_DEBUG
-            if (_frameId == ObservedUtility.frameId) {
-                Type type = typeof(T);
-                UnityEngine.Debug.LogWarning($"Observed {type.Name} in {type.Namespace} called twice in one frame!");
-            }
-        #endif
-            _frameId = TimelineUtility.frameId;
+        public void AddListener(Action listener, UnloadPool unload) {
+            _listeners.Add(listener);
+            unload.Add(new UnloadAction(() => RemoveListener(listener)));
         }
-        
-        public void Unload() => listeners.Clear();
+
+        public void AddListener(Action<T> listener) => _valueListeners.Add(listener);
+
+        public void AddListener(Action<T> listener, UnloadPool unload) {
+            _valueListeners.Add(listener);
+            unload.Add(new UnloadAction(() => RemoveListener(listener)));
+        }
+
+        public void RemoveListener(Action listener) => _listeners.Remove(listener);
+
+        public void RemoveListener(Action<T> listener) => _valueListeners.Remove(listener);
+
+        public void Unload() {
+            _listeners.Clear();
+            _valueListeners.Clear();
+        }
 
         public static implicit operator T(Observed<T> value) => value._value;
-
-        public override string ToString() => $"Observed({typeof(T).Name}: {_value}, listeners: {listeners.Count})";
     }
 }

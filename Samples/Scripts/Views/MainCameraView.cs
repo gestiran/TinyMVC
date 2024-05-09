@@ -64,11 +64,7 @@ namespace TinyMVC.Samples.Views {
         private void ChangePosition(Vector3 newPosition) => thisTransform.position = newPosition;
         
     #if URP_RENDER_PIPELINE
-        private void AddToStack(params Camera[] values) {
-            for (int i = 0; i < values.Length; i++) {
-                thisCameraData.cameraStack.Add(values[i]);   
-            }
-        }
+        private void AddToStack(Camera cam) => thisCameraData.cameraStack.Add(cam);
     #endif
 
     #if UNITY_EDITOR
