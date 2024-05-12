@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 namespace TinyMVC.ApplicationLevel.Saving.VirtualFiles {
-    public sealed class VDirectory {
+    internal sealed class VDirectory {
         public bool isDirty { get; private set; }
 
         public readonly string name;

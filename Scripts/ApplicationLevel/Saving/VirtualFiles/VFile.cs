@@ -1,5 +1,5 @@
 ﻿namespace TinyMVC.ApplicationLevel.Saving.VirtualFiles {
-    public sealed class VFile {
+    internal sealed class VFile {
         public byte[] data;
         
         public readonly string name;

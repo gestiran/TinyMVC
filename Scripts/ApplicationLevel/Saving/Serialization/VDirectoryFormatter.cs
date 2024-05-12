@@ -2,7 +2,7 @@
 using Sirenix.Serialization;
 
 namespace TinyMVC.ApplicationLevel.Saving.Serialization {
-    public sealed class VDirectoryFormatter : BaseFormatter<VDirectory> {
+    internal sealed class VDirectoryFormatter : BaseFormatter<VDirectory> {
         private static readonly VDirectorySerializer _serializer = new VDirectorySerializer();
         
         protected override void DeserializeImplementation(ref VDirectory value, IDataReader reader) => value = _serializer.ReadValue(reader);

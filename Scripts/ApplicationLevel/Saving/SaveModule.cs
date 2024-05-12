@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -15,10 +16,11 @@ namespace TinyMVC.ApplicationLevel.Saving {
     public sealed class SaveModule : IApplicationModule {
         private VDirectory _main;
         private Dictionary<string, VDirectory> _directories;
+        
+        private readonly string _rootDirectory;
+        private readonly string _versionLabel;
 
         private const string _MAIN_FILE_NAME = "Main";
-        private const string _ROOT_DIRECTORY = "UserData";
-        private const string _VERSION_LABEL = "V_02"; // TODO : Temp version value
 
         private const string _BASE_EXTENSION = "sbf";
         private const string _TEMP_EXTENSION = "sbt";
@@ -27,6 +29,16 @@ namespace TinyMVC.ApplicationLevel.Saving {
         private const int _DELAY_BETWEEN_SAVES = 1000;
 
         public SaveModule() {
+            SaveParameters parameters = SaveParameters.LoadFromResources();
+
+            if (parameters != null) {
+                _rootDirectory = parameters.rootDirectory;
+                _versionLabel = parameters.versionLabel;
+            } else {
+                _rootDirectory = SaveParameters.ROOT_DIRECTORY;
+                _versionLabel = SaveParameters.VERSION_LABEL;
+            }
+            
             _main = LoadDirectory(_MAIN_FILE_NAME);
             _directories = new Dictionary<string, VDirectory>(_CAPACITY);
             _directories.Add(_MAIN_FILE_NAME, _main);
@@ -44,8 +56,16 @@ namespace TinyMVC.ApplicationLevel.Saving {
 
         [UnityEditor.MenuItem("Edit/Clear All Saves", false, 280)]
         public static void DeleteAll() {
-            string path = Path.Combine(Application.persistentDataPath, $"{_ROOT_DIRECTORY}_{_VERSION_LABEL}");
-
+            string path;
+            
+            SaveParameters parameters = SaveParameters.LoadFromResources();
+            
+            if (parameters != null) {
+                path = Path.Combine(Application.persistentDataPath, $"{parameters.rootDirectory}_{parameters.versionLabel}");
+            } else {
+                path = Path.Combine(Application.persistentDataPath, $"{SaveParameters.ROOT_DIRECTORY}_{SaveParameters.VERSION_LABEL}");
+            }
+            
             if (Directory.Exists(path) == false) {
                 return;
             }
@@ -314,14 +334,9 @@ namespace TinyMVC.ApplicationLevel.Saving {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task SaveDirectories() {
-            VDirectory[] directories = new VDirectory[_directories.Count]; 
-            int directoryId = 0;
+            VDirectory[] directories = _directories.Values.ToArray();
             
-            foreach (VDirectory directory in _directories.Values) {
-                directories[directoryId++] = directory;
-            }
-
-            for (directoryId = 0; directoryId < directories.Length; directoryId++) {
+            for (int directoryId = 0; directoryId < directories.Length; directoryId++) {
                 VDirectory directory = directories[directoryId];
                 await SaveDirectory(directory);
             }
@@ -358,7 +373,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetPath(string name, string extension) {
-            string path = Path.Combine(Application.persistentDataPath, $"{_ROOT_DIRECTORY}_{_VERSION_LABEL}");
+            string path = Path.Combine(Application.persistentDataPath, $"{_rootDirectory}_{_versionLabel}");
 
             if (Directory.Exists(path) == false) {
                 Directory.CreateDirectory(path);

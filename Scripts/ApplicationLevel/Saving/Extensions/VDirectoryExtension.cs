@@ -2,7 +2,7 @@
 using TinyMVC.ApplicationLevel.Saving.VirtualFiles;
 
 namespace TinyMVC.ApplicationLevel.Saving.Extensions {
-    public static class VDirectoryExtension {
+    internal static class VDirectoryExtension {
         public static VDirectory AddDirectory(this VDirectory directory, string name) {
             VDirectory result = new VDirectory(name);
             
@@ -34,7 +34,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
         public static bool HasDirectory(this VDirectory directory, out VDirectory root, params string[] group) {
             root = directory;
             
-            for (int groupId = 0; groupId < group.Length; groupId++) {
+            for (int groupId = 1; groupId < group.Length; groupId++) {
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
                     root = other;
                 } else {
@@ -49,7 +49,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
             VDirectory root = directory;
             string directoryName = directory.name;
             
-            for (int groupId = 0; groupId < group.Length; groupId++) {
+            for (int groupId = 1; groupId < group.Length; groupId++) {
                 directory = root;
                 
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
@@ -103,7 +103,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
         public static VDirectory GetDirectory(this VDirectory directory, params string[] group) {
             VDirectory root = directory;
             
-            for (int groupId = 0; groupId < group.Length; groupId++) {
+            for (int groupId = 1; groupId < group.Length; groupId++) {
                 root = root.directories[group[groupId]];
             }
 
@@ -113,7 +113,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
         public static VDirectory OpenOrCreateDirectory(this VDirectory directory, string[] group) {
             VDirectory root = directory;
             
-            for (int groupId = 0; groupId < group.Length; groupId++) {
+            for (int groupId = 1; groupId < group.Length; groupId++) {
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
                     root = other;
                 } else {
