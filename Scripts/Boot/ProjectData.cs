@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using TinyMVC.Dependencies;
+using TinyMVC.Entities;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
@@ -21,14 +22,61 @@ namespace TinyMVC.Boot {
         private DependencyContainer _container;
         
         private readonly Dictionary<int, DependencyContainer> _dependencies;
+        private readonly Dictionary<int, List<Entity>> _entities;
 
+        public const int DEFAULT_GROUP = -1;
         private const int _CAPACITY = 16;
 
         internal ProjectData() {
             _dependencies = new Dictionary<int, DependencyContainer>(_CAPACITY);
+            _entities = new Dictionary<int, List<Entity>>(_CAPACITY);
         #if ODIN_INSPECTOR && UNITY_EDITOR
             _dependenciesEditor = new List<DependencyContainer>(_CAPACITY);
         #endif
+        }
+
+        public void AddEntity<T>(T entity, int id = DEFAULT_GROUP) where T : Entity {
+            if (_entities.TryGetValue(id, out List<Entity> entities)) {
+                entities.Add(entity);
+            } else {
+                _entities.Add(id, new List<Entity>() { entity });
+            }
+        }
+        
+        public void RemoveEntity<T>(T entity, int id = DEFAULT_GROUP) where T : Entity {
+            if (_entities.TryGetValue(id, out List<Entity> entities)) {
+                entities.Remove(entity);
+            }
+        }
+
+        public IEnumerable<T> ForEach<T>() where T : IComponentData {
+            foreach (List<Entity> entities in _entities.Values) {
+                foreach (Entity entity in entities) {
+                    foreach (T data in entity.ForEach<T>()) {
+                        yield return data;
+                    }
+                }
+            }
+        }
+        
+        public IEnumerable<(T1, T2)> ForEach<T1, T2>() where T1 : IComponentData where T2 : IComponentData {
+            foreach (List<Entity> entities in _entities.Values) {
+                foreach (Entity entity in entities) {
+                    foreach ((T1, T2) data in entity.ForEach<T1, T2>()) {
+                        yield return data;
+                    }
+                }
+            }
+        }
+        
+        public IEnumerable<(T1, T2, T3)> ForEach<T1, T2, T3>() where T1 : IComponentData where T2 : IComponentData where T3 : IComponentData {
+            foreach (List<Entity> entities in _entities.Values) {
+                foreach (Entity entity in entities) {
+                    foreach ((T1, T2, T3) data in entity.ForEach<T1, T2, T3>()) {
+                        yield return data;
+                    }
+                }
+            }
         }
 
         public void Resolve(List<IResolving> resolving) {
@@ -39,19 +87,7 @@ namespace TinyMVC.Boot {
             ResolveUtility.Resolve(resolving, GetContainer());
         }
 
-        public void Resolve([NotNull] params IResolving[] resolving) {
-            ResolveUtility.Resolve(resolving, GetContainer());
-        }
-
-        public void Resolve([NotNull] DependencyContainer container, List<IResolving> resolving) {
-            ResolveUtility.Resolve(resolving, container);
-        }
-
         public void Resolve([NotNull] DependencyContainer container, [NotNull] IResolving resolving) {
-            ResolveUtility.Resolve(resolving, container);
-        }
-
-        public void Resolve([NotNull] DependencyContainer container, [NotNull] params IResolving[] resolving) {
             ResolveUtility.Resolve(resolving, container);
         }
 
@@ -63,19 +99,11 @@ namespace TinyMVC.Boot {
             ResolveUtility.ResolveWithoutApply(resolving, GetContainer());
         }
 
-        internal void ResolveWithoutApply([NotNull] params IResolving[] resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, GetContainer());
-        }
-        
         internal void ResolveWithoutApply([NotNull] DependencyContainer container, List<IResolving> resolving) {
             ResolveUtility.ResolveWithoutApply(resolving, container);
         }
 
         internal void ResolveWithoutApply([NotNull] DependencyContainer container, [NotNull] IResolving resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, container);
-        }
-
-        internal void ResolveWithoutApply([NotNull] DependencyContainer container, [NotNull] params IResolving[] resolving) {
             ResolveUtility.ResolveWithoutApply(resolving, container);
         }
 

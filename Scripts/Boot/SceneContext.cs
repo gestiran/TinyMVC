@@ -204,12 +204,19 @@ namespace TinyMVC.Boot {
         internal abstract void Disconnect(IController controller, int sceneId);
 
     #if UNITY_EDITOR
+    
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void RevertChanges() => UnityEditor.EditorApplication.playModeStateChanged += PlayModeChange;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void RevertChanges() {
+        private static void PlayModeChange(UnityEditor.PlayModeStateChange state) {
+            if (state != UnityEditor.PlayModeStateChange.ExitingPlayMode) {
+                return;
+            }
+            
             _contexts.Clear();
         }
-        
+
+
     #endif
     }
 }
