@@ -7,20 +7,21 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
             VDirectory result = new VDirectory(name);
             
             directory.directories.Add(name, result);
-
+            directory.SetDirty();
             return result;
         }
 
         public static VFile WriteOrCreateFile(this VDirectory directory, string name, byte[] data) {
             if (directory.files.TryGetValue(name, out VFile file)) {
                 file.data = data;
+                directory.SetDirty();
                 return file;
             }
 
             VFile result = new VFile(name, data);
 
             directory.files.Add(name, result);
-                
+            directory.SetDirty();
             return result;
         }
 
@@ -60,11 +61,13 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
                 directoryName = group[groupId];
             }
             
+            directory.SetDirty();
             directory.directories.Remove(directoryName);
         }
         
         public static void DeleteFile(this VDirectory directory, string name) {
             directory.files.Remove(name);
+            directory.SetDirty();
         }
         
         public static string[] GetAllDirectories(this VDirectory directory, params string[] group) {
@@ -118,6 +121,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
                 }
             }
 
+            root.SetDirty();
             return root;
         }
     }

@@ -2,6 +2,8 @@
 
 namespace TinyMVC.ApplicationLevel.Saving.VirtualFiles {
     public sealed class VDirectory {
+        public bool isDirty { get; private set; }
+
         public readonly string name;
         public readonly Dictionary<string, VDirectory> directories;
         public readonly Dictionary<string, VFile> files;
@@ -28,5 +30,9 @@ namespace TinyMVC.ApplicationLevel.Saving.VirtualFiles {
                 this.files.Add(file.name, file);
             }
         }
+
+        public void SetDirty() => isDirty = true;
+
+        public void ClearDirty() => isDirty = false;
     }
 }
