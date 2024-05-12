@@ -13,8 +13,8 @@ using SirenixSerializationUtility = Sirenix.Serialization.SerializationUtility;
 
 namespace TinyMVC.ApplicationLevel.Saving {
     public sealed class SaveModule : IApplicationModule {
-        private readonly VDirectory _main;
-        private readonly Dictionary<string, VDirectory> _directories;
+        private VDirectory _main;
+        private Dictionary<string, VDirectory> _directories;
 
         private const string _MAIN_FILE_NAME = "Main";
         private const string _ROOT_DIRECTORY = "UserData";
@@ -32,6 +32,12 @@ namespace TinyMVC.ApplicationLevel.Saving {
             _directories.Add(_MAIN_FILE_NAME, _main);
             
             SaveProcess();
+
+        #if UNITY_EDITOR
+            
+            UnityEditor.EditorApplication.playModeStateChanged += PlayModeChange;
+            
+        #endif
         }
 
     #if UNITY_EDITOR
@@ -49,6 +55,16 @@ namespace TinyMVC.ApplicationLevel.Saving {
             for (int fileId = 0; fileId < files.Length; fileId++) {
                 File.Delete(files[fileId]);
             }
+        }
+        
+        private void PlayModeChange(UnityEditor.PlayModeStateChange state) {
+            if (state != UnityEditor.PlayModeStateChange.ExitingPlayMode) {
+                return;
+            }
+            
+            _main = LoadDirectory(_MAIN_FILE_NAME);
+            _directories = new Dictionary<string, VDirectory>(_CAPACITY);
+            _directories.Add(_MAIN_FILE_NAME, _main);
         }
         
     #endif

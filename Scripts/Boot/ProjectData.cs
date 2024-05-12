@@ -23,13 +23,16 @@ namespace TinyMVC.Boot {
         
         private readonly Dictionary<int, DependencyContainer> _dependencies;
         private readonly Dictionary<int, List<Entity>> _entities;
+        private readonly Dictionary<Type, IComponentData> _singleEntities;
 
         public const int DEFAULT_GROUP = -1;
         private const int _CAPACITY = 16;
+        private const int _SINGLE_CAPACITY = 32;
 
         internal ProjectData() {
             _dependencies = new Dictionary<int, DependencyContainer>(_CAPACITY);
             _entities = new Dictionary<int, List<Entity>>(_CAPACITY);
+            _singleEntities = new Dictionary<Type, IComponentData>(_SINGLE_CAPACITY);
         #if ODIN_INSPECTOR && UNITY_EDITOR
             _dependenciesEditor = new List<DependencyContainer>(_CAPACITY);
         #endif
@@ -47,6 +50,20 @@ namespace TinyMVC.Boot {
             if (_entities.TryGetValue(id, out List<Entity> entities)) {
                 entities.Remove(entity);
             }
+        }
+
+        public void SetSingle<T>(T component) where T : IComponentData => _singleEntities.Add(typeof(T), component);
+        
+        public void RemoveSingle<T>() where T : IComponentData => _singleEntities.Remove(typeof(T));
+
+        public bool TryGetSingle<T>(out T component) where T : IComponentData {
+            if (_singleEntities.TryGetValue(typeof(T), out IComponentData componentData)) {
+                component = (T)componentData;
+                return true;
+            }
+            
+            component = default;
+            return false;
         }
 
         public IEnumerable<T> ForEach<T>() where T : IComponentData {
@@ -73,6 +90,16 @@ namespace TinyMVC.Boot {
             foreach (List<Entity> entities in _entities.Values) {
                 foreach (Entity entity in entities) {
                     foreach ((T1, T2, T3) data in entity.ForEach<T1, T2, T3>()) {
+                        yield return data;
+                    }
+                }
+            }
+        }
+        
+        public IEnumerable<(T1, T2, T3, T4)> ForEach<T1, T2, T3, T4>() where T1 : IComponentData where T2 : IComponentData where T3 : IComponentData where T4 : IComponentData {
+            foreach (List<Entity> entities in _entities.Values) {
+                foreach (Entity entity in entities) {
+                    foreach ((T1, T2, T3, T4) data in entity.ForEach<T1, T2, T3, T4>()) {
                         yield return data;
                     }
                 }
