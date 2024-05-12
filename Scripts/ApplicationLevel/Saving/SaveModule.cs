@@ -314,7 +314,15 @@ namespace TinyMVC.ApplicationLevel.Saving {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task SaveDirectories() {
+            VDirectory[] directories = new VDirectory[_directories.Count]; 
+            int directoryId = 0;
+            
             foreach (VDirectory directory in _directories.Values) {
+                directories[directoryId++] = directory;
+            }
+
+            for (directoryId = 0; directoryId < directories.Length; directoryId++) {
+                VDirectory directory = directories[directoryId];
                 await SaveDirectory(directory);
             }
         }
