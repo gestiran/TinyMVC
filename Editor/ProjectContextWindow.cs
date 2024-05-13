@@ -15,7 +15,7 @@
             
             public ProjectContextWindow() => EditorApplication.playModeStateChanged += StateChange;
 
-            [MenuItem("Window/ProjectContext", priority = 0)]
+            [MenuItem("Window/TinyMVC/ProjectContext", priority = 0)]
             private static void OpenWindow() {
                 ProjectContextWindow window = GetWindow<ProjectContextWindow>("ProjectContext");
                 window.Show();

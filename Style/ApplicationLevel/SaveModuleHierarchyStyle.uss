@@ -1,0 +1,19 @@
+Label {
+    position: relative;
+    
+    padding-left: 2px;
+    padding-right: 2px;
+
+    align-content: flex-start;
+    align-items: flex-start;
+}
+
+Foldout {
+    position: relative;
+    
+    padding-left: 2px;
+    padding-right: 2px;
+    
+    align-content: flex-start;
+    align-items: flex-start;
+}
