@@ -18,12 +18,15 @@ namespace TinyMVC.ApplicationLevel {
             
             VisualElement root = rootVisualElement;
             rootVisualElement.styleSheets.Add(_style);
+
+            ScrollView scroll = new ScrollView(ScrollViewMode.Vertical);
             
             _group = new Foldout();
             _group.text = "<b>Files</b>";
             _group.value = true;
             
-            root.Add(_group);
+            scroll.Add(_group);
+            root.Add(scroll);
             
             Button button = new Button();
             button.name = "button";
@@ -35,7 +38,7 @@ namespace TinyMVC.ApplicationLevel {
 
         private void UpdateData() {
             _group.Clear();
-            API<SaveModule>.module.DisplayHierarchy_Editor(_group.contentContainer);
+            API<SaveModule>.module.GetHierarchy_Editor(_group.contentContainer);
         }
     }
 }

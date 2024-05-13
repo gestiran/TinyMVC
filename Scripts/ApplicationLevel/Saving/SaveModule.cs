@@ -86,40 +86,77 @@ namespace TinyMVC.ApplicationLevel.Saving {
             _directories.Add(_MAIN_FILE_NAME, main);
         }
 
-        public void DisplayHierarchy_Editor(UnityEngine.UIElements.VisualElement element) {
-            foreach (VDirectory directory in _directories.Values) {
+        public void GetHierarchy_Editor(UnityEngine.UIElements.VisualElement element) {
+            string path;
+            SaveParameters parameters = SaveParameters.LoadFromResources();
+
+            if (parameters != null) {
+                path = Path.Combine(Application.persistentDataPath, $"{parameters.rootDirectory}_{parameters.versionLabel}");
+            } else {
+                path = Path.Combine(Application.persistentDataPath, $"{SaveParameters.ROOT_DIRECTORY}_{SaveParameters.VERSION_LABEL}");
+            }
+
+            if (Directory.Exists(path) == false) {
+                element.Add(new UnityEngine.UIElements.Label("Doesn't contain files"));
+                return;
+            }
+
+            string[] files = Directory.GetFiles(path);
+
+            if (files.Length <= 0) {
+                element.Add(new UnityEngine.UIElements.Label("Doesn't contain files"));
+                return;
+            }
+            
+            VDirectory[] directories = new VDirectory[files.Length];
+
+            for (int fileId = 0; fileId < files.Length; fileId++) {
+                directories[fileId] = LoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]));
+            }
+            
+            foreach (VDirectory directory in directories) {
                 UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
                 foldout.text = $"<b>{directory.name}.{_BASE_EXTENSION}</b>";
                 foldout.value = true;
 
-                AppendFiles(directory, foldout.contentContainer);
-                AppendSubDirectories(directory, foldout.contentContainer);
+                ConnectFiles_Editor(directory, foldout.contentContainer);
+                ConnectDirectories_Editor(directory, foldout.contentContainer);
+
+                if (foldout.childCount <= 0) {
+                    foldout.text = $"{foldout.text} (Empty)";
+                    foldout.value = false;
+                } 
                 
                 element.Add(foldout);
             }
         }
 
-        private void AppendFiles(VDirectory root, UnityEngine.UIElements.VisualElement element) {
+        private void ConnectFiles_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
             foreach (VFile file in root.files.Values) {
                 element.Add(new UnityEngine.UIElements.Label($"{file.name}.file"));
             }
         }
 
-        private void AppendSubDirectories(VDirectory root, UnityEngine.UIElements.VisualElement element) {
+        private void ConnectDirectories_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
             foreach (VDirectory directory in root.directories.Values) {
                 UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
                 foldout.text = $"<b>{directory.name}</b>";
                 foldout.value = true;
                 
-                AppendFiles(directory, foldout.contentContainer);
-                AppendSubDirectoriesNoRecursive(directory, foldout.contentContainer);
+                ConnectFiles_Editor(directory, foldout.contentContainer);
+                ConnectDirectoriesNR_Editor(directory, foldout.contentContainer);
+
+                if (foldout.childCount <= 0) {
+                    foldout.text = $"{foldout.text} (Empty)";
+                    foldout.value = false;
+                }
                 
                 element.Add(foldout);
             }
         }
 
-        private void AppendSubDirectoriesNoRecursive(VDirectory root, UnityEngine.UIElements.VisualElement element) {
-            AppendSubDirectories(root, element);
+        private void ConnectDirectoriesNR_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
+            ConnectDirectories_Editor(root, element);
         }
 
     #endif
