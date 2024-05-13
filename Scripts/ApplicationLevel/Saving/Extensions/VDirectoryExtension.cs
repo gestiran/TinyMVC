@@ -112,6 +112,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
 
         public static VDirectory OpenOrCreateDirectory(this VDirectory directory, string[] group) {
             VDirectory root = directory;
+            root.SetDirty();
             
             for (int groupId = 1; groupId < group.Length; groupId++) {
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
@@ -120,8 +121,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
                     root = root.AddDirectory(group[groupId]);
                 }
             }
-
-            root.SetDirty();
+            
             return root;
         }
     }
