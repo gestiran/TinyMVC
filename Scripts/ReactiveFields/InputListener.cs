@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TinyMVC.Loop;
+using TinyMVC.ReactiveFields.Extensions;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
@@ -60,38 +61,13 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send(T data = default) {
-            Action listeners = null;
-            Action<T> valueListeners = null;
-            
-            foreach (Action listener in _listeners) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T> listener in _valueListeners) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-            valueListeners?.Invoke(data);
+            _listeners.Invoke();
+            _valueListeners.Invoke(data);
         }
         
         public void Send(params T[] data) {
-            Action listeners = null;
-            Action<T> valueListeners = null;
-            
-            foreach (Action listener in _listeners) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T> listener in _valueListeners) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-
-            for (int i = 0; i < data.Length; i++) {
-                valueListeners?.Invoke(data[i]);
-            }
+            _listeners.Invoke();
+            _valueListeners.Invoke(data);
         }
         
         public void AddListener(Action listener) => _listeners.Add(listener);
@@ -136,19 +112,8 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send(T1 data1 = default, T2 data2 = default) {
-            Action listeners = null;
-            Action<T1, T2> valueListeners = null;
-            
-            foreach (Action listener in _listeners) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T1, T2> listener in _valueListeners) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-            valueListeners?.Invoke(data1, data2);
+            _listeners.Invoke();
+            _valueListeners.Invoke(data1, data2);
         }
         
         public void AddListener(Action listener) => _listeners.Add(listener);
@@ -193,19 +158,8 @@ namespace TinyMVC.ReactiveFields {
         [Button]
     #endif
         public void Send(T1 data1 = default, T2 data2 = default, T3 data3 = default) {
-            Action listeners = null;
-            Action<T1, T2, T3> valueListeners = null;
-            
-            foreach (Action listener in _listeners) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T1, T2, T3> listener in _valueListeners) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-            valueListeners?.Invoke(data1, data2, data3);
+            _listeners.Invoke();
+            _valueListeners.Invoke(data1, data2, data3);
         }
         
         public void AddListener(Action listener) => _listeners.Add(listener);

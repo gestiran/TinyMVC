@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using TinyMVC.Loop;
+using TinyMVC.ReactiveFields.Extensions;
 using TinyMVC.Utilities.Async;
 using UnityEngine;
 
@@ -57,75 +58,26 @@ namespace TinyMVC.ReactiveFields {
         public T this[int index] {
             get => _value[index];
             set {
-                Action listeners = null;
-                Action<T> valueListeners = null;
-            
-                foreach (Action listener in _onRemove) {
-                    listeners += listener;
-                }
-            
-                foreach (Action<T> listener in _onRemoveWithValue) {
-                    valueListeners += listener;
-                }
-            
-                listeners?.Invoke();
-                valueListeners?.Invoke(_value[index]);
+                _onRemove.Invoke();
+                _onRemoveWithValue.Invoke(_value[index]);
                 
                 _value[index] = value;
                 
-                listeners = null;
-                valueListeners = null;
-            
-                foreach (Action listener in _onAdd) {
-                    listeners += listener;
-                }
-            
-                foreach (Action<T> listener in _onAddWithValue) {
-                    valueListeners += listener;
-                }
-            
-                listeners?.Invoke();
-                valueListeners?.Invoke(value);
+                _onAdd.Invoke();
+                _onAddWithValue.Invoke(value);
             }
         }
 
         public void Add([NotNull] params T[] values) {
             _value.AddRange(values);
-            
-            Action listeners = null;
-            Action<T> valueListeners = null;
-            
-            foreach (Action listener in _onAdd) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T> listener in _onAddWithValue) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-
-            for (int i = 0; i < values.Length; i++) {
-                valueListeners?.Invoke(values[i]);
-            }
+            _onAdd.Invoke();
+            _onAddWithValue.Invoke(values);
         }
         
         public void Add([NotNull] T value) {
             _value.Add(value);
-            
-            Action listeners = null;
-            Action<T> valueListeners = null;
-            
-            foreach (Action listener in _onAdd) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T> listener in _onAddWithValue) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-            valueListeners?.Invoke(value);
+            _onAdd.Invoke();
+            _onAddWithValue.Invoke(value);
         }
 
         public Task AddAsync([NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
@@ -253,40 +205,14 @@ namespace TinyMVC.ReactiveFields {
                 _value.Remove(values[i]);
             }
             
-            Action listeners = null;
-            Action<T> valueListeners = null;
-            
-            foreach (Action listener in _onRemove) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T> listener in _onRemoveWithValue) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-
-            for (int i = 0; i < values.Length; i++) {
-                valueListeners?.Invoke(values[i]);   
-            }
+            _onRemove.Invoke();
+            _onRemoveWithValue.Invoke(values);
         }
         
         public void Remove([NotNull] T value) {
             _value.Remove(value);
-            
-            Action listeners = null;
-            Action<T> valueListeners = null;
-            
-            foreach (Action listener in _onRemove) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T> listener in _onRemoveWithValue) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-            valueListeners?.Invoke(value);
+            _onRemove.Invoke();
+            _onRemoveWithValue.Invoke(value);
         }
         
         public Task RemoveAsync([NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
@@ -415,14 +341,7 @@ namespace TinyMVC.ReactiveFields {
 
         public void Clear() {
             _value.Clear();
-            
-            Action listeners = null;
-            
-            foreach (Action listener in _onClear) {
-                listeners += listener;
-            }
-            
-            listeners?.Invoke();
+            _onClear.Invoke();
         }
 
         public int IndexOf(T element) => _value.IndexOf(element);
@@ -432,20 +351,8 @@ namespace TinyMVC.ReactiveFields {
         public void RemoveAt(int id) {
             T element = _value[id];
             _value.RemoveAt(id);
-            
-            Action listeners = null;
-            Action<T> valueListeners = null;
-            
-            foreach (Action listener in _onRemove) {
-                listeners += listener;
-            }
-            
-            foreach (Action<T> listener in _onRemoveWithValue) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-            valueListeners?.Invoke(element);
+            _onRemove.Invoke();
+            _onRemoveWithValue.Invoke(element);
         }
         
         public void AddOnAddListener(Action listener) => _onAdd.Add(listener);

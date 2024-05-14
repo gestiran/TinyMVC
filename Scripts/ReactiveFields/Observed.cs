@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TinyMVC.Loop;
+using TinyMVC.ReactiveFields.Extensions;
 
 #if ODIN_SERIALIZATION
 using Sirenix.Serialization;
@@ -44,21 +45,8 @@ namespace TinyMVC.ReactiveFields {
 
         public void Set(T newValue) {
             _value = newValue;
-
-            Action listeners = null;
-            
-            foreach (Action listener in _listeners) {
-                listeners += listener;
-            }
-            
-            Action<T> valueListeners = null;
-
-            foreach (Action<T> listener in _valueListeners) {
-                valueListeners += listener;
-            }
-            
-            listeners?.Invoke();
-            valueListeners?.Invoke(newValue);
+            _listeners.Invoke();
+            _valueListeners.Invoke(newValue);
         }
 
         public void AddListener(Action listener) => _listeners.Add(listener);

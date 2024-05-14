@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -15,7 +14,7 @@ using SirenixSerializationUtility = Sirenix.Serialization.SerializationUtility;
 namespace TinyMVC.ApplicationLevel.Saving {
     public sealed class SaveModule : IApplicationModule {
         private Dictionary<string, VDirectory> _directories;
-
+        
         private readonly string _rootDirectory;
         private readonly string _versionLabel;
 
@@ -38,9 +37,8 @@ namespace TinyMVC.ApplicationLevel.Saving {
                 _versionLabel = SaveParameters.VERSION_LABEL;
             }
 
-            VDirectory main = LoadDirectory(_MAIN_FILE_NAME);
             _directories = new Dictionary<string, VDirectory>(_CAPACITY);
-            _directories.Add(_MAIN_FILE_NAME, main);
+            _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
 
             SaveProcess();
 
@@ -81,9 +79,8 @@ namespace TinyMVC.ApplicationLevel.Saving {
                 return;
             }
 
-            VDirectory main = LoadDirectory(_MAIN_FILE_NAME);
             _directories = new Dictionary<string, VDirectory>(_CAPACITY);
-            _directories.Add(_MAIN_FILE_NAME, main);
+            _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
         }
 
         public void GetHierarchy_Editor(UnityEngine.UIElements.VisualElement element) {
@@ -380,41 +377,40 @@ namespace TinyMVC.ApplicationLevel.Saving {
             
             return SerializationUtility.DeserializeValue<T>(directory.GetDirectory(group).GetFile(key), DataFormat.Binary);
         }
-        
+
         private async void SaveProcess() {
             while (Application.isPlaying) {
-                await SaveDirectories();
+                SaveDirectories();
                 await Task.Delay(_DELAY_BETWEEN_SAVES);
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task SaveDirectory(VDirectory directory) {
+        private void SaveDirectories() {
+            foreach (VDirectory directory in _directories.Values) {
+                SaveDirectory(directory);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SaveDirectory(VDirectory directory) {
             if (directory.isDirty == false) {
                 return;
             }
-                
-            byte[] bytes = SirenixSerializationUtility.SerializeValue(directory, DataFormat.Binary);
+            
+            directory.ClearDirty();
+            
             string globalPath = GetPath(directory.name, _BASE_EXTENSION);
             string tempPath = GetPath(directory.name, _TEMP_EXTENSION);
-            directory.ClearDirty();
-                
-            await Task.Run(() => File.WriteAllBytesAsync(tempPath, bytes));
+
+            using (FileStream fileStream = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 16384, FileOptions.None)) {
+                SirenixSerializationUtility.SerializeValueWeak(directory, fileStream, DataFormat.Binary);
+            } 
                 
             File.Delete(globalPath);
             File.Move(tempPath, globalPath);
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task SaveDirectories() {
-            VDirectory[] directories = _directories.Values.ToArray();
-            
-            for (int directoryId = 0; directoryId < directories.Length; directoryId++) {
-                VDirectory directory = directories[directoryId];
-                await SaveDirectory(directory);
-            }
-        }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private VDirectory LoadDirectory(string name) {
             string globalPath = GetPath(name, _BASE_EXTENSION);

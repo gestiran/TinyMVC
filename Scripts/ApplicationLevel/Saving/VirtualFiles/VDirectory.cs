@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TinyMVC.ApplicationLevel.Saving.VirtualFiles {
+    [Serializable]
     internal sealed class VDirectory {
-        public bool isDirty { get; private set; }
+        [field: NonSerialized] public bool isDirty { get; private set; }
 
         public readonly string name;
         public readonly Dictionary<string, VDirectory> directories;
