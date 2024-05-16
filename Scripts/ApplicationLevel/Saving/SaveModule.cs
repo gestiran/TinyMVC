@@ -228,21 +228,13 @@ namespace TinyMVC.ApplicationLevel.Saving {
             string directoryName = group[0];
             
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
-                if (directory.HasDirectory(out directory, group)) {
-                    return directory.GetAllFiles(group);
-                }
-
-                return Array.Empty<string>();
+                return directory.GetAllFiles(group);
             }
 
             directory = LoadDirectory(directoryName);
             _directories.Add(directoryName, directory);
             
-            if (directory.HasDirectory(out directory, group)) {
-                return directory.GetAllFiles(group);
-            }
-
-            return Array.Empty<string>();
+            return directory.GetAllFiles(group);
         }
 
         public void Save<T>(T value, [NotNull] string key) {
