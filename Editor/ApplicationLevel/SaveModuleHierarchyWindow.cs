@@ -1,4 +1,5 @@
-﻿using TinyMVC.ApplicationLevel.Saving;
+﻿#if ODIN_SERIALIZATION
+using TinyMVC.ApplicationLevel.Saving;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -42,3 +43,4 @@ namespace TinyMVC.ApplicationLevel {
         }
     }
 }
+#endif

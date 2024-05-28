@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if ODIN_SERIALIZATION
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -6,15 +7,14 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using TinyMVC.ApplicationLevel.Saving.Extensions;
 using TinyMVC.ApplicationLevel.Saving.VirtualFiles;
-using Sirenix.Serialization;
 using UnityEngine;
-
+using Sirenix.Serialization;
 using SirenixSerializationUtility = Sirenix.Serialization.SerializationUtility;
 
 namespace TinyMVC.ApplicationLevel.Saving {
     public sealed class SaveModule : IApplicationModule {
         private Dictionary<string, VDirectory> _directories;
-        
+
         private readonly string _rootDirectory;
         private readonly string _versionLabel;
 
@@ -40,11 +40,15 @@ namespace TinyMVC.ApplicationLevel.Saving {
             _directories = new Dictionary<string, VDirectory>(_CAPACITY);
             _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
 
-            SaveProcess();
-
         #if UNITY_EDITOR
 
             UnityEditor.EditorApplication.playModeStateChanged += PlayModeChange;
+
+            if (Application.isPlaying) {
+                SaveProcess();
+            }
+        #else
+            SaveProcess();
 
         #endif
         }
@@ -75,12 +79,12 @@ namespace TinyMVC.ApplicationLevel.Saving {
         }
 
         private void PlayModeChange(UnityEditor.PlayModeStateChange state) {
-            if (state != UnityEditor.PlayModeStateChange.ExitingPlayMode) {
-                return;
+            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode) {
+                _directories = new Dictionary<string, VDirectory>(_CAPACITY);
+                _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
+            } else if (state == UnityEditor.PlayModeStateChange.EnteredPlayMode) {
+                SaveProcess();
             }
-
-            _directories = new Dictionary<string, VDirectory>(_CAPACITY);
-            _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
         }
 
         public void GetHierarchy_Editor(UnityEngine.UIElements.VisualElement element) {
@@ -95,6 +99,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
 
             if (Directory.Exists(path) == false) {
                 element.Add(new UnityEngine.UIElements.Label("Doesn't contain files"));
+
                 return;
             }
 
@@ -102,15 +107,16 @@ namespace TinyMVC.ApplicationLevel.Saving {
 
             if (files.Length <= 0) {
                 element.Add(new UnityEngine.UIElements.Label("Doesn't contain files"));
+
                 return;
             }
-            
+
             VDirectory[] directories = new VDirectory[files.Length];
 
             for (int fileId = 0; fileId < files.Length; fileId++) {
                 directories[fileId] = LoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]));
             }
-            
+
             foreach (VDirectory directory in directories) {
                 UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
                 foldout.text = $"<b>{directory.name}.{_BASE_EXTENSION}</b>";
@@ -122,8 +128,8 @@ namespace TinyMVC.ApplicationLevel.Saving {
                 if (foldout.childCount <= 0) {
                     foldout.text = $"{foldout.text} (Empty)";
                     foldout.value = false;
-                } 
-                
+                }
+
                 element.Add(foldout);
             }
         }
@@ -139,7 +145,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
                 UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
                 foldout.text = $"<b>{directory.name}</b>";
                 foldout.value = true;
-                
+
                 ConnectFiles_Editor(directory, foldout.contentContainer);
                 ConnectDirectoriesNR_Editor(directory, foldout.contentContainer);
 
@@ -147,42 +153,40 @@ namespace TinyMVC.ApplicationLevel.Saving {
                     foldout.text = $"{foldout.text} (Empty)";
                     foldout.value = false;
                 }
-                
+
                 element.Add(foldout);
             }
         }
 
-        private void ConnectDirectoriesNR_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
-            ConnectDirectories_Editor(root, element);
-        }
+        private void ConnectDirectoriesNR_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) { ConnectDirectories_Editor(root, element); }
 
     #endif
-        
+
         public bool HasGroup([NotNull] params string[] group) {
             if (group.Length <= 0) {
                 return false;
             }
 
             string directoryName = group[0];
-            
+
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                 return directory.HasDirectory(group);
             }
-            
+
             if (File.Exists(GetPath(directoryName, _BASE_EXTENSION))) {
                 return true;
-            } 
-            
+            }
+
             if (File.Exists(GetPath(directoryName, _TEMP_EXTENSION))) {
                 return true;
             }
-            
+
             return false;
         }
 
         public bool Has([NotNull] string key, [NotNull] params string[] group) {
             string directoryName = group[0];
-            
+
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                 if (directory.HasDirectory(out directory, group)) {
                     return directory.HasFile(key);
@@ -193,7 +197,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
 
             directory = LoadDirectory(directoryName);
             _directories.Add(directoryName, directory);
-            
+
             if (directory.HasDirectory(out directory, group)) {
                 return directory.HasFile(key);
             }
@@ -202,21 +206,21 @@ namespace TinyMVC.ApplicationLevel.Saving {
         }
 
         public bool Has([NotNull] string key) => _directories[_MAIN_FILE_NAME].HasFile(key);
-        
+
         public string[] GetGroups([NotNull] params string[] group) {
             if (group.Length <= 0) {
                 return Array.Empty<string>();
             }
-            
+
             string directoryName = group[0];
-            
+
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                 return directory.GetAllDirectories(group);
             }
 
             directory = LoadDirectory(directoryName);
             _directories.Add(directoryName, directory);
-            
+
             return directory.GetAllDirectories(group);
         }
 
@@ -224,54 +228,73 @@ namespace TinyMVC.ApplicationLevel.Saving {
             if (group.Length <= 0) {
                 return Array.Empty<string>();
             }
-            
+
             string directoryName = group[0];
-            
+
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                 return directory.GetAllFiles(group);
             }
 
             directory = LoadDirectory(directoryName);
             _directories.Add(directoryName, directory);
-            
+
             return directory.GetAllFiles(group);
         }
 
         public void Save<T>(T value, [NotNull] string key) {
             _directories[_MAIN_FILE_NAME].WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
+            
+        #if UNITY_EDITOR
+
+            if (Application.isPlaying == false) {
+                SaveDirectories();
+            }
+
+        #endif
         }
 
         public void Save<T>(T value, [NotNull] string key, [NotNull] params string[] group) {
             string directoryName = group[0];
-            
+
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                 directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
-                return;
+            } else {
+                directory = LoadDirectory(directoryName);
+                _directories.Add(directoryName, directory);
+
+                directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
             }
-            
-            directory = LoadDirectory(directoryName);
-            _directories.Add(directoryName, directory);
-            
-            directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
+
+        #if UNITY_EDITOR
+
+            if (Application.isPlaying == false) {
+                SaveDirectories();
+            }
+
+        #endif
         }
 
         public bool TryLoad<T>(out T result, [NotNull] string key) {
             if (Has(key)) {
                 result = LoadData<T>(key);
+
                 return true;
             }
 
             result = default;
+
             return false;
         }
 
         public bool TryLoad<T>(out T result, [NotNull] string key, [NotNull] params string[] group) {
             if (Has(key, group)) {
                 result = LoadData<T>(key, group);
+
                 return true;
             }
 
             result = default;
+
             return false;
         }
 
@@ -297,7 +320,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
 
         public void DeleteGroup([NotNull] params string[] group) {
             string directoryName = group[0];
-            
+
             if (group.Length > 1) {
                 if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                     directory.DeleteDirectory(group);
@@ -308,22 +331,30 @@ namespace TinyMVC.ApplicationLevel.Saving {
                 }
 
                 string path = GetPath(directoryName, _BASE_EXTENSION);
-                
+
                 if (File.Exists(path)) {
                     File.Delete(path);
-                } 
-            
+                }
+
                 path = GetPath(directoryName, _TEMP_EXTENSION);
-                
+
                 if (File.Exists(path)) {
                     File.Delete(path);
                 }
             }
+
+        #if UNITY_EDITOR
+
+            if (Application.isPlaying == false) {
+                SaveDirectories();
+            }
+
+        #endif
         }
 
         public void Delete([NotNull] string key, [NotNull] params string[] group) {
             string directoryName = group[0];
-            
+
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                 if (directory.HasDirectory(out VDirectory root, group) == false) {
                     return;
@@ -333,17 +364,35 @@ namespace TinyMVC.ApplicationLevel.Saving {
             } else {
                 directory = LoadDirectory(directoryName);
                 _directories.Add(directoryName, directory);
-                
+
                 if (directory.HasDirectory(out VDirectory root, group) == false) {
                     return;
                 }
 
                 Delete(root, key);
             }
+
+        #if UNITY_EDITOR
+
+            if (Application.isPlaying == false) {
+                SaveDirectories();
+            }
+
+        #endif
         }
 
-        public void Delete([NotNull] string key) => Delete(_directories[_MAIN_FILE_NAME], key);
-        
+        public void Delete([NotNull] string key) {
+            Delete(_directories[_MAIN_FILE_NAME], key);
+
+        #if UNITY_EDITOR
+
+            if (Application.isPlaying == false) {
+                SaveDirectories();
+            }
+
+        #endif
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Delete(VDirectory root, string key) {
             if (root.HasFile(key) == false) {
@@ -352,21 +401,21 @@ namespace TinyMVC.ApplicationLevel.Saving {
 
             root.DeleteFile(key);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T LoadData<T>([NotNull] string key) => SerializationUtility.DeserializeValue<T>(_directories[_MAIN_FILE_NAME].GetFile(key), DataFormat.Binary);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T LoadData<T>([NotNull] string key, [NotNull] params string[] group) {
             string directoryName = group[0];
-            
+
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
                 return SerializationUtility.DeserializeValue<T>(directory.GetDirectory(group).GetFile(key), DataFormat.Binary);
             }
-            
+
             directory = LoadDirectory(directoryName);
             _directories.Add(directoryName, directory);
-            
+
             return SerializationUtility.DeserializeValue<T>(directory.GetDirectory(group).GetFile(key), DataFormat.Binary);
         }
 
@@ -389,16 +438,23 @@ namespace TinyMVC.ApplicationLevel.Saving {
             if (directory.isDirty == false) {
                 return;
             }
-            
-            directory.ClearDirty();
-            
+
             string globalPath = GetPath(directory.name, _BASE_EXTENSION);
             string tempPath = GetPath(directory.name, _TEMP_EXTENSION);
 
-            using (FileStream fileStream = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 16384, FileOptions.None)) {
+            try {
+                using FileStream fileStream = new FileStream(
+                    tempPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write,
+                    16384, FileOptions.None
+                );
                 SirenixSerializationUtility.SerializeValueWeak(directory, fileStream, DataFormat.Binary);
-            } 
-                
+            } catch (Exception exception) {
+                Console.WriteLine(exception);
+
+                return;
+            }
+
+            directory.ClearDirty();
             File.Delete(globalPath);
             File.Move(tempPath, globalPath);
         }
@@ -407,7 +463,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
         private VDirectory LoadDirectory(string name) {
             string globalPath = GetPath(name, _BASE_EXTENSION);
             string tempPath = GetPath(name, _TEMP_EXTENSION);
-            
+
             if (File.Exists(globalPath)) {
                 try {
                     return LoadRoot(globalPath);
@@ -418,17 +474,22 @@ namespace TinyMVC.ApplicationLevel.Saving {
                         }
                     } catch (Exception exception) {
                         Debug.LogException(exception);
+
                         return new VDirectory(name);
                     }
                 }
-            } 
-            
+            }
+
             return new VDirectory(name);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private VDirectory LoadRoot(string path) {
-            using FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
+            using FileStream fileStream = new FileStream(
+                path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                4096, FileOptions.None
+            );
+
             return SerializationUtility.DeserializeValue<VDirectory>(fileStream, DataFormat.Binary);
         }
 
@@ -444,3 +505,4 @@ namespace TinyMVC.ApplicationLevel.Saving {
         }
     }
 }
+#endif

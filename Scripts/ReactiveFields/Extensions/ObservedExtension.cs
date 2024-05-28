@@ -68,5 +68,15 @@ namespace TinyMVC.ReactiveFields.Extensions {
             observed.Set(value);
             return true;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TrySetWhen<T>(this Observed<T> observed, T equals, T set) {
+            if (observed.value.Equals(equals) == false) {
+                return false;
+            }
+            
+            observed.Set(set);
+            return true;
+        }
     }
 }
