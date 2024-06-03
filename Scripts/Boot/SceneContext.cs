@@ -170,7 +170,7 @@ namespace TinyMVC.Boot {
     #else
         [ContextMenu("Generate")]
     #endif
-        private void Reset() {
+        public void Reset() {
             if (views != null) {
                 views.Generate_Editor();
             }
@@ -215,7 +215,6 @@ namespace TinyMVC.Boot {
             
             _contexts.Clear();
         }
-
 
     #endif
     }
