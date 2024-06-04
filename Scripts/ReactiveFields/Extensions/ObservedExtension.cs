@@ -1,64 +1,93 @@
 ﻿using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using UnityEngine;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class ObservedExtension {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddValue(this Observed<int> observed, int value) => observed.Set(observed.value + value);
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddValue(this Observed<int> observed, [NotNull] params int[] values) {
             int value = observed.value;
-
+            
             for (int i = 0; i < values.Length; i++) {
                 value += values[i];
             }
-
+            
             observed.Set(value);
         }
-
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddValueMax(this Observed<int> observed, int value, int maxValue) => observed.TrySet(Mathf.Min(observed.value + value, maxValue));
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddValueMax(this Observed<int> observed, int maxValue, [NotNull] params int[] values) {
+            int value = observed.value;
+            
+            for (int i = 0; i < values.Length; i++) {
+                value += values[i];
+            }
+            
+            observed.TrySet(Mathf.Min(value, maxValue));
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddValue(this Observed<float> observed, float value) => observed.Set(observed.value + value);
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddValue(this Observed<float> observed, [NotNull] float[] values) {
             float value = observed.value;
-
+            
             for (int i = 0; i < values.Length; i++) {
                 value += values[i];
             }
-
+            
             observed.Set(value);
         }
-
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddValueMax(this Observed<float> observed, float value, float maxValue) => observed.TrySet(Mathf.Min(observed.value + value, maxValue));
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddValueMax(this Observed<float> observed, float maxValue, [NotNull] params float[] values) {
+            float value = observed.value;
+            
+            for (int i = 0; i < values.Length; i++) {
+                value += values[i];
+            }
+            
+            observed.TrySet(Mathf.Min(value, maxValue));
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SubtractValue(this Observed<int> observed, int value) => observed.Set(observed.value - value);
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SubtractValue(this Observed<int> observed, [NotNull] params int[] values) {
             int value = observed.value;
-
+            
             for (int i = 0; i < values.Length; i++) {
                 value -= values[i];
             }
-
+            
             observed.Set(value);
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SubtractValue(this Observed<float> observed, float value) => observed.Set(observed.value - value);
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SubtractValue(this Observed<float> observed, [NotNull] params float[] values) {
             float value = observed.value;
-
+            
             for (int i = 0; i < values.Length; i++) {
                 value -= values[i];
             }
-
+            
             observed.Set(value);
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TrySet<T>(this Observed<T> observed, T value) {
             if (observed.value.Equals(value)) {
@@ -66,6 +95,7 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
             
             observed.Set(value);
+            
             return true;
         }
         
@@ -76,6 +106,7 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
             
             observed.Set(set);
+            
             return true;
         }
     }
