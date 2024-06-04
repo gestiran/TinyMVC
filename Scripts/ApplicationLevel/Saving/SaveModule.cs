@@ -453,17 +453,20 @@ namespace TinyMVC.ApplicationLevel.Saving {
             UnityEngine.Scripting.GarbageCollector.GCMode = UnityEngine.Scripting.GarbageCollector.Mode.Manual;
             #endif
 
+            List<VDirectory> saveList = new List<VDirectory>(directories.Count);
+
             foreach (VDirectory directory in directories.Values) {
                 if (directory.isDirty == false) {
                     continue;
                 }
-
-                VDirectory data = directory.Clone();
-
-                await Task.Run(() => SaveDirectory(data));
-                data.Dispose();
-
+                
+                saveList.Add(directory.Clone());
                 directory.ClearDirty();
+            }
+            
+            foreach (VDirectory directory in saveList) {
+                await Task.Run(() => SaveDirectory(directory));
+                directory.Dispose();
 
                 #if !UNITY_EDITOR
                 UnityEngine.Scripting.GarbageCollector.CollectIncremental(500000);
