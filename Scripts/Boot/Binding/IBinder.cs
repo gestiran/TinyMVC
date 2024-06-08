@@ -3,6 +3,7 @@
 namespace TinyMVC.Boot.Binding {
     internal interface IBinder {
         public IDependency GetDependency();
+        
         public Binder current { get; }
     }
 }

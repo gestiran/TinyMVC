@@ -11,17 +11,17 @@ namespace TinyMVC.Loop.Extensions {
         public static void TryBeginPlay<T>(this T[] objects) {
             for (int objId = 0; objId < objects.Length; objId++) {
                 if (objects[objId] is IBeginPlayAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => otherAsync.BeginPlay(), exception => new BeginPlayAsyncException(otherAsync, exception));
-                #else
+                    #else
                     otherAsync.BeginPlay();
-                #endif
+                    #endif
                 } else if (objects[objId] is IBeginPlay other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.BeginPlay(), exception => new BeginPlayException(other, exception));
-                #else
+                    #else
                     other.BeginPlay();
-                #endif
+                    #endif
                 }
             }
         }
@@ -29,35 +29,35 @@ namespace TinyMVC.Loop.Extensions {
         public static async Task TryBeginPlayAsync<T>(this T[] objects) {
             for (int objId = 0; objId < objects.Length; objId++) {
                 if (objects[objId] is IBeginPlayAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     await DebugUtility.ReThrowAsync(() => otherAsync.BeginPlay(), exception => new BeginPlayAsyncException(otherAsync, exception));
-                #else
+                    #else
                     await otherAsync.BeginPlay();
-                #endif
+                    #endif
                 } else if (objects[objId] is IBeginPlay other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.BeginPlay(), exception => new BeginPlayException(other, exception));
-                #else
+                    #else
                     other.BeginPlay();
-                #endif
+                    #endif
                 }
             }
         }
-
+        
         public static void TryBeginPlay<T>(this List<T> objects) {
             for (int objId = 0; objId < objects.Count; objId++) {
                 if (objects[objId] is IBeginPlayAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => otherAsync.BeginPlay(), exception => new BeginPlayAsyncException(otherAsync, exception));
-                #else
+                    #else
                     otherAsync.BeginPlay();
-                #endif
+                    #endif
                 } else if (objects[objId] is IBeginPlay other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.BeginPlay(), exception => new BeginPlayException(other, exception));
-                #else
+                    #else
                     other.BeginPlay();
-                #endif
+                    #endif
                 }
             }
         }
@@ -65,62 +65,62 @@ namespace TinyMVC.Loop.Extensions {
         public static async Task TryBeginPlayAsync<T>(this List<T> objects) {
             for (int objId = 0; objId < objects.Count; objId++) {
                 if (objects[objId] is IBeginPlayAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     await DebugUtility.ReThrowAsync(() => otherAsync.BeginPlay(), exception => new BeginPlayAsyncException(otherAsync, exception));
-                #else
+                    #else
                     await otherAsync.BeginPlay();
-                #endif
+                    #endif
                 } else if (objects[objId] is IBeginPlay other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.BeginPlay(), exception => new BeginPlayException(other, exception));
-                #else
+                    #else
                     other.BeginPlay();
-                #endif
+                    #endif
                 }
             }
         }
-
+        
         public static void BeginPlay<TBeginPlay>(this TBeginPlay[] objects) where TBeginPlay : IBeginPlay {
             for (int objId = 0; objId < objects.Length; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 DebugUtility.ReThrow(() => objects[id].BeginPlay(), exception => new BeginPlayException(objects[id], exception));
-            #else
+                #else
                 objects[objId].BeginPlay();
-            #endif
+                #endif
             }
         }
         
         public static async Task BeginPlayAsync<TBeginPlay>(this TBeginPlay[] objects) where TBeginPlay : IBeginPlayAsync {
             for (int objId = 0; objId < objects.Length; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 await DebugUtility.ReThrowAsync(() => objects[id].BeginPlay(), exception => new BeginPlayAsyncException(objects[id], exception));
-            #else
+                #else
                 await objects[objId].BeginPlay();
-            #endif
+                #endif
             }
         }
-
+        
         public static void BeginPlay<TBeginPlay>(this List<TBeginPlay> objects) where TBeginPlay : IBeginPlay {
             for (int objId = 0; objId < objects.Count; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 DebugUtility.ReThrow(() => objects[id].BeginPlay(), exception => new BeginPlayException(objects[id], exception));
-            #else
+                #else
                 objects[objId].BeginPlay();
-            #endif
+                #endif
             }
         }
         
         public static async Task BeginPlayAsync<TBeginPlay>(this List<TBeginPlay> objects) where TBeginPlay : IBeginPlayAsync {
             for (int objId = 0; objId < objects.Count; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 await DebugUtility.ReThrowAsync(() => objects[id].BeginPlay(), exception => new BeginPlayAsyncException(objects[id], exception));
-            #else
+                #else
                 await objects[objId].BeginPlay();
-            #endif
+                #endif
             }
         }
     }

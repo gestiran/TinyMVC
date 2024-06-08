@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace TinyMVC.Utilities.Async {
     public static class CancellationExtension {
-        public static void Cancel<T>(this List<T> cancellations) where T : ICancellation{
+        public static void Cancel<T>(this List<T> cancellations) where T : ICancellation {
             for (int cancellationId = 0; cancellationId < cancellations.Count; cancellationId++) {
                 cancellations[cancellationId].Cancel();
             }
@@ -18,11 +18,12 @@ namespace TinyMVC.Utilities.Async {
         
         public static T UpdateAsync<T>([CanBeNull] this T cancellation, Action<T> action) where T : ICancellation, new() {
             if (cancellation != null) {
-                cancellation.Cancel();   
+                cancellation.Cancel();
             }
-                
+            
             T result = new T();
             action(result);
+            
             return result;
         }
     }

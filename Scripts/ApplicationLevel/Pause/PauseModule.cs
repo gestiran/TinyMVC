@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-
 using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.ApplicationLevel.Pause {
@@ -9,13 +8,13 @@ namespace TinyMVC.ApplicationLevel.Pause {
         
         public event Action<bool> onApplicationPause;
         public event Action<bool> onChange;
-
+        
         public void Initialize() {
             GameObject test = new GameObject("Pause Events");
             test.AddComponent<PauseEvents>().Init(OnApplicationPause);
             UnityObject.DontDestroyOnLoad(test);
         }
-
+        
         public void Enable() {
             if (isEnable) {
                 return;
@@ -25,7 +24,7 @@ namespace TinyMVC.ApplicationLevel.Pause {
             isEnable = true;
             onChange?.Invoke(isEnable);
         }
-
+        
         public void Disable() {
             if (isEnable == false) {
                 return;
@@ -35,7 +34,7 @@ namespace TinyMVC.ApplicationLevel.Pause {
             isEnable = false;
             onChange?.Invoke(isEnable);
         }
-
+        
         private void OnApplicationPause(bool isPause) => onApplicationPause?.Invoke(isPause);
     }
 }

@@ -9,32 +9,32 @@ namespace TinyMVC.ReactiveFields.Extensions {
             if (actions.Count <= 0) {
                 return;
             }
-
+            
             Action[] temp = new Action[actions.Count];
             int i;
             
             for (i = 0; i < actions.Count; i++) {
                 temp[i] = actions[i];
             }
-
+            
             for (i = 0; i < temp.Length; i++) {
                 temp[i].Invoke();
             }
-        } 
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke<T>(this List<Action<T>> actions, T value) {
             if (actions.Count <= 0) {
                 return;
             }
-
+            
             Action<T>[] temp = new Action<T>[actions.Count];
             int i;
-
+            
             for (i = 0; i < actions.Count; i++) {
                 temp[i] = actions[i];
             }
-
+            
             for (i = 0; i < temp.Length; i++) {
                 temp[i].Invoke(value);
             }
@@ -45,17 +45,17 @@ namespace TinyMVC.ReactiveFields.Extensions {
             if (actions.Count <= 0) {
                 return;
             }
-
+            
             Action<T>[] temp = new Action<T>[actions.Count];
             int i;
-
+            
             for (i = 0; i < actions.Count; i++) {
                 temp[i] = actions[i];
             }
-
+            
             for (i = 0; i < temp.Length; i++) {
                 for (int v = 0; v < value.Length; v++) {
-                    temp[i].Invoke(value[v]);   
+                    temp[i].Invoke(value[v]);
                 }
             }
         }
@@ -65,14 +65,14 @@ namespace TinyMVC.ReactiveFields.Extensions {
             if (actions.Count <= 0) {
                 return;
             }
-
+            
             Action<T1, T2>[] temp = new Action<T1, T2>[actions.Count];
             int i;
-
+            
             for (i = 0; i < actions.Count; i++) {
                 temp[i] = actions[i];
             }
-
+            
             for (i = 0; i < temp.Length; i++) {
                 temp[i].Invoke(value1, value2);
             }
@@ -83,14 +83,14 @@ namespace TinyMVC.ReactiveFields.Extensions {
             if (actions.Count <= 0) {
                 return;
             }
-
+            
             Action<T1, T2, T3>[] temp = new Action<T1, T2, T3>[actions.Count];
             int i;
-
+            
             for (i = 0; i < actions.Count; i++) {
                 temp[i] = actions[i];
             }
-
+            
             for (i = 0; i < temp.Length; i++) {
                 temp[i].Invoke(value1, value2, value3);
             }

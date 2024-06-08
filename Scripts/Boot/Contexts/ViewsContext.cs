@@ -20,20 +20,20 @@ using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains references to scene objects </summary>
-#if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
     [InlineProperty, HideLabel]
-#endif
+    #endif
     [Serializable]
     public abstract class ViewsContext {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
         [ListDrawerSettings(HideAddButton = true, ShowFoldout = false), Searchable, Required]
-    #endif
+        #endif
         [SerializeField]
         private View[] _assets;
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
         [SceneObjectsOnly, ShowIn(PrefabKind.InstanceInScene), ReadOnly, RequiredIn(PrefabKind.InstanceInScene)]
-    #endif
+        #endif
         [SerializeField]
         private View[] _generated;
         
@@ -46,7 +46,7 @@ namespace TinyMVC.Boot.Contexts {
                 _assets[assetId] = UnityObject.Instantiate(_assets[assetId]);
             }
         }
-
+        
         internal void GetDependencies(List<IDependency> dependencies) {
             for (int assetId = 0; assetId < _mainViews.Count; assetId++) {
                 if (_mainViews[assetId] is IDependency dependency) {
@@ -64,7 +64,7 @@ namespace TinyMVC.Boot.Contexts {
             _mainViews.AddRange(_assets);
             _mainViews.AddRange(_generated);
         }
-
+        
         internal async Task InitAsync(int sceneId) {
             for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
                 if (_mainViews[viewId] is View view) {
@@ -72,53 +72,53 @@ namespace TinyMVC.Boot.Contexts {
                 }
             }
             
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
             try {
-            #endif
+                #endif
                 
                 await _mainViews.TryInitAsync();
-
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
             } catch (InitException exception) {
                 if (exception.other is IView view) {
                     throw new ViewsException(view, exception);
                 }
-
+                
                 throw;
             } catch (InitAsyncException exception) {
                 if (exception.other is IView view) {
                     throw new ViewsException(view, exception);
                 }
-
+                
                 throw;
             }
-        #endif
-        }
-
-        internal async Task BeginPlay() {
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            try {
             #endif
+        }
+        
+        internal async Task BeginPlay() {
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            try {
+                #endif
                 
                 await _mainViews.TryBeginPlayAsync();
-
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
             } catch (BeginPlayException exception) {
                 if (exception.other is IView view) {
                     throw new ViewsException(view, exception);
                 }
-
+                
                 throw;
             } catch (BeginPlayAsyncException exception) {
                 if (exception.other is IView view) {
                     throw new ViewsException(view, exception);
                 }
-
+                
                 throw;
             }
-        #endif
+            #endif
         }
-
+        
         internal void CheckAndAdd<T>(List<T> list) {
             list.Capacity += list.Count;
             
@@ -128,7 +128,7 @@ namespace TinyMVC.Boot.Contexts {
                 }
             }
         }
-
+        
         internal void ApplyDontDestroyOnLoad() {
             for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
                 if (_mainViews[viewId] is IDontDestroyOnLoad && _mainViews[viewId] is MonoBehaviour monoView) {
@@ -141,15 +141,15 @@ namespace TinyMVC.Boot.Contexts {
             if (view is IInit init) {
                 init.Init();
             }
-
+            
             if (view is IResolving resolving) {
                 resolve(resolving);
             }
-
+            
             if (view is IBeginPlay beginPlay) {
                 beginPlay.BeginPlay();
             }
-
+            
             if (view is ILoop loop) {
                 ProjectContext.current.ConnectLoop(sceneId, loop);
             }
@@ -173,15 +173,15 @@ namespace TinyMVC.Boot.Contexts {
             _subViews.TryUnload();
             _mainViews.TryUnload();
         }
-
+        
         protected void Add<T>(T view) where T : IView => _mainViews.Add(view);
-
+        
         /// <summary> Create and connect views to initialization </summary>
         protected abstract void Create();
-
+        
         protected virtual void Generate() { }
         
-    #if UNITY_EDITOR
+        #if UNITY_EDITOR
         
         internal void Generate_Editor() {
             View[] views = UnityObject.FindObjectsOfType<View>(includeInactive: true);
@@ -191,11 +191,11 @@ namespace TinyMVC.Boot.Contexts {
                 if (views[viewId] is not IGenerated) {
                     continue;
                 }
-
+                
                 if (views[viewId] is IGeneratedContext) {
-                    generated.Add(views[viewId]); 
+                    generated.Add(views[viewId]);
                 }
-
+                
                 if (views[viewId] is IApplyGenerated target) {
                     target.Reset();
                     UnityEditor.EditorUtility.SetDirty(views[viewId].gameObject);
@@ -209,6 +209,6 @@ namespace TinyMVC.Boot.Contexts {
             Generate();
         }
         
-    #endif
+        #endif
     }
 }

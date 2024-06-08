@@ -11,53 +11,53 @@ namespace TinyMVC.Loop.Extensions {
         public static void TryInit<T>(this T[] objects) {
             for (int objId = 0; objId < objects.Length; objId++) {
                 if (objects[objId] is IInitAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => otherAsync.Init(), exception => new InitAsyncException(otherAsync, exception));
-                #else
+                    #else
                     otherAsync.Init();
-                #endif
+                    #endif
                 } else if (objects[objId] is IInit other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.Init(), exception => new InitException(other, exception));
-                #else
+                    #else
                     other.Init();
-                #endif
-                } 
+                    #endif
+                }
             }
         }
         
         public static async Task TryInitAsync<T>(this T[] objects) {
             for (int objId = 0; objId < objects.Length; objId++) {
                 if (objects[objId] is IInitAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     await DebugUtility.ReThrowAsync(() => otherAsync.Init(), exception => new InitAsyncException(otherAsync, exception));
-                #else
+                    #else
                     await otherAsync.Init();
-                #endif
+                    #endif
                 } else if (objects[objId] is IInit other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.Init(), exception => new InitException(other, exception));
-                #else
+                    #else
                     other.Init();
-                #endif
+                    #endif
                 }
             }
         }
-
+        
         public static void TryInit<T>(this List<T> objects) {
             for (int objId = 0; objId < objects.Count; objId++) {
                 if (objects[objId] is IInitAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => otherAsync.Init(), exception => new InitAsyncException(otherAsync, exception));
-                #else
+                    #else
                     otherAsync.Init();
-                #endif
+                    #endif
                 } else if (objects[objId] is IInit other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.Init(), exception => new InitException(other, exception));
-                #else
+                    #else
                     other.Init();
-                #endif
+                    #endif
                 }
             }
         }
@@ -65,62 +65,62 @@ namespace TinyMVC.Loop.Extensions {
         public static async Task TryInitAsync<T>(this List<T> objects) {
             for (int objId = 0; objId < objects.Count; objId++) {
                 if (objects[objId] is IInitAsync otherAsync) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     await DebugUtility.ReThrowAsync(() => otherAsync.Init(), exception => new InitAsyncException(otherAsync, exception));
-                #else
+                    #else
                     await otherAsync.Init();
-                #endif
+                    #endif
                 } else if (objects[objId] is IInit other) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     DebugUtility.ReThrow(() => other.Init(), exception => new InitException(other, exception));
-                #else
+                    #else
                     other.Init();
-                #endif
+                    #endif
                 }
             }
         }
-
+        
         public static void Init<TInit>(this TInit[] objects) where TInit : IInit {
             for (int objId = 0; objId < objects.Length; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 DebugUtility.ReThrow(() => objects[id].Init(), exception => new InitException(objects[id], exception));
-            #else
+                #else
                 objects[objId].Init();
-            #endif
+                #endif
             }
         }
         
         public static async Task InitAsync<TInit>(this TInit[] objects) where TInit : IInitAsync {
             for (int objId = 0; objId < objects.Length; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 await DebugUtility.ReThrowAsync(() => objects[id].Init(), exception => new InitAsyncException(objects[id], exception));
-            #else
+                #else
                 await objects[objId].Init();
-            #endif
+                #endif
             }
         }
-
+        
         public static void Init<TInit>(this List<TInit> objects) where TInit : IInit {
             for (int objId = 0; objId < objects.Count; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 DebugUtility.ReThrow(() => objects[id].Init(), exception => new InitException(objects[id], exception));
-            #else
+                #else
                 objects[objId].Init();
-            #endif
+                #endif
             }
         }
         
         public static async Task InitAsync<TInit>(this List<TInit> objects) where TInit : IInitAsync {
             for (int objId = 0; objId < objects.Count; objId++) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 int id = objId;
                 await DebugUtility.ReThrowAsync(() => objects[id].Init(), exception => new InitAsyncException(objects[id], exception));
-            #else
+                #else
                 await objects[objId].Init();
-            #endif
+                #endif
             }
         }
     }

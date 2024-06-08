@@ -6,9 +6,9 @@ using Sirenix.OdinInspector;
 
 namespace TinyMVC.Dependencies {
     /// <summary> Marker of an object marking it as a possible dependency </summary>
-#if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
     [HideReferenceObjectPicker, HideDuplicateReferenceBox]
-#endif
+    #endif
     public interface IDependency {
         public Type GetType();
     }

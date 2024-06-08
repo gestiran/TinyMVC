@@ -1,5 +1,3 @@
 ﻿namespace TinyMVC.Loop {
-    public interface ILoop {
-        
-    }
+    public interface ILoop { }
 }

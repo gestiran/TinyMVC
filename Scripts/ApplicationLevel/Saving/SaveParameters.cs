@@ -13,7 +13,7 @@ namespace TinyMVC.ApplicationLevel.Saving {
         public const string VERSION_LABEL = "V_01";
         
         private const string _PATH = nameof(SaveParameters);
-
+        
         public static SaveParameters LoadFromResources() => Resources.Load<SaveParameters>(_PATH);
     }
 }

@@ -6,13 +6,13 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.SmartLinks {
-#if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
     [InlineProperty]
-#endif
+    #endif
     [Serializable]
     public sealed class HardLink<T> : SmartLink<T> where T : MonoBehaviour {
         public T GetInstance(Transform parent) => GetInstance(parent, _ => { });
-
+        
         public T GetInstance(Transform parent, Action<T> initialization) => getInstance(parent, initialization);
     }
 }

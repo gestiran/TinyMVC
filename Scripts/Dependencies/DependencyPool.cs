@@ -8,33 +8,33 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies {
-#if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
     [HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-#endif
+    #endif
     public sealed class DependencyPool<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
         public int length => _objects.Length;
         public T Current => _objects[_currentId];
         object IEnumerator.Current => _objects[_currentId];
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, IsReadOnly = true)]
         [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox, LabelText("@ToString()")]
-    #endif
+        #endif
         private T[] _objects;
         private int _currentId;
-
+        
         public DependencyPool(int count) {
             _objects = new T[count];
             _currentId = -1;
         }
-
+        
         public DependencyPool([NotNull] params DependencyPool<T>[] pools) {
             int count = 0;
-
+            
             for (int poolId = 0; poolId < pools.Length; poolId++) {
                 count += pools[poolId].length;
             }
-
+            
             _objects = new T[count];
             count = 0;
             
@@ -45,7 +45,7 @@ namespace TinyMVC.Dependencies {
             
             _currentId = -1;
         }
-
+        
         public DependencyPool([NotNull] List<T> pool) {
             _objects = pool.ToArray();
             _currentId = -1;
@@ -55,18 +55,18 @@ namespace TinyMVC.Dependencies {
             _objects = pool;
             _currentId = -1;
         }
-
+        
         public DependencyPool([NotNull] DependencyPool<T> pool) {
             _objects = new T[pool._objects.Length];
             Array.Copy(pool._objects, _objects, pool._objects.Length);
             _currentId = -1;
         }
-
+        
         public T this[int index] {
             get => _objects[index];
             set => _objects[index] = value;
         }
-
+        
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         
         public IEnumerator<T> GetEnumerator() {
@@ -77,16 +77,17 @@ namespace TinyMVC.Dependencies {
         
         public bool MoveNext() {
             _currentId++;
+            
             return _currentId < _objects.Length;
         }
-
+        
         public void Reset() => _currentId = -1;
-
+        
         public void Dispose() {
             Reset();
             _objects = null;
         }
-
+        
         public override string ToString() => $"DependencyPool<{typeof(T).Name}>";
     }
 }

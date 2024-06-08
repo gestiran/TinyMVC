@@ -7,14 +7,16 @@ namespace TinyMVC.Boot.Helpers {
                 if (list[i].sceneId != sceneId) {
                     continue;
                 }
-
+                
                 context = list[i].context;
                 id = i;
+                
                 return true;
             }
-
+            
             context = default;
             id = default;
+            
             return false;
         }
     }

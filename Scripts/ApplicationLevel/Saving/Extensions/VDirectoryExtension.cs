@@ -10,32 +10,35 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
             
             directory.directories.Add(name, result);
             directory.SetDirty();
+            
             return result;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static VFile WriteOrCreateFile(this VDirectory directory, string name, byte[] data) {
             if (directory.files.TryGetValue(name, out VFile file)) {
                 file.data = data;
                 directory.SetDirty();
+                
                 return file;
             }
-
+            
             VFile result = new VFile(name, data);
-
+            
             directory.files.Add(name, result);
             directory.SetDirty();
+            
             return result;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetFile(this VDirectory directory, string name) => directory.files[name].data;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasDirectory(this VDirectory directory, params string[] group) => directory.HasDirectory(out _, group);
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool HasFile(this VDirectory directory, string name) => directory.files.ContainsKey(name); 
+        public static bool HasFile(this VDirectory directory, string name) => directory.files.ContainsKey(name);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasDirectory(this VDirectory directory, out VDirectory root, params string[] group) {
@@ -48,7 +51,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
                     return false;
                 }
             }
-
+            
             return true;
         }
         
@@ -84,7 +87,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
             if (directory.HasDirectory(out VDirectory root, group) == false) {
                 return Array.Empty<string>();
             }
-
+            
             string[] result = new string[root.directories.Count];
             int i = 0;
             
@@ -100,7 +103,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
             if (directory.HasDirectory(out VDirectory root, group) == false) {
                 return Array.Empty<string>();
             }
-
+            
             string[] result = new string[root.files.Count];
             int i = 0;
             
@@ -110,7 +113,7 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
             
             return result;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static VDirectory GetDirectory(this VDirectory directory, params string[] group) {
             VDirectory root = directory;
@@ -118,10 +121,10 @@ namespace TinyMVC.ApplicationLevel.Saving.Extensions {
             for (int groupId = 1; groupId < group.Length; groupId++) {
                 root = root.directories[group[groupId]];
             }
-
+            
             return root;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static VDirectory OpenOrCreateDirectory(this VDirectory directory, string[] group) {
             VDirectory root = directory;

@@ -13,7 +13,7 @@ namespace TinyMVC.Dependencies {
         private static readonly Type _injectType;
         
         static ResolveUtility() => _injectType = typeof(InjectAttribute);
-
+        
         internal static void ResolveWithoutApply(IResolving resolving, DependencyContainer container) {
             Resolve(resolving, container.dependencies, _injectType);
         }
@@ -30,7 +30,7 @@ namespace TinyMVC.Dependencies {
             Resolve(resolving, container.dependencies, _injectType);
             TryApply(resolving);
         }
-
+        
         internal static void Resolve(List<IResolving> resolving, DependencyContainer containers) {
             Resolve(resolving, containers.dependencies, _injectType);
             TryApply(resolving);
@@ -40,7 +40,7 @@ namespace TinyMVC.Dependencies {
             Resolve(resolving, containers.dependencies, _injectType);
             TryApply(resolving);
         }
-
+        
         private static void TryApply(List<IResolving> resolving) {
             for (int resolvingId = 0; resolvingId < resolving.Count; resolvingId++) {
                 TryApply(resolving[resolvingId]);
@@ -54,9 +54,9 @@ namespace TinyMVC.Dependencies {
         }
         
         private static void TryApply(IResolving resolving) {
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ValidateFields(resolving, _injectType);
-        #endif
+            #endif
             
             if (resolving is IApplyResolving applyResolving) {
                 applyResolving.ApplyResolving();
@@ -74,22 +74,22 @@ namespace TinyMVC.Dependencies {
                 Resolve(resolving[resolvingId], dependencies, injectType);
             }
         }
-
+        
         private static void Resolve(IResolving resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
             FieldInfo[] fields = GetFields(resolving);
             
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker resolvingMarker = new ProfilerMarker(ProfilerCategory.Scripts, $"Resolve(Resolving: {resolving.GetType().Name})");
             resolvingMarker.Begin();
-        #endif
+            #endif
             
             for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
                 if (!Attribute.IsDefined(fields[fieldId], injectType)) {
                     continue;
                 }
-
+                
                 Type fieldType = fields[fieldId].FieldType;
-
+                
                 if (!dependencies.ContainsKey(fieldType)) {
                     continue;
                 }
@@ -97,17 +97,17 @@ namespace TinyMVC.Dependencies {
                 fields[fieldId].SetValue(resolving, dependencies[fieldType]);
             }
             
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
             resolvingMarker.End();
-        #endif
+            #endif
         }
-
+        
         private static FieldInfo[] GetFields(IResolving resolving) {
             return resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
         }
-
-    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-
+        
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        
         private static void ValidateFields(IResolving resolving, Type injectType) {
             FieldInfo[] fields = GetFields(resolving);
             
@@ -115,13 +115,13 @@ namespace TinyMVC.Dependencies {
                 if (!Attribute.IsDefined(fields[fieldId], injectType)) {
                     continue;
                 }
-
+                
                 InjectAttribute inject = fields[fieldId].GetCustomAttribute<InjectAttribute>();
-
+                
                 if (!inject.isRequired) {
                     continue;
                 }
-
+                
                 if (fields[fieldId].GetValue(resolving) != null) {
                     continue;
                 }
@@ -133,29 +133,30 @@ namespace TinyMVC.Dependencies {
                 }
             }
         }
-
+        
         private static string Log(IResolving resolving, FieldInfo field) {
             string access = field.IsPrivate ? "private" : "protected";
-            return $"Resolve {DebugUtility.Link(resolving)} required [{nameof(InjectAttribute)}] {access} {LogField(field)} {field.Name}";
+            
+            return$"Resolve {DebugUtility.Link(resolving)} required [{nameof(InjectAttribute)}] {access} {LogField(field)} {field.Name}";
         }
-
+        
         private static string LogField(FieldInfo field) {
             if (field.FieldType.IsGenericType) {
                 StringBuilder builder = new StringBuilder(4);
-
+                
                 builder.Append(field.FieldType.Name[..^2]);
                 builder.Append("<");
                 
                 Type[] generic = field.FieldType.GenericTypeArguments;
-
+                
                 if (generic.Length > 0) {
                     int i = 0;
-                
+                    
                     while (true) {
                         builder.Append(DebugUtility.Link(generic[i].Name));
-                    
+                        
                         i++;
-                    
+                        
                         if (i < generic.Length) {
                             builder.Append(", ");
                         } else {
@@ -168,10 +169,10 @@ namespace TinyMVC.Dependencies {
                 
                 return builder.ToString();
             }
-
+            
             return DebugUtility.Link(field.FieldType.Name);
         }
-
-    #endif
+        
+        #endif
     }
 }

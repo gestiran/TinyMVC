@@ -4,10 +4,10 @@ using UnityEngine.LowLevel;
 
 namespace TinyMVC.Loop {
     internal static class LoopUtility {
-    #if UNITY_EDITOR
-
+        #if UNITY_EDITOR
+        
         static LoopUtility() => UnityEditor.EditorApplication.playModeStateChanged += PlayModeStateChanged;
-
+        
         private static void PlayModeStateChanged(UnityEditor.PlayModeStateChange state) {
             if (state != UnityEditor.PlayModeStateChange.ExitingPlayMode) {
                 return;
@@ -15,16 +15,16 @@ namespace TinyMVC.Loop {
             
             PlayerLoop.SetPlayerLoop(PlayerLoop.GetDefaultPlayerLoop());
         }
-
-    #endif
-
+        
+        #endif
+        
         private const string _FIXED_TICK = "FixedUpdate";
         private const string _TICK = "Update";
         private const string _LATE_TICK = "PostLateUpdate";
-
+        
         public static void ApplyLoop(Action tick, Action fixedTick, Action lateTick) {
             PlayerLoopSystem current = PlayerLoop.GetCurrentPlayerLoop();
-
+            
             PlayerLoopSystem[] systems = current.subSystemList;
             
             for (int i = 0; i < systems.Length; i++) {
@@ -41,22 +41,22 @@ namespace TinyMVC.Loop {
             
             PlayerLoop.SetPlayerLoop(current);
         }
-
+        
         private static PlayerLoopSystem[] AddSystem(PlayerLoopSystem[] systems, PlayerLoopSystem system) {
             PlayerLoopSystem[] newSystems = new PlayerLoopSystem[systems.Length + 1];
-
+            
             Array.Copy(systems, newSystems, systems.Length);
             newSystems[systems.Length] = system;
             
             return newSystems;
         }
-
+        
         private static PlayerLoopSystem CreateSystem(Action loop, Type type) {
             PlayerLoopSystem system = new PlayerLoopSystem();
-
+            
             system.updateDelegate = loop.Invoke;
             system.type = type;
-
+            
             return system;
         }
     }

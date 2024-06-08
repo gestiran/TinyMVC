@@ -11,19 +11,19 @@ namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains parameters initialization </summary>
     public abstract class ParametersContext {
         private readonly List<IDependency> _parameters;
-
+        
         protected ParametersContext() => _parameters = new List<IDependency>();
-
+        
         public static ParametersEmptyContext Empty() => new ParametersEmptyContext();
-
+        
         internal void Create() {
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
             DebugUtility.ReThrow(() => Create(_parameters), exception => new ParametersException(exception));
-        #else
+            #else
             Create(_parameters);
-        #endif
+            #endif
         }
-
+        
         internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(_parameters);
         
         /// <summary>  Create parameters and connect initialization  </summary>

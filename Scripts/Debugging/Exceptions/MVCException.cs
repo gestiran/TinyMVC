@@ -1,11 +1,11 @@
 ﻿#if UNITY_EDITOR || DEVELOPMENT_BUILD
 
-    using System;
+using System;
 
-    namespace TinyMVC.Debugging {
-        internal abstract class MVCException : Exception {
-            protected MVCException(string message, Exception exception) : base(message, exception) { }
-        }
+namespace TinyMVC.Debugging.Exceptions {
+    internal abstract class MVCException : Exception {
+        protected MVCException(string message, Exception exception) : base(message, exception) { }
     }
+}
 
 #endif

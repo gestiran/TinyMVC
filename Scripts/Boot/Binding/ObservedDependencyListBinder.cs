@@ -6,19 +6,20 @@ namespace TinyMVC.Boot.Binding {
     /// <typeparam name="T"> Dependency object type </typeparam>
     public abstract class ObservedDependencyListBinder<T> : Binder where T : IDependency, new() {
         protected virtual int _capacity { get; } = 4;
-
+        
         /// <summary> Internal create first state dependency object </summary>
         /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
         public override IDependency GetDependency() => Bind();
-
+        
         internal override Type GetBindType() => typeof(ObservedDependencyList<T>);
         
         public ObservedDependencyList<T> Bind() {
             ObservedDependencyList<T> model = new ObservedDependencyList<T>(_capacity);
             Bind(model);
+            
             return model;
         }
-
+        
         protected void AddCount(ObservedDependencyList<T> models, int count, Action<T, int> bind) {
             for (int i = 0; i < count; i++) {
                 T model = new T();
