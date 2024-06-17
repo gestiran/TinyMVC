@@ -1,4 +1,3 @@
-#if ODIN_SERIALIZATION
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -45,4 +44,3 @@ namespace TinyMVC.Editor.Modules.Saving {
         }
     }
 }
-#endif
