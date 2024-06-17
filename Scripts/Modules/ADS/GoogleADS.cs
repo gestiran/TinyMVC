@@ -1,6 +1,10 @@
 using System;
 using System.Threading.Tasks;
 
+#if UNITY_ANDROID
+using UnityEngine;
+#endif
+
 #if GOOGLE_ADS_MOBILE
 using UnityEngine;
 using TinyMVC.Modules.ADS.Providers;
@@ -129,6 +133,7 @@ namespace TinyMVC.Modules.ADS {
         }
         
         #if UNITY_ANDROID
+        
         public string GetGAID() {
             string advertisingID = "";
             
