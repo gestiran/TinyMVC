@@ -1,6 +1,9 @@
 using System;
-using Newtonsoft.Json;
 using UnityEngine;
+
+#if UNITY_EDITOR && UNITY_NUGET_NEWTONSOFT_JSON
+using Newtonsoft.Json;
+#endif
 
 namespace TinyMVC.Modules.ADS {
     [CreateAssetMenu(fileName = nameof(ADSParameters), menuName = "API/" + nameof(ADSParameters))]
@@ -101,7 +104,7 @@ namespace TinyMVC.Modules.ADS {
             return data;
         }
         
-        #if UNITY_EDITOR
+        #if UNITY_EDITOR && UNITY_NUGET_NEWTONSOFT_JSON
         
         private void OnValidate() => _remote = JsonConvert.SerializeObject(DefaultRemotes());
         
