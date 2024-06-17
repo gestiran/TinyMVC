@@ -73,5 +73,7 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public static implicit operator T(Observed<T> value) => value._value;
+        
+        public override string ToString() => _value.ToString();
     }
 }

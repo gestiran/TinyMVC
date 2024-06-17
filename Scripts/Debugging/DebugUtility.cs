@@ -2,7 +2,6 @@
 
 using System;
 using System.Threading.Tasks;
-using TinyMVC.Debugging.Exceptions;
 using Unity.Profiling;
 using UnityEditor;
 using UnityEngine;
@@ -55,12 +54,12 @@ namespace TinyMVC.Debugging {
         
         public static string Link(object context) {
             if (context == null) {
-                return"null";
+                return "null";
             }
             
             #if UNITY_EDITOR
             if (TryGetPath(context, out string path)) {
-                return$"<a href=\"{path}\">{context.GetType().Name}</a>";
+                return $"<a href=\"{path}\">{context.GetType().Name}</a>";
             }
             
             #endif
@@ -70,7 +69,7 @@ namespace TinyMVC.Debugging {
         public static string Link(string contextName) {
             #if UNITY_EDITOR
             if (TryGetPath(contextName, out string path)) {
-                return$"<a href=\"{path}\">{contextName}</a>";
+                return $"<a href=\"{path}\">{contextName}</a>";
             }
             
             #endif

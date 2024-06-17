@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TinyMVC.Boot.Binding;
@@ -39,8 +40,18 @@ namespace TinyMVC.Boot {
         
         private sealed class BootstrapContext : ContextLink<IContext[]> {
             public readonly UnloadPool unload;
+            private readonly SceneCoroutines _coroutines;
             
-            public BootstrapContext(int sceneId, IContext[] context) : base(sceneId, context) { unload = new UnloadPool(); }
+            public BootstrapContext(int sceneId, IContext[] context) : base(sceneId, context) {
+                unload = new UnloadPool();
+                _coroutines = new GameObject(nameof(SceneCoroutines)).AddComponent<SceneCoroutines>();
+            }
+            
+            public Coroutine StartCoroutine(IEnumerator enumerator) => _coroutines.AddCoroutine(enumerator);
+            
+            public void StopCoroutine(Coroutine coroutine) => _coroutines.RemoveCoroutine(coroutine);
+            
+            public void StopAllCoroutines() => _coroutines.StopAll();
         }
         
         public async void LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single) {
@@ -50,6 +61,24 @@ namespace TinyMVC.Boot {
             }
             
             SceneManager.LoadScene(sceneBuildIndex, mode);
+        }
+        
+        public Coroutine StartCoroutine(IEnumerator enumerator) => StartCoroutine(SceneManager.GetActiveScene().buildIndex, enumerator);
+        
+        public Coroutine StartCoroutine(int sceneId, IEnumerator enumerator) {
+            if (_contexts.TryGetContext(sceneId, out IContext[] _, out int id)) {
+                return _contexts[id].StartCoroutine(enumerator);
+            }
+            
+            return null;
+        }
+        
+        public void StopCoroutine(Coroutine coroutine) => StopCoroutine(SceneManager.GetActiveScene().buildIndex, coroutine);
+        
+        public void StopCoroutine(int sceneId, Coroutine coroutine) {
+            if (_contexts.TryGetContext(sceneId, out IContext[] _, out int id)) {
+                _contexts[id].StopCoroutine(coroutine);
+            }
         }
         
         public bool TryGetGlobalUnload(out UnloadPool unload) => TryGetGlobalUnload(SceneManager.GetActiveScene().buildIndex, out unload);
@@ -217,6 +246,7 @@ namespace TinyMVC.Boot {
             data.Remove(sceneId);
             
             _contexts[contextId].unload.Unload();
+            _contexts[contextId].StopAllCoroutines();
             
             _loopContext.RemoveAllContextsWithId(sceneId);
             _contexts.RemoveAt(contextId);

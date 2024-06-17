@@ -1,0 +1,25 @@
+{
+    "name": "TinyMVC.Modules.Firebase",
+    "rootNamespace": "TinyMVC",
+    "references": [
+        "GUID:58c74cb7d7df1a17dba51822087c325e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Firebase.App.dll",
+        "Firebase.TaskExtension.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.google.firebase.app",
+            "expression": "1",
+            "define": "GOOGLE_FIREBASE_APP"
+        }
+    ],
+    "noEngineReferences": false
+}

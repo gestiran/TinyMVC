@@ -1,0 +1,33 @@
+{
+    "name": "TinyMVC.Modules.ADS",
+    "rootNamespace": "TinyMVC",
+    "references": [
+        "GUID:58c74cb7d7df1a17dba51822087c325e",
+        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "GoogleMobileAds.dll",
+        "GoogleMobileAds.Core.dll",
+        "GoogleMobileAds.Ump.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.google.ads.mobile",
+            "expression": "1",
+            "define": "GOOGLE_ADS_MOBILE"
+        },
+        {
+            "name": "com.unity.nuget.newtonsoft-json",
+            "expression": "1",
+            "define": "UNITY_NUGET_NEWTONSOFT_JSON"
+        }
+    ],
+    "noEngineReferences": false
+}

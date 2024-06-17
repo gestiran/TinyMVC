@@ -1,6 +1,6 @@
 {
     "name": "TinyMVC.Tests",
-    "rootNamespace": "TinyMVC.Tests",
+    "rootNamespace": "TinyMVC",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",

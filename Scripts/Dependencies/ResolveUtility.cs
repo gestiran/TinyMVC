@@ -137,7 +137,7 @@ namespace TinyMVC.Dependencies {
         private static string Log(IResolving resolving, FieldInfo field) {
             string access = field.IsPrivate ? "private" : "protected";
             
-            return$"Resolve {DebugUtility.Link(resolving)} required [{nameof(InjectAttribute)}] {access} {LogField(field)} {field.Name}";
+            return $"Resolve {DebugUtility.Link(resolving)} required [{nameof(InjectAttribute)}] {access} {LogField(field)} {field.Name}";
         }
         
         private static string LogField(FieldInfo field) {

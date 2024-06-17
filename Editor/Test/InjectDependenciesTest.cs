@@ -10,7 +10,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace TinyMVC.Tests {
+namespace TinyMVC.Editor.Test {
     public class InjectDependenciesTest {
         private Assembly[] _assemblies;
         

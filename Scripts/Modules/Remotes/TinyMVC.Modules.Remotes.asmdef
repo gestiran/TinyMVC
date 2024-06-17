@@ -1,0 +1,36 @@
+{
+    "name": "TinyMVC.Modules.Remotes",
+    "rootNamespace": "TinyMVC",
+    "references": [
+        "GUID:58c74cb7d7df1a17dba51822087c325e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Firebase.RemoteConfig.dll",
+        "Firebase.TaskExtension.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.google.firebase.app",
+            "expression": "1",
+            "define": "GOOGLE_FIREBASE_APP"
+        },
+        {
+            "name": "com.google.firebase.remote-config",
+            "expression": "1",
+            "define": "GOOGLE_FIREBASE_REMOTE_CONFIGS"
+        },
+        {
+            "name": "com.unity.nuget.newtonsoft-json",
+            "expression": "1",
+            "define": "UNITY_NUGET_NEWTONSOFT_JSON"
+        }
+    ],
+    "noEngineReferences": false
+}

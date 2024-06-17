@@ -68,7 +68,7 @@ namespace TinyMVC.Dependencies.Components {
                     continue;
                 }
                 
-                yield return(target1, target2);
+                yield return (target1, target2);
             }
         }
         
@@ -88,7 +88,7 @@ namespace TinyMVC.Dependencies.Components {
                     continue;
                 }
                 
-                yield return(target1, target2, target3);
+                yield return (target1, target2, target3);
             }
         }
         
@@ -112,7 +112,7 @@ namespace TinyMVC.Dependencies.Components {
                     continue;
                 }
                 
-                yield return(target1, target2, target3, target4);
+                yield return (target1, target2, target3, target4);
             }
         }
         
@@ -146,6 +146,7 @@ namespace TinyMVC.Dependencies.Components {
         private static void Reset_Editor() => _globalId = 0;
         
         #endif
+        
         
         public bool Equals(Model other) => other != null && other._id == _id;
         

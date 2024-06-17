@@ -13,7 +13,7 @@ namespace TinyMVC.Boot.Binding {
         public T Bind<T>() where T : class, IDependency, new() {
             if (_binders.TryGetValue(typeof(T), out Binder data)) {
                 // TODO : DI
-                return(T)data.GetDependency();
+                return (T)data.GetDependency();
             }
             
             return new T();

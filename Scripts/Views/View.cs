@@ -7,9 +7,12 @@ using UnityEngine;
 namespace TinyMVC.Views {
     public abstract class View : MonoBehaviour, IView {
         public ConnectState connectState { get; private set; }
-
+        
+        public delegate T ConnectViewDelegate<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : Component, IView, IResolving;
+        public delegate void ConnectViewDelegate([NotNull] params IView[] views);
+        
         internal int sceneId;
-
+        
         public enum ConnectState : byte {
             Disconnected,
             Connected
@@ -19,24 +22,25 @@ namespace TinyMVC.Views {
             if (token) {
                 return;
             }
-
+            
             token = true;
             init();
         }
-
+        
         public void ConnectView([NotNull] params IView[] views) {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 TryApply(views[viewId], ConnectState.Connected);
                 SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, ProjectContext.data.Resolve);
             }
         }
-
+        
         public T ConnectView<T>([NotNull] T view) where T : class, IView {
             TryApply(view, ConnectState.Connected);
             SceneContext.GetContext(sceneId).Connect(view, sceneId, ProjectContext.data.Resolve);
+            
             return view;
         }
-
+        
         public void ConnectView([NotNull] params View[] views) {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 TryApply(views[viewId], ConnectState.Connected);
@@ -73,15 +77,17 @@ namespace TinyMVC.Views {
         public T ConnectView<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : Component, IView, IResolving {
             TryApply(view, ConnectState.Connected);
             SceneContext.GetContext(sceneId).Connect(view, sceneId, resolving => ProjectContext.data.Resolve(container, resolving));
+            
             return view;
         }
-
+        
         public T DisconnectView<T>(T view) where T : Component, IView {
             SceneContext.GetContext(sceneId).Disconnect(view, sceneId);
             TryApply(view, ConnectState.Disconnected);
+            
             return view;
         }
-
+        
         public void DisconnectView([NotNull] params IView[] views) {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 SceneContext.GetContext(sceneId).Disconnect(views[viewId], sceneId);

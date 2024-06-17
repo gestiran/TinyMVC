@@ -1,0 +1,16 @@
+{
+    "name": "TinyMVC.Modules.Pause",
+    "rootNamespace": "TinyMVC",
+    "references": [
+        "GUID:58c74cb7d7df1a17dba51822087c325e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

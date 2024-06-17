@@ -11,7 +11,10 @@ namespace TinyMVC.Boot.Binding {
         
         public BinderLink(Binder binder) {
             _binder = binder;
-            _types = new[] { binder.GetBindType() };
+            
+            _types = new[] {
+                binder.GetBindType()
+            };
         }
         
         public BinderLink(Binder binder, [NotNull] params Type[] types) {

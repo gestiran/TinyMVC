@@ -13,7 +13,10 @@ namespace TinyMVC.Controllers {
         
         internal int sceneId;
         
-        public enum ConnectState : byte { Disconnected, Connected }
+        public enum ConnectState : byte {
+            Disconnected,
+            Connected
+        }
         
         protected T ConnectController<T>() where T : class, IController, new() {
             T controller = new T();

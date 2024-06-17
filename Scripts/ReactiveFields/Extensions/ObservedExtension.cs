@@ -8,6 +8,9 @@ namespace TinyMVC.ReactiveFields.Extensions {
         public static void AddValue(this Observed<int> observed, int value) => observed.Set(observed.value + value);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddValueMax(this Observed<int> observed, int value, int maxValue) => observed.Set(Mathf.Min(observed.value + value, maxValue));
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddValue(this Observed<int> observed, [NotNull] params int[] values) {
             int value = observed.value;
             
@@ -19,21 +22,10 @@ namespace TinyMVC.ReactiveFields.Extensions {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddValueMax(this Observed<int> observed, int value, int maxValue) => observed.TrySet(Mathf.Min(observed.value + value, maxValue));
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddValueMax(this Observed<int> observed, int maxValue, [NotNull] params int[] values) {
-            int value = observed.value;
-            
-            for (int i = 0; i < values.Length; i++) {
-                value += values[i];
-            }
-            
-            observed.TrySet(Mathf.Min(value, maxValue));
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddValue(this Observed<float> observed, float value) => observed.Set(observed.value + value);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddValueMax(this Observed<float> observed, float value, float maxValue) => observed.Set(Mathf.Min(observed.value + value, maxValue));
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddValue(this Observed<float> observed, [NotNull] float[] values) {
@@ -44,20 +36,6 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
             
             observed.Set(value);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddValueMax(this Observed<float> observed, float value, float maxValue) => observed.TrySet(Mathf.Min(observed.value + value, maxValue));
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddValueMax(this Observed<float> observed, float maxValue, [NotNull] params float[] values) {
-            float value = observed.value;
-            
-            for (int i = 0; i < values.Length; i++) {
-                value += values[i];
-            }
-            
-            observed.TrySet(Mathf.Min(value, maxValue));
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

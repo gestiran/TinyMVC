@@ -2,7 +2,7 @@
 
 using System;
 
-namespace TinyMVC.Debugging.Exceptions {
+namespace TinyMVC.Debugging {
     internal abstract class MVCException : Exception {
         protected MVCException(string message, Exception exception) : base(message, exception) { }
     }
