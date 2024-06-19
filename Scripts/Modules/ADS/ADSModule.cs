@@ -110,6 +110,30 @@ namespace TinyMVC.Modules.ADS {
             #endif
         }
         
+        public void LoadReward() {
+            if (data.fullNoADSMode) {
+                return;
+            }
+            
+            if (!isReady) {
+                #if DEBUG_ADS
+                Debug.LogError("ADSModule.LoadReward: Isn't ready!");
+                #endif
+                return;
+            }
+            
+            #if GOOGLE_ADS_MOBILE
+            if (_googleReward.IsLoaded()) {
+                #if DEBUG_ADS
+                Debug.LogError($"ADSModule.LoadReward: Already loaded!");
+                #endif
+                return;
+            }
+            
+            _googleReward.Load();
+            #endif
+        }
+        
         public void BuyNoADS() {
             #if DEBUG_ADS
             Debug.LogError($"ADSModule.BuyNoADS");

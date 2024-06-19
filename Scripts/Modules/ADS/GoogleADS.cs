@@ -22,6 +22,8 @@ namespace TinyMVC.Modules.ADS {
         public bool isCanShowConsent;
         
         #if GOOGLE_ADS_MOBILE
+        public event Action<bool> onRewardActiveStateChange;
+        
         protected GoogleInterstitialProvider _googleInterstitial;
         protected GoogleRewardedProvider _googleReward;
         protected GoogleBannerProvider _banner;
@@ -65,6 +67,8 @@ namespace TinyMVC.Modules.ADS {
             _googleInterstitial = new GoogleInterstitialProvider(GetAdRequest, config.kids.interstitial, config.general.interstitial);
             _googleReward = new GoogleRewardedProvider(GetAdRequest, config.kids.reward, config.general.reward);
             _banner = new GoogleBannerProvider(GetAdRequest, config.kids.banner, config.general.banner);
+            
+            _googleReward.onActiveStateChange += onRewardActiveStateChange;
             #endif
             
             if (ADSSaveUtility.HasSavedAge()) {

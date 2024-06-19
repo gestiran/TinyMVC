@@ -6,6 +6,8 @@ using UnityEngine;
 
 namespace TinyMVC.Modules.ADS.Providers {
     public sealed class GoogleRewardedProvider : BaseADSProvider {
+        public event Action<bool> onActiveStateChange;
+        
         private string _rewardId;
         private RewardedAd _rewardedAd;
         
@@ -58,6 +60,13 @@ namespace TinyMVC.Modules.ADS.Providers {
         }
         
         public override void Load() {
+            if (isLoading) {
+                #if DEBUG_ADS
+                Debug.LogError("GoogleRewardedProvider.Load: Failed, loading already in progress!");
+                #endif
+                return;
+            }
+            
             if (Application.internetReachability == NetworkReachability.NotReachable) {
                 WaitingNetwork();
                 #if DEBUG_ADS
@@ -113,6 +122,8 @@ namespace TinyMVC.Modules.ADS.Providers {
                 Debug.LogError("GoogleRewardedProvider.TryShow: Success!");
                 #endif
                 
+                onActiveStateChange?.Invoke(false);
+                
                 return true;
             } catch (Exception e) {
                 #if DEBUG_ADS
@@ -154,6 +165,7 @@ namespace TinyMVC.Modules.ADS.Providers {
             #if DEBUG_ADS
             Debug.LogError("GoogleRewardedProvider.OnRewardedLoaded: Success!");
             #endif
+            onActiveStateChange?.Invoke(true);
             _isLoadSuccess = true;
             isLoading = false;
             _rewardedAd = rewardedAd;
