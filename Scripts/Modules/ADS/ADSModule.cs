@@ -96,7 +96,7 @@ namespace TinyMVC.Modules.ADS {
         
         public bool IsLoadRewarded() {
             if (data.fullNoADSMode) {
-                return false;
+                return true;
             }
             
             if (!isReady) {

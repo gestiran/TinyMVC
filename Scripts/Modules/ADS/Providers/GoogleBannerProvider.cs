@@ -29,10 +29,6 @@ namespace TinyMVC.Modules.ADS.Providers {
                 _bannerId = _kidsId;
             }
             
-            _bannerView = new BannerView(_bannerId, AdSize.Banner, AdPosition.Bottom);
-            _bannerView.OnBannerAdLoaded += OnLoaded;
-            _bannerView.OnBannerAdLoadFailed += OnLoadFailed;
-            
             SetRating(rating);
             
             if (isNeedLoad) {
@@ -46,7 +42,7 @@ namespace TinyMVC.Modules.ADS.Providers {
             #endif
             
             if (_bannerView == null) {
-                _bannerView = new BannerView(_bannerId, AdSize.Banner, AdPosition.Bottom);
+                _bannerView = Create();
             }
             
             _bannerView.LoadAd(_getGoogleRequest.Invoke());
@@ -76,6 +72,7 @@ namespace TinyMVC.Modules.ADS.Providers {
                 Debug.LogError("GoogleBannerProvider.Hide: Success!");
                 #endif
                 _bannerView.Hide();
+                Destroy();
             } else {
                 #if DEBUG_ADS
                 Debug.LogError("GoogleBannerProvider.Hide: Isn't initialized!");
@@ -85,11 +82,27 @@ namespace TinyMVC.Modules.ADS.Providers {
             isVisible = false;
         }
         
+        private BannerView Create() {
+            BannerView bannerView = new BannerView(_bannerId, AdSize.GetCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(AdSize.FullWidth), AdPosition.Bottom);
+            bannerView.OnBannerAdLoaded += OnLoaded;
+            bannerView.OnBannerAdLoadFailed += OnLoadFailed;
+            return bannerView;
+        }
+        
+        private void Destroy() {
+            _bannerView.OnBannerAdLoaded -= OnLoaded;
+            _bannerView.OnBannerAdLoadFailed -= OnLoadFailed;
+            _bannerView.Destroy();
+            _bannerView = null;
+            isLoaded = false;
+        }
+        
         private void OnLoaded() {
             #if DEBUG_ADS
             Debug.LogError("GoogleBannerProvider.OnLoaded: Success!");
             #endif
             isLoaded = true;
+            _bannerView.Show();
         }
         
         private void OnLoadFailed(LoadAdError error) {
