@@ -33,10 +33,9 @@ namespace TinyMVC.Modules.Remotes {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
             lastFetchStatus = LastFetchStatus.Pending;
             _instance = FirebaseRemoteConfig.DefaultInstance;
-            _instance.SetDefaultsAsync(_defaultValues).ContinueWithOnMainThread(OnFinishFetch);
+            _instance.SetDefaultsAsync(_defaultValues).ContinueWithOnMainThread(StartFetch);
             #endif
         }
-        
         
         public async Task WaitInitialization() {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
@@ -78,7 +77,6 @@ namespace TinyMVC.Modules.Remotes {
                     #if UNITY_NUGET_NEWTONSOFT_JSON
                     return JsonConvert.DeserializeObject<T>(_instance.GetValue(key).StringValue);
                     #else
-                    
                     Debug.LogError($"Can't convert remote data with key {key}, please use unity newtonsoft JSON!");
                     
                     return default;
@@ -94,7 +92,6 @@ namespace TinyMVC.Modules.Remotes {
                 #if UNITY_NUGET_NEWTONSOFT_JSON
                 return JsonConvert.DeserializeObject<T>((string)value);
                 #else
-                
                 if (value is T result) {
                     return result;
                 }
@@ -159,18 +156,24 @@ namespace TinyMVC.Modules.Remotes {
         }
         
         #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-        private void OnFinishFetch(Task _) {
+        private void StartFetch(Task _) {
+            _instance.FetchAsync().ContinueWithOnMainThread(OnFetchFinish);
+        }
+        
+        private void OnFetchFinish(Task _) {
+            lastFetchStatus = _instance.Info.LastFetchStatus;
+            
             if (lastFetchStatus == LastFetchStatus.Success) {
                 Debug.Log($"RemotesModule: {lastFetchStatus}");
+                
+                _instance.ActivateAsync().ContinueWithOnMainThread(_ => ApplyRemotes());
             } else if (lastFetchStatus == LastFetchStatus.Pending) {
                 Debug.LogWarning($"RemotesModule: {lastFetchStatus}");
             } else {
                 Debug.LogError($"RemotesModule: {lastFetchStatus}");
             }
-            
-            lastFetchStatus = _instance.Info.LastFetchStatus;
-            ApplyRemotes();
         }
+        
         #endif
         
         protected abstract Dictionary<string, object> CreateDefaultValues();
