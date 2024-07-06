@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
+using UnityEngine;
 
 #if GOOGLE_FIREBASE_ANALYTICS
 using Firebase.Analytics;
@@ -12,6 +14,9 @@ namespace TinyMVC.Modules.Analytics {
         public AnalyticsModule() {
             _log = new AnalyticsLog();
         }
+        
+        [Obsolete("Can't send empty event!", true)]
+        public void LogEvent() => Debug.LogError("Don't have parameters!");
         
         public void LogEvent(string eventName) => SendEvent(new AnalyticsEvent(eventName));
         

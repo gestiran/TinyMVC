@@ -1,10 +1,10 @@
-﻿#if UNITY_EDITOR || DEVELOPMENT_BUILD
-
-using System;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Unity.Profiling;
-using UnityEditor;
 using UnityEngine;
+
+using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.Debugging {
     internal static class DebugUtility {
@@ -36,22 +36,6 @@ namespace TinyMVC.Debugging {
             }
         }
         
-        public static async Task ReThrowAsync<T>(Func<Task> action, Func<Exception, T> createException) where T : MVCException {
-            try {
-                await action.Invoke();
-            } catch (Exception exception) {
-                throw createException(exception);
-            }
-        }
-        
-        public static void ReThrow<T1, T2>(Action action, Func<T2, T1> createException) where T1 : MVCException where T2 : Exception {
-            try {
-                action.Invoke();
-            } catch (T2 exception) {
-                throw createException(exception);
-            }
-        }
-        
         public static string Link(object context) {
             if (context == null) {
                 return "null";
@@ -64,6 +48,169 @@ namespace TinyMVC.Debugging {
             
             #endif
             return context.GetType().Name;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void LogException(Exception exception, object context) {
+            if (context != null && context is UnityObject obj) {
+                Debug.LogError(exception.StackTrace, obj);
+            } else {
+                LogException(exception);
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void LogException(Exception exception) => Debug.LogError(exception.StackTrace);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckAndLogException(Action action) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                action.Invoke();
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T CheckAndLogExceptionResult<T>(Func<T> func) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                return func.Invoke();
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception);
+                return default;
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckAndLogException(Func<Task> func) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                func.Invoke();
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckAndLogException(Func<Task> func, object context) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                func.Invoke();
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception, context);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task CheckAndLogExceptionAsync(Func<Task> func) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                await func.Invoke();
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task CheckAndLogExceptionAsync(Func<Task> func, object context) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                await func.Invoke();
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception, context);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckAndLogException<T>(Action<T> action, T value) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                action.Invoke(value);
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckAndLogException<T1, T2>(Action<T1, T2> action, T1 value1, T2 value2) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                action.Invoke(value1, value2);
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckAndLogException<T1, T2, T3>(Action<T1, T2, T3> action, T1 value1, T2 value2, T3 value3) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                action.Invoke(value1, value2, value3);
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception);
+            }
+            #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CheckAndLogException(Action action, object context) {
+            #if MVC_DEBUG
+            try {
+                #endif
+                
+                action.Invoke();
+                
+                #if MVC_DEBUG
+            } catch (Exception exception) {
+                LogException(exception, context);
+            }
+            #endif
         }
         
         public static string Link(string contextName) {
@@ -80,13 +227,13 @@ namespace TinyMVC.Debugging {
         
         private static bool TryGetPath(object context, out string path) {
             if (context is MonoBehaviour behavior) {
-                path = AssetDatabase.GetAssetPath(MonoScript.FromMonoBehaviour(behavior));
+                path = UnityEditor.AssetDatabase.GetAssetPath(UnityEditor.MonoScript.FromMonoBehaviour(behavior));
                 
                 return true;
             }
             
             if (context is ScriptableObject scriptable) {
-                path = AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(scriptable));
+                path = UnityEditor.AssetDatabase.GetAssetPath(UnityEditor.MonoScript.FromScriptableObject(scriptable));
                 
                 return true;
             }
@@ -95,10 +242,10 @@ namespace TinyMVC.Debugging {
         }
         
         private static bool TryGetPath(string contextName, out string path) {
-            string[] scripts = AssetDatabase.FindAssets($"t:Script {contextName}");
+            string[] scripts = UnityEditor.AssetDatabase.FindAssets($"t:Script {contextName}");
             
             if (scripts.Length > 0) {
-                path = AssetDatabase.GUIDToAssetPath(scripts[0]);
+                path = UnityEditor.AssetDatabase.GUIDToAssetPath(scripts[0]);
                 
                 return true;
             }
@@ -111,4 +258,3 @@ namespace TinyMVC.Debugging {
         #endif
     }
 }
-#endif

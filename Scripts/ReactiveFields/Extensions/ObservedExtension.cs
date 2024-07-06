@@ -87,5 +87,49 @@ namespace TinyMVC.ReactiveFields.Extensions {
             
             return true;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TrySetNext(this Observed<int> observed, int value) {
+            if (observed.value >= value) {
+                return false;
+            }
+            
+            observed.Set(value);
+            
+            return true;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TrySetNext(this Observed<float> observed, float value) {
+            if (observed.value >= value) {
+                return false;
+            }
+            
+            observed.Set(value);
+            
+            return true;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TrySetPrevious(this Observed<int> observed, int value) {
+            if (observed.value <= value) {
+                return false;
+            }
+            
+            observed.Set(value);
+            
+            return true;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TrySetPrevious(this Observed<float> observed, float value) {
+            if (observed.value <= value) {
+                return false;
+            }
+            
+            observed.Set(value);
+            
+            return true;
+        }
     }
 }

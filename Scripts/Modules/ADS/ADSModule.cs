@@ -252,6 +252,14 @@ namespace TinyMVC.Modules.ADS {
             return false;
         }
         
+        public bool IsCanShowInterstitial() {
+            #if GOOGLE_ADS_MOBILE
+            return IsNeedInterstitial() && _googleInterstitial.IsLoaded();
+            #else
+            return IsNeedInterstitial();
+            #endif
+        }
+        
         private bool IsNeedInterstitial() {
             if (data.fullNoADSMode) {
                 return false;

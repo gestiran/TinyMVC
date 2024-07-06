@@ -4,11 +4,7 @@ using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop.Extensions;
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using TinyMVC.Debugging;
-using TinyMVC.Debugging.Exceptions;
-#endif
 
 namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains models initialization </summary>
@@ -23,13 +19,7 @@ namespace TinyMVC.Boot.Contexts {
         
         public static ModelsEmptyContext Empty() => new ModelsEmptyContext();
         
-        internal void CreateBinders() {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DebugUtility.ReThrow(Bind, exception => new BindException(exception));
-            #else
-            Bind();
-            #endif
-        }
+        internal void CreateBinders() => Bind();
         
         internal List<IResolving> CreateResolving() {
             List<IResolving> resolving = new List<IResolving>(_binders.Count);
@@ -45,22 +35,11 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void ApplyBindDependencies() {
             for (int bindId = 0; bindId < _binders.Count; bindId++) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                int id = bindId;
-                DebugUtility.ReThrow(() => _models.Add(_binders[id].GetDependency()), exception => new BindException(exception));
-                #else
-                _models.Add(_binders[bindId].GetDependency());
-                #endif
+                _models.Add(DebugUtility.CheckAndLogExceptionResult(_binders[bindId].GetDependency));
             }
         }
         
-        internal void Create() {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DebugUtility.ReThrow(() => Create(_models), exception => new ModelsException(exception));
-            #else
-            Create(_models);
-            #endif
-        }
+        internal void Create() => Create(_models);
         
         internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(_models);
         

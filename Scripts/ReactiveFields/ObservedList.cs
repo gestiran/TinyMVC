@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using TinyMVC.Debugging;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 using TinyMVC.Utilities.Async;
@@ -29,8 +30,8 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<Action> _onClear;
         
         #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, LabelText("Elements"), ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName =
- "@GetType().Name")]
+        [ShowInInspector, LabelText("Elements"),
+         ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@GetType().Name")]
         #endif
         private List<T> _value;
         
@@ -98,7 +99,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onAdd.Count - 1; i >= 0; i--) {
-                _onAdd[i].Invoke();
+                DebugUtility.CheckAndLogException(_onAdd[i].Invoke);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -119,7 +120,7 @@ namespace TinyMVC.ReactiveFields {
             
             for (int i = _onAddWithValue.Count - 1; i >= 0; i--) {
                 for (int j = 0; j < values.Length; j++) {
-                    _onAddWithValue[i].Invoke(values[j]);
+                    DebugUtility.CheckAndLogException(_onAddWithValue[i].Invoke, values[j]);
                 }
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -159,7 +160,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onAdd.Count - 1; i >= 0; i--) {
-                _onAdd[i].Invoke();
+                DebugUtility.CheckAndLogException(_onAdd[i].Invoke);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -179,7 +180,7 @@ namespace TinyMVC.ReactiveFields {
             }
             
             for (int i = _onAddWithValue.Count - 1; i >= 0; i--) {
-                _onAddWithValue[i].Invoke(value);
+                DebugUtility.CheckAndLogException(_onAddWithValue[i].Invoke, value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -237,7 +238,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onRemove.Count - 1; i >= 0; i--) {
-                _onRemove[i].Invoke();
+                DebugUtility.CheckAndLogException(_onRemove[i].Invoke);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -258,7 +259,7 @@ namespace TinyMVC.ReactiveFields {
             
             for (int i = _onRemoveWithValue.Count - 1; i >= 0; i--) {
                 for (int j = 0; j < values.Length; j++) {
-                    _onRemoveWithValue[i].Invoke(values[j]);
+                    DebugUtility.CheckAndLogException(_onRemoveWithValue[i].Invoke, values[j]);
                 }
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -298,7 +299,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onRemove.Count - 1; i >= 0; i--) {
-                _onRemove[i].Invoke();
+                DebugUtility.CheckAndLogException(_onRemove[i].Invoke);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -318,7 +319,7 @@ namespace TinyMVC.ReactiveFields {
             }
             
             for (int i = _onRemoveWithValue.Count - 1; i >= 0; i--) {
-                _onRemoveWithValue[i].Invoke(value);
+                DebugUtility.CheckAndLogException(_onRemoveWithValue[i].Invoke, value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {

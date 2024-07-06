@@ -38,11 +38,11 @@ namespace TinyMVC.Boot {
             unscaledDeltaTime = delta;
         }
         
-        private sealed class BootstrapContext : ContextLink<IContext[]> {
+        private sealed class BootstrapContext : ContextLink<IContext> {
             public readonly UnloadPool unload;
             private readonly SceneCoroutines _coroutines;
             
-            public BootstrapContext(int sceneId, IContext[] context) : base(sceneId, context) {
+            public BootstrapContext(int sceneId, IContext context) : base(sceneId, context) {
                 unload = new UnloadPool();
                 _coroutines = new GameObject(nameof(SceneCoroutines)).AddComponent<SceneCoroutines>();
             }
@@ -66,7 +66,7 @@ namespace TinyMVC.Boot {
         public Coroutine StartCoroutine(IEnumerator enumerator) => StartCoroutine(SceneManager.GetActiveScene().buildIndex, enumerator);
         
         public Coroutine StartCoroutine(int sceneId, IEnumerator enumerator) {
-            if (_contexts.TryGetContext(sceneId, out IContext[] _, out int id)) {
+            if (_contexts.TryGetContext(sceneId, out IContext _, out int id)) {
                 return _contexts[id].StartCoroutine(enumerator);
             }
             
@@ -76,7 +76,7 @@ namespace TinyMVC.Boot {
         public void StopCoroutine(Coroutine coroutine) => StopCoroutine(SceneManager.GetActiveScene().buildIndex, coroutine);
         
         public void StopCoroutine(int sceneId, Coroutine coroutine) {
-            if (_contexts.TryGetContext(sceneId, out IContext[] _, out int id)) {
+            if (_contexts.TryGetContext(sceneId, out IContext _, out int id)) {
                 _contexts[id].StopCoroutine(coroutine);
             }
         }
@@ -84,7 +84,7 @@ namespace TinyMVC.Boot {
         public bool TryGetGlobalUnload(out UnloadPool unload) => TryGetGlobalUnload(SceneManager.GetActiveScene().buildIndex, out unload);
         
         public bool TryGetGlobalUnload(int sceneId, out UnloadPool unload) {
-            if (_contexts.TryGetContext(sceneId, out IContext[] _, out int id)) {
+            if (_contexts.TryGetContext(sceneId, out IContext _, out int id)) {
                 unload = _contexts[id].unload;
                 
                 return true;
@@ -182,30 +182,28 @@ namespace TinyMVC.Boot {
         private async void InitScene(Scene scene, LoadSceneMode mode) {
             int sceneId = scene.buildIndex;
             
-            if (_contexts.TryGetContext(sceneId, out IContext[] _, out int _)) {
+            if (_contexts.TryGetContext(sceneId, out IContext _, out int _)) {
                 return;
             }
             
-            if (!TryFindSceneContext(scene.GetRootGameObjects(), out IContext[] contexts)) {
+            if (!TryFindSceneContext(scene.GetRootGameObjects(), out IContext context)) {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.LogWarning($"ProjectContext.InitScene() - {scene.name} not contain Bootstrap!");
                 #endif
                 return;
             }
             
-            _contexts.Add(new BootstrapContext(sceneId, contexts));
+            _contexts.Add(new BootstrapContext(sceneId, context));
+            context.Create();
             
-            for (int contextId = contexts.Length - 1; contextId >= 0; contextId--) {
-                await contexts[contextId].Create();
-                await contexts[contextId].InitAsync(this, sceneId);
-            }
+            await context.InitAsync(this, sceneId);
         }
         
-        private bool TryFindSceneContext(GameObject[] rootObjects, out IContext[] contexts) {
+        private bool TryFindSceneContext(GameObject[] rootObjects, out IContext contexts) {
             for (int rootId = 0; rootId < rootObjects.Length; rootId++) {
-                contexts = rootObjects[rootId].GetComponents<IContext>();
+                contexts = rootObjects[rootId].GetComponent<IContext>();
                 
-                if (contexts.Length <= 0) {
+                if (contexts == null) {
                     continue;
                 }
                 
@@ -220,28 +218,24 @@ namespace TinyMVC.Boot {
         private void UnloadScene(Scene scene) {
             int sceneId = scene.buildIndex;
             
-            if (!_contexts.TryGetContext(sceneId, out IContext[] contexts, out int contextId)) {
+            if (!_contexts.TryGetContext(sceneId, out IContext context, out int contextId)) {
                 return;
             }
             
-            for (int i = 0; i < contexts.Length; i++) {
-                if (contexts[i] is IGlobalContext) {
-                    return;
-                }
+            if (context is IGlobalContext) {
+                return;
             }
             
-            for (int i = contexts.Length - 1; i >= 0; i--) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Unload");
-                contextCreate.Begin();
-                #endif
-                
-                contexts[i].Unload();
-                
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                contextCreate.End();
-                #endif
-            }
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Unload");
+            contextCreate.Begin();
+            #endif
+            
+            context.Unload();
+            
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            contextCreate.End();
+            #endif
             
             data.Remove(sceneId);
             

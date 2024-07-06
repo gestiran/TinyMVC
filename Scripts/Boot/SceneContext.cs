@@ -9,10 +9,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Debugging.Exceptions;
-#endif
-
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
@@ -20,10 +16,11 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Boot {
     /// <summary> Scene initialization order </summary>
     /// <typeparam name="TViews"> Serialized views class to store references to scene objects </typeparam>
+    [DisallowMultipleComponent]
     public abstract class SceneContext<TViews> : SceneContext, IContext where TViews : ViewsContext {
         [field: SerializeField
-            #if ODIN_INSPECTOR && UNITY_EDITOR
-                , BoxGroup("Views")
+                #if ODIN_INSPECTOR && UNITY_EDITOR
+              , BoxGroup("Views")
             #endif
         ]
         public TViews views { get; private set; }
@@ -32,7 +29,7 @@ namespace TinyMVC.Boot {
         private ModelsContext _models;
         private ParametersContext _parameters;
         
-        async Task IContext.Create() {
+        void IContext.Create() {
             Add(this);
             
             _controllers = CreateControllers();
@@ -41,7 +38,7 @@ namespace TinyMVC.Boot {
             
             views.Instantiate();
             
-            await _controllers.CreateControllers();
+            _controllers.CreateControllers();
             views.CreateViews();
             
             if (this is IGlobalContext) {
@@ -50,44 +47,31 @@ namespace TinyMVC.Boot {
         }
         
         async Task IContext.InitAsync(ProjectContext context, int sceneId) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            try {
-                #endif
-                PreInitResolve();
-                
-                await _controllers.InitAsync(sceneId);
-                await views.InitAsync(sceneId);
-                
-                Resolve(sceneId);
-                
-                await _controllers.BeginPlay();
-                await views.BeginPlay();
-                
-                List<IFixedTick> fixedTicks = new List<IFixedTick>();
-                List<ITick> ticks = new List<ITick>();
-                List<ILateTick> lateTicks = new List<ILateTick>();
-                
-                _controllers.CheckAndAdd(fixedTicks);
-                _controllers.CheckAndAdd(ticks);
-                _controllers.CheckAndAdd(lateTicks);
-                
-                views.CheckAndAdd(fixedTicks);
-                views.CheckAndAdd(ticks);
-                views.CheckAndAdd(lateTicks);
-                
-                context.AddFixedTicks(sceneId, fixedTicks);
-                context.AddTicks(sceneId, ticks);
-                context.AddLateTicks(sceneId, lateTicks);
-                
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (Exception exception) {
-                if (sceneId < 0) {
-                    Debug.LogException(new SceneException($"(ID:{sceneId})", exception), this);
-                } else {
-                    Debug.LogException(new SceneException(SceneManager.GetSceneByBuildIndex(sceneId).name, exception), this);
-                }
-            }
-            #endif
+            PreInitResolve();
+            
+            await _controllers.InitAsync(sceneId);
+            await views.InitAsync(sceneId);
+            
+            Resolve(sceneId);
+            
+            await _controllers.BeginPlay();
+            await views.BeginPlay();
+            
+            List<IFixedTick> fixedTicks = new List<IFixedTick>();
+            List<ITick> ticks = new List<ITick>();
+            List<ILateTick> lateTicks = new List<ILateTick>();
+            
+            _controllers.CheckAndAdd(fixedTicks);
+            _controllers.CheckAndAdd(ticks);
+            _controllers.CheckAndAdd(lateTicks);
+            
+            views.CheckAndAdd(fixedTicks);
+            views.CheckAndAdd(ticks);
+            views.CheckAndAdd(lateTicks);
+            
+            context.AddFixedTicks(sceneId, fixedTicks);
+            context.AddTicks(sceneId, ticks);
+            context.AddLateTicks(sceneId, lateTicks);
         }
         
         void IContext.Unload() {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TinyMVC.Debugging;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
@@ -10,10 +11,6 @@ using UnityEngine;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
-#endif
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Debugging.Exceptions;
 #endif
 
 using UnityObject = UnityEngine.Object;
@@ -72,52 +69,10 @@ namespace TinyMVC.Boot.Contexts {
                 }
             }
             
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            try {
-                #endif
-                
-                await _mainViews.TryInitAsync();
-                
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (InitException exception) {
-                if (exception.other is IView view) {
-                    throw new ViewsException(view, exception);
-                }
-                
-                throw;
-            } catch (InitAsyncException exception) {
-                if (exception.other is IView view) {
-                    throw new ViewsException(view, exception);
-                }
-                
-                throw;
-            }
-            #endif
+            await _mainViews.TryInitAsync();
         }
         
-        internal async Task BeginPlay() {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            try {
-                #endif
-                
-                await _mainViews.TryBeginPlayAsync();
-                
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            } catch (BeginPlayException exception) {
-                if (exception.other is IView view) {
-                    throw new ViewsException(view, exception);
-                }
-                
-                throw;
-            } catch (BeginPlayAsyncException exception) {
-                if (exception.other is IView view) {
-                    throw new ViewsException(view, exception);
-                }
-                
-                throw;
-            }
-            #endif
-        }
+        internal async Task BeginPlay() => await _mainViews.TryBeginPlayAsync();
         
         internal void CheckAndAdd<T>(List<T> list) {
             list.Capacity += list.Count;
@@ -139,7 +94,7 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void Connect(IView view, int sceneId, Action<IResolving> resolve) {
             if (view is IInit init) {
-                init.Init();
+                DebugUtility.CheckAndLogException(init.Init);
             }
             
             if (view is IResolving resolving) {
@@ -147,7 +102,7 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (view is IBeginPlay beginPlay) {
-                beginPlay.BeginPlay();
+                DebugUtility.CheckAndLogException(beginPlay.BeginPlay);
             }
             
             if (view is ILoop loop) {
@@ -163,7 +118,7 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (view is IUnload unload) {
-                unload.Unload();
+                DebugUtility.CheckAndLogException(unload.Unload);
             }
             
             _subViews.Remove(view);

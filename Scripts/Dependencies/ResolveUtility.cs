@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using TinyMVC.Debugging;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Text;
 using Unity.Profiling;
-using TinyMVC.Debugging;
 #endif
 
 namespace TinyMVC.Dependencies {
@@ -59,7 +59,7 @@ namespace TinyMVC.Dependencies {
             #endif
             
             if (resolving is IApplyResolving applyResolving) {
-                applyResolving.ApplyResolving();
+                DebugUtility.CheckAndLogException(applyResolving.ApplyResolving);
             }
         }
         

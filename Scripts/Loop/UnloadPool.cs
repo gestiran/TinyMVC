@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using TinyMVC.Debugging;
 
 namespace TinyMVC.Loop {
     public sealed class UnloadPool : IUnload {
@@ -25,7 +26,7 @@ namespace TinyMVC.Loop {
         
         public void Unload() {
             foreach (IUnload unload in _unloads) {
-                unload.Unload();
+                DebugUtility.CheckAndLogException(unload.Unload, unload);
             }
             
             isUnloaded = true;
@@ -53,7 +54,7 @@ namespace TinyMVC.Loop {
         
         public void Unload() {
             foreach (T unload in _unloads) {
-                unload.Unload();
+                DebugUtility.CheckAndLogException(unload.Unload, unload);
             }
         }
     }
