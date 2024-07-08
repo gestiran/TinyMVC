@@ -42,7 +42,7 @@ namespace TinyMVC.Modules.Remotes {
             int time = _MAX_DELAY;
             
             while (time > 0) {
-                if (lastFetchStatus == LastFetchStatus.Success) {
+                if (lastFetchStatus != LastFetchStatus.Pending) {
                     return;
                 }
                 
@@ -156,9 +156,7 @@ namespace TinyMVC.Modules.Remotes {
         }
         
         #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-        private void StartFetch(Task _) {
-            _instance.FetchAsync().ContinueWithOnMainThread(OnFetchFinish);
-        }
+        private void StartFetch(Task _) => _instance.FetchAsync().ContinueWithOnMainThread(OnFetchFinish);
         
         private void OnFetchFinish(Task _) {
             lastFetchStatus = _instance.Info.LastFetchStatus;
