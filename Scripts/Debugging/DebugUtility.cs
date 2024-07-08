@@ -15,27 +15,6 @@ namespace TinyMVC.Debugging {
             marker.End();
         }
         
-        public static void ProfilerMarkerScripts<T>(string name, Action action, Func<Exception, T> createException) where T : MVCException {
-            ProfilerMarker marker = new ProfilerMarker(ProfilerCategory.Scripts, name);
-            marker.Begin();
-            
-            try {
-                action.Invoke();
-            } catch (Exception exception) {
-                throw createException(exception);
-            }
-            
-            marker.End();
-        }
-        
-        public static void ReThrow<T>(Action action, Func<Exception, T> createException) where T : MVCException {
-            try {
-                action.Invoke();
-            } catch (Exception exception) {
-                throw createException(exception);
-            }
-        }
-        
         public static string Link(object context) {
             if (context == null) {
                 return "null";

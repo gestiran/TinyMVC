@@ -2,11 +2,6 @@
 using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Debugging.Exceptions;
-using TinyMVC.Debugging;
-#endif
-
 namespace TinyMVC.Boot.Contexts {
     /// <summary> Contains parameters initialization </summary>
     public abstract class ParametersContext {
@@ -16,13 +11,7 @@ namespace TinyMVC.Boot.Contexts {
         
         public static ParametersEmptyContext Empty() => new ParametersEmptyContext();
         
-        internal void Create() {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DebugUtility.ReThrow(() => Create(_parameters), exception => new ParametersException(exception));
-            #else
-            Create(_parameters);
-            #endif
-        }
+        internal void Create() => Create(_parameters);
         
         internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(_parameters);
         

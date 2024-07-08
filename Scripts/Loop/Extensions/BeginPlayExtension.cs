@@ -64,7 +64,7 @@ namespace TinyMVC.Loop.Extensions {
                     profile.End();
                     
                     #else
-                    await await DebugUtility.CheckAndLogExceptionAsync(otherAsync.BeginPlay, objects[objId]);
+                    await DebugUtility.CheckAndLogExceptionAsync(otherAsync.BeginPlay, objects[objId]);
                     #endif
                 } else if (objects[objId] is IBeginPlay other) {
                     #if UNITY_EDITOR || DEVELOPMENT_BUILD
