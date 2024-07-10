@@ -68,7 +68,7 @@ namespace TinyMVC.Modules.ADS {
             _googleReward = new GoogleRewardedProvider(GetAdRequest, config.kids.reward, config.general.reward);
             _banner = new GoogleBannerProvider(GetAdRequest, config.kids.banner, config.general.banner);
             
-            _googleReward.onActiveStateChange += onRewardActiveStateChange;
+            _googleReward.onActiveStateChange += isActive => onRewardActiveStateChange?.Invoke(isActive);
             #endif
             
             if (ADSSaveUtility.HasSavedAge()) {
