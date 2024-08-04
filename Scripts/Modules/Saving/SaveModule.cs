@@ -131,6 +131,10 @@ namespace TinyMVC.Modules.Saving {
             }
             
             foreach (VDirectory directory in directories) {
+                if (directory == null) {
+                    continue;
+                }
+                
                 UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
                 foldout.text = $"<b>{directory.name}.{_BASE_EXTENSION}</b>";
                 foldout.value = true;
@@ -379,7 +383,11 @@ namespace TinyMVC.Modules.Saving {
                     return;
                 }
                 
-                Delete(root, key);
+                if (TryDelete(root, key)) {
+                    directory.SetDirty();
+                } else {
+                    return;
+                }
             } else {
                 directory = LoadDirectory(directoryName);
                 _directories.Add(directoryName, directory);
@@ -388,7 +396,11 @@ namespace TinyMVC.Modules.Saving {
                     return;
                 }
                 
-                Delete(root, key);
+                if (TryDelete(root, key)) {
+                    directory.SetDirty();
+                } else {
+                    return;
+                }
             }
             
             #if UNITY_EDITOR
@@ -401,7 +413,11 @@ namespace TinyMVC.Modules.Saving {
         }
         
         public void Delete([NotNull] string key) {
-            Delete(_directories[_MAIN_FILE_NAME], key);
+            if (TryDelete(_directories[_MAIN_FILE_NAME], key) == false) {
+                return;
+            }
+            
+            _directories[_MAIN_FILE_NAME].SetDirty();
             
             #if UNITY_EDITOR
             
@@ -413,12 +429,13 @@ namespace TinyMVC.Modules.Saving {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Delete(VDirectory root, string key) {
+        private bool TryDelete(VDirectory root, string key) {
             if (root.HasFile(key) == false) {
-                return;
+                return false;
             }
             
             root.DeleteFile(key);
+            return true;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -511,6 +528,11 @@ namespace TinyMVC.Modules.Saving {
             
             try {
                 #if ODIN_SERIALIZATION
+                
+                if (File.Exists(tempPath)) {
+                    File.Delete(tempPath);
+                }
+                
                 using FileStream fileStream = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 16384, FileOptions.None);
                 SirenixSerializationUtility.SerializeValue(directory, fileStream, DataFormat.Binary);
                 #endif
@@ -520,8 +542,7 @@ namespace TinyMVC.Modules.Saving {
                 return;
             }
             
-            File.Delete(globalPath);
-            File.Move(tempPath, globalPath);
+            File.Copy(tempPath, globalPath, true);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
