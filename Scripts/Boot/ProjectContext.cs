@@ -32,6 +32,8 @@ namespace TinyMVC.Boot {
         /// <remarks> Run <see cref="Tick"/>, <see cref="FixedTick"/>, <see cref="LateTick"/> all scenes </remarks>
         private LoopContext _loopContext;
         
+        private const int _NULL_SCENE_ID = 1;
+        
         static ProjectContext() {
             float delta = Time.unscaledDeltaTime;
             deltaTime = delta * Time.timeScale;
@@ -56,11 +58,60 @@ namespace TinyMVC.Boot {
         
         public async void LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single) {
             if (mode == LoadSceneMode.Single) {
-                UnloadScene(SceneManager.GetActiveScene());
+                UnloadScene(SceneManager.GetActiveScene().buildIndex);
                 await Task.Yield();
             }
             
             SceneManager.LoadScene(sceneBuildIndex, mode);
+        }
+        
+        public async void ChangeScene(int sceneBuildIndex) {
+            int currentSceneId = SceneManager.GetActiveScene().buildIndex;
+            
+            UnloadScene(currentSceneId);
+            
+            AsyncOperation loadingNull = SceneManager.LoadSceneAsync(_NULL_SCENE_ID, LoadSceneMode.Additive);
+            
+            if (loadingNull == null) {
+                Debug.LogError("Unity internal load scene error!");
+                return;
+            }
+            
+            while (loadingNull.isDone == false) {
+                await Task.Yield();
+            }
+            
+            AsyncOperation unloading = SceneManager.UnloadSceneAsync(currentSceneId, UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
+            
+            if (unloading == null) {
+                Debug.LogError("Unity internal unload scene error!");
+                return;
+            }
+            
+            while (unloading.isDone == false) {
+                await Task.Yield();
+            }
+            
+            UnloadScene(_NULL_SCENE_ID);
+            
+            AsyncOperation clean = Resources.UnloadUnusedAssets();
+            
+            while (clean.isDone == false) {
+                await Task.Yield();
+            }
+            
+            AsyncOperation loading = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Single);
+            
+            if (loading == null) {
+                Debug.LogError("Unity internal load scene error!");
+                return;
+            }
+            
+            while (loading.isDone == false) {
+                await Task.Yield();
+            }
+            
+            await Task.Delay(100);
         }
         
         public Coroutine StartCoroutine(IEnumerator enumerator) => StartCoroutine(SceneManager.GetActiveScene().buildIndex, enumerator);
@@ -99,7 +150,7 @@ namespace TinyMVC.Boot {
         
         public void LoadSceneEditor(string path, LoadSceneMode mode = LoadSceneMode.Single) {
             if (mode == LoadSceneMode.Single) {
-                UnloadScene(SceneManager.GetActiveScene());
+                UnloadScene(SceneManager.GetActiveScene().buildIndex);
             }
             
             LoadSceneParameters parameters = new LoadSceneParameters(mode, LocalPhysicsMode.None);
@@ -215,10 +266,8 @@ namespace TinyMVC.Boot {
             return false;
         }
         
-        private void UnloadScene(Scene scene) {
-            int sceneId = scene.buildIndex;
-            
-            if (!_contexts.TryGetContext(sceneId, out IContext context, out int contextId)) {
+        private void UnloadScene(int buildId) {
+            if (!_contexts.TryGetContext(buildId, out IContext context, out int contextId)) {
                 return;
             }
             
@@ -237,12 +286,12 @@ namespace TinyMVC.Boot {
             contextCreate.End();
             #endif
             
-            data.Remove(sceneId);
+            data.Remove(buildId);
             
             _contexts[contextId].unload.Unload();
             _contexts[contextId].StopAllCoroutines();
             
-            _loopContext.RemoveAllContextsWithId(sceneId);
+            _loopContext.RemoveAllContextsWithId(buildId);
             _contexts.RemoveAt(contextId);
         }
     }
