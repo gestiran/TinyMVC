@@ -4,14 +4,16 @@
     "references": [
         "GUID:58c74cb7d7df1a17dba51822087c325e",
         "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f",
-        "GUID:ac145e6b8c6034cdbadc8c6e26aedbcf"
+        "GUID:ac145e6b8c6034cdbadc8c6e26aedbcf",
+        "GUID:7b5d27c93195f7f4b88a1083935cd13e"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Newtonsoft.Json.dll"
+        "Newtonsoft.Json.dll",
+        "Sirenix.OdinInspector.Attributes.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
@@ -20,6 +22,11 @@
             "name": "com.unity.mobile.notifications",
             "expression": "2",
             "define": "UNITY_MOBILE_NOTIFICATIONS"
+        },
+        {
+            "name": "i2.loc",
+            "expression": "1",
+            "define": "I2_LOCALIZE"
         }
     ],
     "noEngineReferences": false

@@ -4,10 +4,20 @@ using System;
 using System.Collections.Generic;
 using Unity.Notifications.Android;
 
+#if I2_LOCALIZE
+using I2.Loc;
+#endif
+
 namespace TinyMVC.Modules.Push {
     public sealed class AndroidPushModule : MobilePushModule {
-        public AndroidNotification Create(string text, DateTime date, string smallIconName, string largeIconName) {
+        public AndroidNotification Create(string key, string text, DateTime date, string smallIconName, string largeIconName) {
             AndroidNotification notification = new AndroidNotification();
+            
+            #if I2_LOCALIZE
+            if (API<AndroidPushModule>.module.TryGetNotification(key, out PushParameters.NotificationData data)) {
+                text = LocalizationManager.GetTranslation(data.term);
+            }
+            #endif
             
             notification.Title = _parameters.appTitle;
             notification.Text = text;
@@ -18,8 +28,8 @@ namespace TinyMVC.Modules.Push {
             return notification;
         }
         
-        public override void Send(string text, DateTime date, string smallIconName, string largeIconName, string channelId) {
-            Send(Create(text, date, smallIconName, largeIconName), channelId);
+        public override void Send(string key, string text, DateTime date, string smallIconName, string largeIconName, string channelId) {
+            Send(Create(key, text, date, smallIconName, largeIconName), channelId);
         }
         
         public void Send(AndroidNotification[] notifications, string channelId) {
@@ -34,7 +44,7 @@ namespace TinyMVC.Modules.Push {
             }
         }
         
-        public void Send<T>(Dictionary<T,AndroidNotification> notifications, string channelId) {
+        public void Send<T>(Dictionary<T, AndroidNotification> notifications, string channelId) {
             foreach (AndroidNotification notification in notifications.Values) {
                 Send(notification, channelId);
             }
