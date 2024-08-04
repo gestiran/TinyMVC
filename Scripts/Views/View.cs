@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
@@ -43,7 +44,7 @@ namespace TinyMVC.Views {
         
         public void ConnectView([NotNull] params View[] views) {
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                TryApply(views[viewId], ConnectState.Connected);
+                TryApplyView(views[viewId], ConnectState.Connected);
                 SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, ProjectContext.data.Resolve);
             }
         }
@@ -61,7 +62,7 @@ namespace TinyMVC.Views {
             DependencyContainer container = new DependencyContainer(dependencies);
             
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                TryApply(views[viewId], ConnectState.Connected);
+                TryApplyView(views[viewId], ConnectState.Connected);
                 SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, resolving => ProjectContext.data.Resolve(container, resolving));
             }
         }
@@ -111,11 +112,17 @@ namespace TinyMVC.Views {
             return ConnectView(view, dependencies);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void TryApply<T>(T view, ConnectState state) where T : IView {
             if (view is View link) {
-                link.sceneId = sceneId;
-                link.connectState = state;
+                TryApplyView(link, state);
             }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void TryApplyView<T>(T view, ConnectState state) where T : View {
+            view.sceneId = sceneId;
+            view.connectState = state;
         }
     }
 }
