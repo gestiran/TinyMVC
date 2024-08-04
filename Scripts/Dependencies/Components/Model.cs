@@ -16,7 +16,7 @@ namespace TinyMVC.Dependencies.Components {
         #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel]
         #endif
-        private readonly ObservedDictionary<Type, ModelComponent> _components;
+        private readonly ObservedDictionary<string, ModelComponent> _components;
         private readonly int _id;
         
         private static int _globalId;
@@ -24,20 +24,20 @@ namespace TinyMVC.Dependencies.Components {
         private const int _CAPACITY = 16;
         
         protected Model() {
-            _components = new ObservedDictionary<Type, ModelComponent>(_CAPACITY);
+            _components = new ObservedDictionary<string, ModelComponent>(_CAPACITY);
             _id = _globalId++;
         }
         
-        public void AddComponent<T>(T component) where T : ModelComponent => _components.Add(typeof(T), component);
+        public void AddComponent<T>(T component) where T : ModelComponent => _components.Add(typeof(T).FullName, component);
         
-        public void RemoveComponent<T>() where T : ModelComponent => _components.RemoveByKey(typeof(T));
+        public void RemoveComponent<T>() where T : ModelComponent => _components.RemoveByKey(typeof(T).FullName);
         
         public void RemoveComponents(List<ModelComponent> components) => _components.RemoveRange(components);
         
-        public bool IsHaveComponent<T>() where T : ModelComponent => _components.ContainsKey(typeof(T));
+        public bool IsHaveComponent<T>() where T : ModelComponent => _components.ContainsKey(typeof(T).FullName);
         
         public bool TryGetComponent<T>(out T component) where T : ModelComponent {
-            if (_components.TryGetValue(typeof(T), out ModelComponent componentValue)) {
+            if (_components.TryGetValue(typeof(T).FullName, out ModelComponent componentValue)) {
                 component = (T)componentValue;
                 
                 return true;
