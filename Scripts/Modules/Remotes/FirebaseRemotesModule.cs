@@ -4,7 +4,6 @@ using UnityEngine;
 
 #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
 using System;
-using Firebase.Extensions;
 using Firebase.RemoteConfig;
 #endif
 
@@ -17,47 +16,61 @@ namespace TinyMVC.Modules.Remotes {
         #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
         public LastFetchStatus lastFetchStatus { get; private set; }
         
-        private readonly FirebaseRemoteConfig _instance;
+        private static FirebaseRemoteConfig _instance;
         #endif
         
         private readonly Dictionary<string, object> _defaultValues;
-        
-        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-        private const int _MAX_DELAY = 3000;
-        private const int _STEP = 100;
-        #endif
+        private readonly bool _isAlwaysDefault;
         
         protected FirebaseRemotesModule() {
             _defaultValues = CreateDefaultValues();
-            
-            #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-            lastFetchStatus = LastFetchStatus.Pending;
-            _instance = FirebaseRemoteConfig.DefaultInstance;
-            _instance.SetDefaultsAsync(_defaultValues).ContinueWithOnMainThread(StartFetch);
-            #endif
+            _isAlwaysDefault = IsAlwaysDefault();
         }
         
-        public async Task WaitInitialization() {
+        public async Task Initialize() {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-            int time = _MAX_DELAY;
             
-            while (time > 0) {
-                if (lastFetchStatus != LastFetchStatus.Pending) {
-                    return;
-                }
-                
-                await Task.Delay(_STEP);
-                time -= _STEP;
+            lastFetchStatus = LastFetchStatus.Pending;
+            _instance = FirebaseRemoteConfig.DefaultInstance;
+            
+            await _instance.SetDefaultsAsync(_defaultValues);
+            
+            try {
+                await _instance.FetchAsync();
+            } catch (Exception exception) {
+                Debug.LogWarning(exception);
+                lastFetchStatus = LastFetchStatus.Failure;
+                ApplyRemotes();
+                return;
             }
+            
+            lastFetchStatus = _instance.Info.LastFetchStatus;
+            
+            if (lastFetchStatus == LastFetchStatus.Success) {
+                Debug.Log($"RemotesModule: {lastFetchStatus}");
+                await _instance.ActivateAsync();
+            } else if (lastFetchStatus == LastFetchStatus.Pending) {
+                Debug.LogWarning($"RemotesModule: {lastFetchStatus}");
+            } else {
+                Debug.LogError($"RemotesModule: {lastFetchStatus}");
+            }
+            
+            ApplyRemotes();
+            
             #endif
-            await Task.Yield();
         }
         
         public string GetString(string key) {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-            if (lastFetchStatus == LastFetchStatus.Success) {
-                return _instance.GetValue(key).StringValue;
+            
+            if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
+                try {
+                    return _instance.GetValue(key).StringValue;
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
+            
             #endif
             
             if (_defaultValues.TryGetValue(key, out object value)) {
@@ -72,7 +85,7 @@ namespace TinyMVC.Modules.Remotes {
         
         public T GetValue<T>(string key) {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-            if (lastFetchStatus == LastFetchStatus.Success) {
+            if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
                     #if UNITY_NUGET_NEWTONSOFT_JSON
                     return JsonConvert.DeserializeObject<T>(_instance.GetValue(key).StringValue);
@@ -109,8 +122,14 @@ namespace TinyMVC.Modules.Remotes {
         
         public float GetFloat(string key) {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-            if (lastFetchStatus == LastFetchStatus.Success && float.TryParse($"{_instance.GetValue(key).DoubleValue}", out float remoteValue)) {
-                return remoteValue;
+            if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
+                try {
+                    if (float.TryParse($"{_instance.GetValue(key).DoubleValue}", out float remoteValue)) {
+                        return remoteValue;
+                    }
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
             #endif
             
@@ -125,8 +144,14 @@ namespace TinyMVC.Modules.Remotes {
         
         public int GetInt(string key) {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-            if (lastFetchStatus == LastFetchStatus.Success && int.TryParse($"{_instance.GetValue(key).LongValue}", out int remoteValue)) {
-                return remoteValue;
+            if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
+                try {
+                    if (int.TryParse($"{_instance.GetValue(key).LongValue}", out int remoteValue)) {
+                        return remoteValue;
+                    }
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
             #endif
             
@@ -141,8 +166,12 @@ namespace TinyMVC.Modules.Remotes {
         
         public bool GetBool(string key) {
             #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-            if (lastFetchStatus == LastFetchStatus.Success) {
-                return _instance.GetValue(key).BooleanValue;
+            if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
+                try {
+                    return _instance.GetValue(key).BooleanValue;
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
             #endif
             
@@ -155,27 +184,10 @@ namespace TinyMVC.Modules.Remotes {
             return false;
         }
         
-        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
-        private void StartFetch(Task _) => _instance.FetchAsync().ContinueWithOnMainThread(OnFetchFinish);
-        
-        private void OnFetchFinish(Task _) {
-            lastFetchStatus = _instance.Info.LastFetchStatus;
-            
-            if (lastFetchStatus == LastFetchStatus.Success) {
-                Debug.Log($"RemotesModule: {lastFetchStatus}");
-                
-                _instance.ActivateAsync().ContinueWithOnMainThread(_ => ApplyRemotes());
-            } else if (lastFetchStatus == LastFetchStatus.Pending) {
-                Debug.LogWarning($"RemotesModule: {lastFetchStatus}");
-            } else {
-                Debug.LogError($"RemotesModule: {lastFetchStatus}");
-            }
-        }
-        
-        #endif
-        
         protected abstract Dictionary<string, object> CreateDefaultValues();
         
         protected abstract void ApplyRemotes();
+        
+        protected abstract bool IsAlwaysDefault();
     }
 }
