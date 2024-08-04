@@ -13,7 +13,7 @@ namespace TinyMVC.Modules.IAP {
     [DisallowMultipleComponent]
     #if UNITY_PURCHASING
     public sealed class BuyButton : CodelessIAPButton, IDisposable {
-    #else
+        #else
     public sealed class BuyButton : MonoBehaviour, IDisposable {
         #endif
         [SerializeField]
@@ -47,10 +47,12 @@ namespace TinyMVC.Modules.IAP {
             #if UNITY_PURCHASING
             productId = handler.productId;
             
-            UpdatePrice();
-            CodelessIAPStoreListener.Instance.AddButton(this);
+            if (TryUpdatePrice()) {
+                CodelessIAPStoreListener.Instance.AddButton(this);
+                _isActive = true;
+            }
+            
             #endif
-            Active();
         }
         
         public void Dispose() {
@@ -58,21 +60,16 @@ namespace TinyMVC.Modules.IAP {
             #if UNITY_PURCHASING
             CodelessIAPStoreListener.Instance.RemoveButton(this);
             #endif
-            Inactive();
+            _isActive = false;
         }
-        
-        public void Active() => _isActive = true;
-        
-        public void Inactive() => _isActive = false;
         
         #if UNITY_PURCHASING
         protected override void OnPurchaseComplete(Product product) {
-            base.OnPurchaseComplete(product);
-            
             if (!_isActive) {
                 return;
             }
             
+            base.OnPurchaseComplete(product);
             SendToHandler();
         }
         
@@ -84,36 +81,35 @@ namespace TinyMVC.Modules.IAP {
             return button;
         }
         
-        protected override void AddButtonToCodelessListener() { } // Do nothing
+        protected override void AddButtonToCodelessListener() {
+            // Do nothing
+        }
         
-        protected override void RemoveButtonToCodelessListener() { } // Do nothing
+        protected override void RemoveButtonToCodelessListener() {
+            // Do nothing
+        } 
         
         private async void SendToHandler() {
             await Task.Yield();
             _handler.Purchase();
         }
         
-        private void ChangeLayerFromAllChildren(GameObject target, int layer) {
-            Transform targetTransform = target.transform;
-            int children = targetTransform.childCount;
-            
-            for (int childId = 0; childId < children; childId++) {
-                ChangeLayerFromAllChildrenNonRecursive(targetTransform.GetChild(childId).gameObject, layer);
+        private bool TryUpdatePrice() {
+            try {
+                Product product = CodelessIAPStoreListener.Instance.GetProduct(productId);
+                
+                if (_price == null) {
+                    return false;
+                }
+                
+                _price.text = product.metadata.localizedPriceString;
+                
+                return true;
+            } catch (Exception exception) {
+                Debug.LogWarning(exception);
+                
+                return false;
             }
-            
-            target.layer = layer;
-        }
-        
-        private void ChangeLayerFromAllChildrenNonRecursive(GameObject target, int layer) => ChangeLayerFromAllChildren(target, layer);
-        
-        private void UpdatePrice() {
-            Product product = CodelessIAPStoreListener.Instance.GetProduct(productId);
-            
-            if (_price == null) {
-                return;
-            }
-            
-            _price.text = product.metadata.localizedPriceString;
         }
         
         #if UNITY_EDITOR
