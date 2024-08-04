@@ -10,10 +10,7 @@ namespace TinyMVC.Modules.Analytics {
     public sealed class AnalyticsModule : IApplicationModule {
         private readonly AnalyticsLog _log;
         
-        
-        public AnalyticsModule() {
-            _log = new AnalyticsLog();
-        }
+        public AnalyticsModule() => _log = new AnalyticsLog();
         
         [Obsolete("Can't send empty event!", true)]
         public void LogEvent() => Debug.LogError("Don't have parameters!");
@@ -44,10 +41,21 @@ namespace TinyMVC.Modules.Analytics {
         
         private void SendEvent(AnalyticsEvent data) {
             #if GOOGLE_FIREBASE_ANALYTICS
-            if (data.eventType == AnalyticsEvent.EventType.EventOnly) {
-                FirebaseAnalytics.LogEvent(data.eventName);
-            } else {
-                FirebaseAnalytics.LogEvent(data.eventName, data.parameters.ToParameters());
+            switch (data.eventType) {
+                case AnalyticsEvent.EventType.EventOnly: FirebaseAnalytics.LogEvent(data.eventName); break;
+                
+                case AnalyticsEvent.EventType.WithParameter:
+                    AnalyticsParameter parameter = data.parameters[0];
+                    
+                    switch (parameter.type) {
+                        case AnalyticsParameter.ValueType.String: FirebaseAnalytics.LogEvent(data.eventName, parameter.parameterName, parameter.stringValue); break;
+                        case AnalyticsParameter.ValueType.Long: FirebaseAnalytics.LogEvent(data.eventName, parameter.parameterName, parameter.longValue); break;
+                        case AnalyticsParameter.ValueType.Double: FirebaseAnalytics.LogEvent(data.eventName, parameter.parameterName, parameter.doubleValue); break;
+                    }
+                    
+                    break;
+                
+                case AnalyticsEvent.EventType.WithParameters: FirebaseAnalytics.LogEvent(data.eventName, data.parameters.ToParameters()); break;
             }
             #endif
             

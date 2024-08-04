@@ -1,54 +1,37 @@
-#if GOOGLE_FIREBASE_ANALYTICS
-using Firebase.Analytics;
-#endif
-
 namespace TinyMVC.Modules.Analytics {
     public sealed class AnalyticsParameter {
-        private readonly string _parameterName;
-        private readonly string _parameterStringValue;
-        private readonly long _parameterLongValue;
-        private readonly double _parameterDoubleValue;
-        private readonly ValueType _valueType;
+        internal readonly string parameterName;
+        internal readonly string stringValue;
+        internal readonly long longValue;
+        internal readonly double doubleValue;
+        internal readonly ValueType type;
         
-        private enum ValueType : byte {
+        internal enum ValueType : byte {
             String,
             Long,
             Double
         }
         
         public AnalyticsParameter(string parameterName, string parameterValue) {
-            _parameterName = parameterName;
-            _parameterStringValue = parameterValue;
-            _valueType = ValueType.String;
+            this.parameterName = parameterName;
+            stringValue = parameterValue;
+            type = ValueType.String;
         }
         
         public AnalyticsParameter(string parameterName, long parameterValue) {
-            _parameterName = parameterName;
-            _parameterStringValue = $"{parameterValue}";
-            _parameterLongValue = parameterValue;
-            _valueType = ValueType.Long;
+            this.parameterName = parameterName;
+            stringValue = $"{parameterValue}";
+            longValue = parameterValue;
+            type = ValueType.Long;
         }
         
         public AnalyticsParameter(string parameterName, double parameterValue) {
-            _parameterName = parameterName;
-            _parameterStringValue = $"{parameterValue}";
-            _parameterDoubleValue = parameterValue;
-            _valueType = ValueType.Double;
+            this.parameterName = parameterName;
+            stringValue = $"{parameterValue}";
+            doubleValue = parameterValue;
+            type = ValueType.Double;
         }
         
-        #if GOOGLE_FIREBASE_ANALYTICS
-        public static implicit operator Parameter(AnalyticsParameter parameter) {
-            switch (parameter._valueType) {
-                case ValueType.String: return new Parameter(parameter._parameterName, parameter._parameterStringValue);
-                case ValueType.Long: return new Parameter(parameter._parameterName, parameter._parameterLongValue);
-                case ValueType.Double: return new Parameter(parameter._parameterName, parameter._parameterDoubleValue);
-            }
-            
-            return null;
-        }
-        
-        #endif
-        
-        public override string ToString() => $"{_parameterName}:{_parameterStringValue}";
+        public override string ToString() => $"{parameterName}:{stringValue}";
     }
 }
