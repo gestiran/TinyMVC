@@ -4,10 +4,32 @@ using UnityEngine;
 namespace TinyMVC.Utilities {
     [DisallowMultipleComponent]
     public sealed class SceneCoroutines : MonoBehaviour {
-        internal Coroutine AddCoroutine(IEnumerator enumerator) => StartCoroutine(enumerator);
+        private bool _isDestroyed;
         
-        internal void RemoveCoroutine(Coroutine coroutine) => StopCoroutine(coroutine);
+        private void OnDestroy() => _isDestroyed = true;
         
-        internal void StopAll() => StopAllCoroutines();
+        internal Coroutine AddCoroutine(IEnumerator enumerator) {
+            if (_isDestroyed) {
+                return null;
+            }
+            
+            return StartCoroutine(enumerator);
+        }
+        
+        internal void RemoveCoroutine(Coroutine coroutine) {
+            if (_isDestroyed) {
+                return;
+            }
+            
+            StopCoroutine(coroutine);
+        }
+        
+        internal void StopAll() {
+            if (_isDestroyed) {
+                return;
+            }
+            
+            StopAllCoroutines();
+        }
     }
 }
