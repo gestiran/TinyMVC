@@ -34,6 +34,10 @@ namespace TinyMVC.Modules.ADS {
         
         private bool _isADSInitialized;
         
+        private bool _isLoadInterstitial;
+        private bool _isLoadReward;
+        private bool _isLoadBanner;
+        
         #if GOOGLE_ADS_MOBILE
         #if DEBUG_ADS
         private string _consentFailedLog;
@@ -57,6 +61,10 @@ namespace TinyMVC.Modules.ADS {
         }
         
         public virtual void Init(bool isLoadInterstitial, bool isLoadReward, bool isLoadBanner) {
+            _isLoadInterstitial = isLoadInterstitial;
+            _isLoadReward = isLoadReward;
+            _isLoadBanner = isLoadBanner;
+            
             #if UNITY_ANDROID
             ADSParameters.Config config = data.android;
             #elif UNITY_IOS
@@ -73,7 +81,7 @@ namespace TinyMVC.Modules.ADS {
             
             if (ADSSaveUtility.HasSavedAge()) {
                 SetADSRating((byte)ADSSaveUtility.LoadAge());
-                StartModule(isLoadInterstitial, isLoadReward, isLoadBanner);
+                StartModule();
             }
         }
         
@@ -113,7 +121,7 @@ namespace TinyMVC.Modules.ADS {
             #endif
         }
         
-        private void StartModule(bool isLoadInterstitial, bool isLoadReward, bool isLoadBanner) {
+        private void StartModule() {
             if (!ADSSaveUtility.HasSavedAge()) {
                 #if DEBUG_ADS
                 Debug.LogError("GoogleADS.StartModule: Hasn't saved age!");
@@ -126,13 +134,13 @@ namespace TinyMVC.Modules.ADS {
             #endif
             
             #if UNITY_EDITOR
-            InitializeADS(isLoadInterstitial, isLoadReward, isLoadBanner);
+            InitializeADS();
             
             return;
             #endif
             
             #if GOOGLE_ADS_MOBILE
-            SendConsentRequest(isLoadInterstitial, isLoadReward, isLoadBanner);
+            SendConsentRequest();
             #endif
         }
         
@@ -158,15 +166,15 @@ namespace TinyMVC.Modules.ADS {
         
         #endif
         
-        protected virtual void ActivateADS(bool isLoadInterstitial, bool isLoadReward, bool isLoadBanner) {
+        protected virtual void ActivateADS() {
             #if DEBUG_ADS && UNITY_ANDROID
             Debug.LogError($"GoogleADS.ActivateAds: GAID: {GetGAID()}");
             #endif
             
             #if GOOGLE_ADS_MOBILE
-            _googleInterstitial.Activate(_rating, isLoadInterstitial);
-            _googleReward.Activate(_rating, isLoadReward);
-            _banner.Activate(_rating, isLoadBanner);
+            _googleInterstitial.Activate(_rating, _isLoadInterstitial);
+            _googleReward.Activate(_rating, _isLoadReward);
+            _banner.Activate(_rating, _isLoadBanner);
             #endif
             
             isReady = true;
@@ -216,14 +224,13 @@ namespace TinyMVC.Modules.ADS {
             }
         }
         
-        private void SendConsentRequest(bool isLoadInterstitial, bool isLoadReward, bool isLoadBanner) {
+        private void SendConsentRequest() {
             #if DEBUG_ADS
             Debug.LogError("GoogleADS.SendConsentRequest: Start");
             #endif
             
             consentState = ConsentState.Process;
-            Action sendRequest = () => SendConsentRequest(isLoadInterstitial, isLoadReward, isLoadBanner);
-            WaitConsentAsync(() => CheckConsentResult(sendRequest, () => InitializeADS(isLoadInterstitial, isLoadReward, isLoadBanner)));
+            WaitConsentAsync(() => CheckConsentResult(InitializeADS));
             
             if (!isCanShowConsent) {
                 #if DEBUG_ADS
@@ -287,14 +294,14 @@ namespace TinyMVC.Modules.ADS {
             }
         }
         
-        private async void CheckConsentResult(Action sendRequest, Action onSuccess) {
+        private async void CheckConsentResult(Action onSuccess) {
             if (consentState == ConsentState.Failed) {
                 #if DEBUG_ADS
                 Debug.LogError($"GoogleADS.CheckConsentResult - Consent Failed!\n{_consentFailedLog}");
                 #endif
                 
                 await Task.Delay(_CONSENT_CHECK_DELAY);
-                sendRequest();
+                SendConsentRequest();
                 
                 return;
             }
@@ -303,7 +310,7 @@ namespace TinyMVC.Modules.ADS {
         }
         #endif
         
-        private void InitializeADS(bool isLoadInterstitial, bool isLoadReward, bool isLoadBanner) {
+        private void InitializeADS() {
             #if DEBUG_ADS
             Debug.LogError("GoogleADS.InitializeAds");
             #endif
@@ -321,7 +328,7 @@ namespace TinyMVC.Modules.ADS {
             _isADSInitialized = true;
             #endif
             
-            WaitInitializeCompletedAsync(() => ActivateADS(isLoadInterstitial, isLoadReward, isLoadBanner));
+            WaitInitializeCompletedAsync(ActivateADS);
         }
         
         #if GOOGLE_ADS_MOBILE

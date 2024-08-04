@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 
 namespace TinyMVC.Modules.ADS.Components {
@@ -11,12 +13,25 @@ namespace TinyMVC.Modules.ADS.Components {
         
         #if GOOGLE_ADS_MOBILE
         
-        private void Start() {
-            UpdateState(API<ADSModule>.module.IsLoadRewarded());
-            API<ADSModule>.module.onRewardActiveStateChange += UpdateState;
+        private void OnEnable() {
+            UpdateRequest(API<ADSModule>.module.IsLoadRewarded());
+            API<ADSModule>.module.onRewardActiveStateChange += UpdateRequest;
         }
         
-        private void OnDestroy() => API<ADSModule>.module.onRewardActiveStateChange -= UpdateState;
+        private void OnDisable() => API<ADSModule>.module.onRewardActiveStateChange -= UpdateRequest;
+        
+        private void UpdateRequest(bool isLoaded) {
+            try {
+                StopAllCoroutines();
+                UpdateState(isLoaded);
+            } catch (Exception exception) {
+                Debug.LogWarning(exception);
+                
+                if (gameObject.activeInHierarchy) {
+                    StartCoroutine(UpdateAfterFrame(isLoaded));
+                }
+            }
+        }
         
         private void UpdateState(bool isLoaded) {
             if (isLoaded) {
@@ -34,6 +49,16 @@ namespace TinyMVC.Modules.ADS.Components {
         private void ToInactive() {
             active.SetActive(false);
             inactive.SetActive(true);
+        }
+        
+        private IEnumerator UpdateAfterFrame(bool isLoaded) {
+            yield return new WaitForSecondsRealtime(0.5f);
+            
+            try {
+                UpdateState(isLoaded);
+            } catch (Exception exception) {
+                Debug.LogWarning(exception);
+            }
         }
         
         #endif

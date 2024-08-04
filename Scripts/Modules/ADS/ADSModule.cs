@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 namespace TinyMVC.Modules.ADS {
     public sealed class ADSModule : GoogleADS, IApplicationModule {
         public override bool isNoADS { get; protected set; }
+        public bool isAdsVisible { get; private set; }
         
         #if GOOGLE_ADS_MOBILE
-        public bool isVisibleBanner => _banner.isVisible;
+        public bool isVisibleBanner => _banner != null && _banner.isVisible;
+        public bool isInterstitialEnable => _withoutInterstitialTime <= 0;
         #else
         public bool isVisibleBanner => false;
         #endif
@@ -19,6 +21,7 @@ namespace TinyMVC.Modules.ADS {
         public event Action onInterstitialShowFailed;
         public event Action onBannerShow;
         public event Action onBannerHide;
+        public event Action<bool> noAdsStateChange;
         
         private int _withoutInterstitialTime;
         private int _bannerRewardsCount;
@@ -36,7 +39,7 @@ namespace TinyMVC.Modules.ADS {
             base.Init(isLoadInterstitial, isLoadReward, isLoadBanner);
         }
         
-        protected override void ActivateADS(bool isLoadInterstitial, bool isLoadReward, bool isLoadBanner) {
+        protected override void ActivateADS() {
             _withoutInterstitialTime = Mathf.Max(ADSSaveUtility.LoadWithoutInterstitialTime(data.beforeFirstInterstitial), data.beforeAppStartInterstitial);
             #if GOOGLE_ADS_MOBILE
             if (IsActiveADS()) {
@@ -52,7 +55,7 @@ namespace TinyMVC.Modules.ADS {
                 UpdateInterstitialProcess();
             }
             #endif
-            base.ActivateADS(isLoadInterstitial, isLoadReward, isLoadBanner);
+            base.ActivateADS();
         }
         
         public bool HasSavedAge() => ADSSaveUtility.HasSavedAge();
@@ -141,6 +144,7 @@ namespace TinyMVC.Modules.ADS {
             
             isNoADS = true;
             ADSSaveUtility.SaveIsNoADS(isNoADS);
+            noAdsStateChange?.Invoke(true);
         }
         
         public void RemoveNoADS() {
@@ -150,6 +154,7 @@ namespace TinyMVC.Modules.ADS {
             
             isNoADS = false;
             ADSSaveUtility.SaveIsNoADS(isNoADS);
+            noAdsStateChange?.Invoke(false);
         }
         
         public bool TryShowInterstitial() {
@@ -165,15 +170,17 @@ namespace TinyMVC.Modules.ADS {
         public bool TryShowReward(Action onSuccess, Action onFailed) => TryShowRewardProcess(onSuccess, onFailed);
         
         private bool TryShowInterstitialProcess(Action onClose) {
+            isAdsVisible = true;
+            
             if (data.fullNoADSMode) {
                 onClose();
-                
+                isAdsVisible = false;
                 return false;
             }
             
             if (!isReady) {
                 onClose();
-                
+                isAdsVisible = false;
                 #if DEBUG_ADS
                 Debug.LogError("ADSModule.TryShowInterstitialProcess: Is not ready!");
                 #endif
@@ -207,7 +214,7 @@ namespace TinyMVC.Modules.ADS {
             #endif
             
             onClose();
-            
+            isAdsVisible = false;
             return true;
         }
         
@@ -372,8 +379,8 @@ namespace TinyMVC.Modules.ADS {
         private void LoadNextInterstitialAndClose(Action onClose) {
             _googleInterstitial.Load();
             onClose.Invoke();
+            isAdsVisible = false;
         }
-        
         
         private bool IsActiveADS() {
             if (data.fullNoADSMode) {
