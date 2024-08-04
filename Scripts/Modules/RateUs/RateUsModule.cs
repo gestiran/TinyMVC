@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
 using Google.Play.Common;
@@ -36,12 +37,13 @@ namespace TinyMVC.Modules.RateUs {
         
         public void AddTime(int minutes) => _toShowTimer += minutes;
         
-        public void TryOpenWindow() {
+        public bool TryOpenWindow() {
             if (IsNeedShow() == false) {
-                return;
+                return false;
             }
             
             OpenWindow();
+            return true;
         }
         
         public bool IsNeedShow() {
@@ -91,11 +93,15 @@ namespace TinyMVC.Modules.RateUs {
             #endif
         }
         
+        public void SendToMail(string email, string title) => Application.OpenURL($"mailto:{email}?subject={title}&body={MyEscapeURL("")}");
+        
         public void OnClose() {
             _isFirstShow = false;
             RateUsSaveUtility.SaveIsFirstShow(_isFirstShow);
             _toShowTimer = data.otherShowDelay;
         }
+        
+        private string MyEscapeURL(string url) => UnityWebRequest.EscapeURL(url).Replace("+", "%20");
         
         private void OpenWindow() => showRateUs?.Invoke();
         
