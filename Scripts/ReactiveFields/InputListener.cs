@@ -18,6 +18,10 @@ namespace TinyMVC.ReactiveFields {
         
         public InputListener() => _listeners = new List<Action>(_CAPACITY);
         
+        public InputListener(Action action) : this() => AddListener(action);
+        
+        public InputListener(Action action, UnloadPool unload) : this() => AddListener(action, unload);
+        
         #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button]
         #endif

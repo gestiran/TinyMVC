@@ -69,7 +69,7 @@ namespace TinyMVC.ReactiveFields {
             _onRemoveWithValue.Invoke(value);
             
             #if ODIN_INSPECTOR && UNITY_EDITOR
-            _inspectorDisplay.Add(value);
+            _inspectorDisplay.Remove(value);
             #endif
         }
         
@@ -94,7 +94,7 @@ namespace TinyMVC.ReactiveFields {
                     _onRemoveWithValue.Invoke(value);
                     
                     #if ODIN_INSPECTOR && UNITY_EDITOR
-                    _inspectorDisplay.Add(value);
+                    _inspectorDisplay.Remove(value);
                     #endif
                     break;
                 }
