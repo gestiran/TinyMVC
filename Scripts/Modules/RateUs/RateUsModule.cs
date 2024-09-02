@@ -20,11 +20,12 @@ namespace TinyMVC.Modules.RateUs {
         public RateUsModule() {
             data = RateUsParameters.LoadFromResources();
             isNeedShow = RateUsSaveUtility.LoadIsNeedShow(data.isEnableRateUs);
-            _isFirstShow = RateUsSaveUtility.LoadIsFirstShow();
             
             if (isNeedShow == false) {
                 return;
             }
+            
+            _isFirstShow = RateUsSaveUtility.LoadIsFirstShow();
             
             if (_isFirstShow) {
                 _toShowTimer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.firstShowDelay), data.afterAppStartDelay);
@@ -38,55 +39,31 @@ namespace TinyMVC.Modules.RateUs {
         public void AddTime(int minutes) => _toShowTimer += minutes;
         
         public bool TryOpenWindow() {
-            if (IsNeedShow() == false) {
-                return false;
+            if (IsNeedShow()) {
+                OpenWindow();
+                return true;
             }
             
-            OpenWindow();
-            return true;
+            return false;
         }
         
-        public bool IsNeedShow() {
-            if (isNeedShow == false) {
-                return false;
-            }
-            
-            return _toShowTimer <= 0;
-        }
+        public bool IsNeedShow() => isNeedShow && _toShowTimer <= 0;
         
         public async void RateUs() {
             if (isNeedShow) {
                 isNeedShow = false;
-                RateUsSaveUtility.SaveIsNeedShow(isNeedShow);
+                RateUsSaveUtility.SaveIsNeedShow(false);
             }
             
             #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
             
-            try {
-                ReviewManager reviewManager = new ReviewManager();
-                
-                PlayAsyncOperation<PlayReviewInfo, ReviewErrorCode> request = reviewManager.RequestReviewFlow();
-                
-                if (request.IsDone == false) {
-                    await Task.Yield();
-                }
-                
-                if (request.Error == ReviewErrorCode.NoError && request.IsSuccessful) {
-                    PlayAsyncOperation<VoidResult, ReviewErrorCode> launch = reviewManager.LaunchReviewFlow(request.GetResult());
-                    
-                    if (launch.IsDone == false) {
-                        await Task.Yield();
-                    }
-                    
-                    if (launch.Error == ReviewErrorCode.NoError) {
-                        return;
-                    }
-                }
-            } catch (Exception) {
-                // Do nothing
+            if (await TryShowForm()) {
+                // TODO : Need test rate-us showing!
+                // await Task.Yield();
+                // Debug.LogError(Application.isFocused);
+            } else {
+                Application.OpenURL($"market://details?id={Application.identifier}");
             }
-            
-            Application.OpenURL($"market://details?id={Application.identifier}");
             
             #else
             Application.OpenURL($"market://details?id={Application.identifier}");
@@ -100,6 +77,37 @@ namespace TinyMVC.Modules.RateUs {
             RateUsSaveUtility.SaveIsFirstShow(_isFirstShow);
             _toShowTimer = data.otherShowDelay;
         }
+        
+        #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
+        
+        private async Task<bool> TryShowForm() {
+            try {
+                ReviewManager manager = new ReviewManager();
+                PlayAsyncOperation<PlayReviewInfo, ReviewErrorCode> request = manager.RequestReviewFlow();
+                
+                do {
+                    await Task.Yield();
+                } while (request.IsDone == false);
+                
+                if (request.Error == ReviewErrorCode.NoError) {
+                    PlayAsyncOperation<VoidResult, ReviewErrorCode> launch = manager.LaunchReviewFlow(request.GetResult());
+                    
+                    do {
+                        await Task.Yield();
+                    } while (launch.IsDone == false);
+                    
+                    if (launch.Error == ReviewErrorCode.NoError) {
+                        return true;
+                    }
+                }
+            } catch (Exception) {
+                // Do nothing
+            }
+            
+            return false;
+        }
+        
+        #endif
         
         private string MyEscapeURL(string url) => UnityWebRequest.EscapeURL(url).Replace("+", "%20");
         
