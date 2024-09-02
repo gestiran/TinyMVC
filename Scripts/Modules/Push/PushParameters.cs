@@ -29,7 +29,6 @@ namespace TinyMVC.Modules.Push {
             public string term { get; private set; }
             
             #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
-            
             private List<string> GetAllTerms() {
                 if (TryGetSources(out LanguageSourceAsset source)) {
                     return source.mSource.GetTermsList();
