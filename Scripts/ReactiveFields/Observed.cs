@@ -49,24 +49,31 @@ namespace TinyMVC.ReactiveFields {
             _valueListeners.Invoke(newValue);
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddListener(Action listener) => _listeners.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddListener(Action listener, UnloadPool unload) {
             _listeners.Add(listener);
             unload.Add(new UnloadAction(() => RemoveListener(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddListener(Action<T> listener) => _valueListeners.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddListener(Action<T> listener, UnloadPool unload) {
             _valueListeners.Add(listener);
             unload.Add(new UnloadAction(() => RemoveListener(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(Action listener) => _listeners.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(Action<T> listener) => _valueListeners.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void Unload() {
             _listeners.Clear();
             _valueListeners.Clear();
@@ -74,6 +81,12 @@ namespace TinyMVC.ReactiveFields {
         
         public static implicit operator T(Observed<T> value) => value._value;
         
-        public override string ToString() => _value.ToString();
+        public override string ToString() {
+            if (_value == null) {
+                return "null";
+            }
+            
+            return _value.ToString();
+        }
     }
 }

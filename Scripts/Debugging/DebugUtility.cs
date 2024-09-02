@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Unity.Profiling;
 using UnityEngine;
-
 using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.Debugging {
@@ -20,12 +19,12 @@ namespace TinyMVC.Debugging {
                 return "null";
             }
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             if (TryGetPath(context, out string path)) {
                 return $"<a href=\"{path}\">{context.GetType().Name}</a>";
             }
             
-            #endif
+        #endif
             return context.GetType().Name;
         }
         
@@ -43,166 +42,166 @@ namespace TinyMVC.Debugging {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckAndLogException(Action action) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                action.Invoke();
-                
-                #if MVC_DEBUG
+        #endif
+            
+            action.Invoke();
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T CheckAndLogExceptionResult<T>(Func<T> func) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                return func.Invoke();
-                
-                #if MVC_DEBUG
+        #endif
+            
+            return func.Invoke();
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception);
                 return default;
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckAndLogException(Func<Task> func) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                func.Invoke();
-                
-                #if MVC_DEBUG
+        #endif
+            
+            func.Invoke();
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckAndLogException(Func<Task> func, object context) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                func.Invoke();
-                
-                #if MVC_DEBUG
+        #endif
+            
+            func.Invoke();
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception, context);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task CheckAndLogExceptionAsync(Func<Task> func) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                await func.Invoke();
-                
-                #if MVC_DEBUG
+        #endif
+            
+            await func.Invoke();
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task CheckAndLogExceptionAsync(Func<Task> func, object context) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                await func.Invoke();
-                
-                #if MVC_DEBUG
+        #endif
+            
+            await func.Invoke();
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception, context);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckAndLogException<T>(Action<T> action, T value) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                action.Invoke(value);
-                
-                #if MVC_DEBUG
+        #endif
+            
+            action.Invoke(value);
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckAndLogException<T1, T2>(Action<T1, T2> action, T1 value1, T2 value2) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                action.Invoke(value1, value2);
-                
-                #if MVC_DEBUG
+        #endif
+            
+            action.Invoke(value1, value2);
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckAndLogException<T1, T2, T3>(Action<T1, T2, T3> action, T1 value1, T2 value2, T3 value3) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                action.Invoke(value1, value2, value3);
-                
-                #if MVC_DEBUG
+        #endif
+            
+            action.Invoke(value1, value2, value3);
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception);
             }
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckAndLogException(Action action, object context) {
-            #if MVC_DEBUG
+        #if MVC_DEBUG
             try {
-                #endif
-                
-                action.Invoke();
-                
-                #if MVC_DEBUG
+        #endif
+            
+            action.Invoke();
+            
+        #if MVC_DEBUG
             } catch (Exception exception) {
                 LogException(exception, context);
             }
-            #endif
+        #endif
         }
         
         public static string Link(string contextName) {
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             if (TryGetPath(contextName, out string path)) {
                 return $"<a href=\"{path}\">{contextName}</a>";
             }
             
-            #endif
+        #endif
             return contextName;
         }
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         private static bool TryGetPath(object context, out string path) {
             if (context is MonoBehaviour behavior) {
@@ -234,6 +233,6 @@ namespace TinyMVC.Debugging {
             return false;
         }
         
-        #endif
+    #endif
     }
 }

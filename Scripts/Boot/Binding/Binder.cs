@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using TinyMVC.Dependencies;
+using TinyMVC.Loop;
 
 namespace TinyMVC.Boot.Binding {
     /// <summary> Dependency objects factory </summary>
@@ -49,6 +50,11 @@ namespace TinyMVC.Boot.Binding {
         /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
         public override IDependency GetDependency() {
             T model = new T();
+            
+            if (this is IInit init) {
+                init.Init();
+            }
+            
             Bind(model);
             
             return model;

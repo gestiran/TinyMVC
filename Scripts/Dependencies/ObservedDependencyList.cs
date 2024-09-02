@@ -14,9 +14,9 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-    [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
+#if ODIN_INSPECTOR && UNITY_EDITOR
+    [HideLabel, ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
+#endif
     public sealed class ObservedDependencyList<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
         public int count => _value.Count;
         public T Current => _value[_currentId];
@@ -28,9 +28,9 @@ namespace TinyMVC.Dependencies {
         private readonly List<Action<T>> _onRemoveWithValue;
         private readonly List<Action> _onClear;
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel, ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
-        #endif
+    #endif
         private List<T> _value;
         
         private int _currentId;
@@ -91,9 +91,11 @@ namespace TinyMVC.Dependencies {
             _currentId = -1;
         }
         
-        public T this[int index] {
+        public T this[int index]
+        {
             get => _value[index];
-            set {
+            set
+            {
                 _onRemove.Invoke();
                 _onRemoveWithValue.Invoke(_value[index]);
                 
@@ -111,9 +113,9 @@ namespace TinyMVC.Dependencies {
             _onAddWithValue.Invoke(values);
         }
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button(Expanded = true), HorizontalGroup]
-        #endif
+    #endif
         public void Add([NotNull] T value) {
             _value.Add(value);
             
@@ -127,9 +129,9 @@ namespace TinyMVC.Dependencies {
         
         public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -188,9 +190,9 @@ namespace TinyMVC.Dependencies {
         
         public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] T value) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -250,9 +252,9 @@ namespace TinyMVC.Dependencies {
             _onRemoveWithValue.Invoke(values);
         }
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button(Expanded = true), HorizontalGroup]
-        #endif
+    #endif
         public void Remove([NotNull] T value) {
             _value.Remove(value);
             
@@ -266,9 +268,9 @@ namespace TinyMVC.Dependencies {
         
         public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -331,9 +333,9 @@ namespace TinyMVC.Dependencies {
         
         public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] T value) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -384,9 +386,9 @@ namespace TinyMVC.Dependencies {
             _lock = false;
         }
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
         [Button]
-        #endif
+    #endif
         public void Clear() {
             _value.Clear();
             _onClear.Invoke();

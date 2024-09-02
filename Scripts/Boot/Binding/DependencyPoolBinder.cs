@@ -1,5 +1,6 @@
 ﻿using System;
 using TinyMVC.Dependencies;
+using TinyMVC.Loop;
 
 namespace TinyMVC.Boot.Binding {
     /// <summary> Dependency objects factory </summary>
@@ -14,6 +15,10 @@ namespace TinyMVC.Boot.Binding {
         internal override Type GetBindType() => typeof(DependencyPool<T>);
         
         public DependencyPool<T> Bind() {
+            if (this is IInit init) {
+                init.Init();
+            }
+            
             DependencyPool<T> models = new DependencyPool<T>(_count);
             
             for (int modelId = 0; modelId < models.length; modelId++) {

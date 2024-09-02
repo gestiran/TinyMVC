@@ -7,16 +7,15 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
+#endif
     public sealed class DependencyContainer {
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false, ListElementLabelName = "@GetType().Name")]
-        [ShowInInspector, HideInEditorMode, LabelText("Dependencies"), HideReferenceObjectPicker, HideDuplicateReferenceBox, Searchable]
+        [ShowInInspector, HideInEditorMode, LabelText("Dependencies"), HideReferenceObjectPicker, HideDuplicateReferenceBox]
         internal List<IDependency> display;
-        
-        #endif
+    #endif
         internal readonly Dictionary<Type, IDependency> dependencies;
         
         internal DependencyContainer(int capacity) => dependencies = new Dictionary<Type, IDependency>(capacity);
@@ -34,9 +33,9 @@ namespace TinyMVC.Dependencies {
                 }
             }
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
             display = dependencies;
-            #endif
+        #endif
         }
         
         public DependencyContainer(params IDependency[] dependencies) : this(dependencies.Length) {
@@ -52,9 +51,9 @@ namespace TinyMVC.Dependencies {
                 }
             }
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
             display = dependencies.ToList();
-            #endif
+        #endif
         }
         
         public DependencyContainer(IDependency dependency) : this(1) {
@@ -68,9 +67,9 @@ namespace TinyMVC.Dependencies {
                 dependencies.Add(dependency.GetType(), dependency);
             }
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
             display = new List<IDependency>() { dependency };
-            #endif
+        #endif
         }
         
         public void Add(IDependency dependency) {
@@ -84,9 +83,9 @@ namespace TinyMVC.Dependencies {
                 dependencies.Add(dependency.GetType(), dependency);
             }
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
             display.Add(dependency);
-            #endif
+        #endif
         }
     }
 }

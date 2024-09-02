@@ -15,9 +15,9 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.ReactiveFields {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
+#endif
     public sealed class ObservedList<T> : IEnumerable<T>, IEnumerator<T> {
         public int count => _value.Count;
         public T Current => _value[_currentId];
@@ -29,10 +29,10 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<Action<T>> _onRemoveWithValue;
         private readonly List<Action> _onClear;
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, LabelText("Elements"),
          ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@GetType().Name")]
-        #endif
+    #endif
         private List<T> _value;
         
         private int _currentId;
@@ -57,9 +57,11 @@ namespace TinyMVC.ReactiveFields {
             _currentId = -1;
         }
         
-        public T this[int index] {
+        public T this[int index]
+        {
             get => _value[index];
-            set {
+            set
+            {
                 _onRemove.Invoke();
                 _onRemoveWithValue.Invoke(_value[index]);
                 
@@ -88,9 +90,9 @@ namespace TinyMVC.ReactiveFields {
         
         public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -149,9 +151,9 @@ namespace TinyMVC.ReactiveFields {
         
         public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] T value) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -223,9 +225,9 @@ namespace TinyMVC.ReactiveFields {
         
         public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -288,9 +290,9 @@ namespace TinyMVC.ReactiveFields {
         
         public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] T value) {
             if (_lock) {
-                #if UNITY_EDITOR || PERFORMANCE_DEBUG
+            #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
-                #endif
+            #endif
                 return;
             }
             
@@ -357,49 +359,64 @@ namespace TinyMVC.ReactiveFields {
             _onRemoveWithValue.Invoke(element);
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action listener) => _onAdd.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action listener, UnloadPool unload) {
             _onAdd.Add(listener);
             unload.Add(new UnloadAction(() => _onAdd.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action<T> listener) => _onAddWithValue.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action<T> listener, UnloadPool unload) {
             _onAddWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onAddWithValue.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnAddListener(Action listener) => _onAdd.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnAddListener(Action<T> listener) => _onAddWithValue.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(Action listener) => _onRemove.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(Action listener, UnloadPool unload) {
             _onRemove.Add(listener);
             unload.Add(new UnloadAction(() => _onRemove.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(Action<T> listener) => _onRemoveWithValue.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(Action<T> listener, UnloadPool unload) {
             _onRemoveWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnRemoveListener(Action listener) => _onRemove.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnRemoveListener(Action<T> listener) => _onRemoveWithValue.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnClearListener(Action listener) => _onClear.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnClearListener(Action listener, UnloadPool unload) {
             _onClear.Add(listener);
             unload.Add(new UnloadAction(() => _onClear.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnClearListener(Action listener) => _onClear.Remove(listener);
         
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

@@ -2,21 +2,38 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using TinyMVC.Dependencies;
+using UnityEngine;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
+using UnityEngine.SceneManagement;
 #endif
 
 namespace TinyMVC.Boot {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
     [ShowInInspector, InlineProperty, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
+#endif
     public sealed class ProjectData {
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false)]
-        private List<DependencyContainer> _dependenciesEditor;
-        #endif
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox, Searchable]
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false, ListElementLabelName = "@label")]
+        private List<DependencyLink> _dependenciesEditor;
+        
+        [HideReferenceObjectPicker, HideDuplicateReferenceBox]
+        private sealed class DependencyLink {
+            [HideLabel, ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
+            private DependencyContainer _container;
+            
+            [HideInInspector]
+            public readonly string label;
+            
+            public DependencyLink(string label, DependencyContainer container) {
+                this.label = label;
+                _container = container;
+            }
+        }
+        
+    #endif
         
         private DependencyContainer _container;
         
@@ -26,9 +43,9 @@ namespace TinyMVC.Boot {
         
         internal ProjectData() {
             _dependencies = new Dictionary<int, DependencyContainer>(_CAPACITY);
-            #if ODIN_INSPECTOR && UNITY_EDITOR
-            _dependenciesEditor = new List<DependencyContainer>(_CAPACITY);
-            #endif
+        #if ODIN_INSPECTOR && UNITY_EDITOR
+            _dependenciesEditor = new List<DependencyLink>(_CAPACITY);
+        #endif
         }
         
         public void Resolve(List<IResolving> resolving) {
@@ -67,9 +84,9 @@ namespace TinyMVC.Boot {
             _dependencies.Add(sceneId, container);
             _container = null;
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
-            RecreateDisplayEditor();
-            #endif
+        #if ODIN_INSPECTOR && UNITY_EDITOR
+            _dependenciesEditor.Add(new DependencyLink(SceneManager.GetSceneByBuildIndex(sceneId).name, container));
+        #endif
         }
         
         internal void Remove(int sceneId) {
@@ -80,9 +97,16 @@ namespace TinyMVC.Boot {
             _dependencies.Remove(sceneId);
             _container = null;
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
-            RecreateDisplayEditor();
-            #endif
+        #if ODIN_INSPECTOR && UNITY_EDITOR
+            string name = SceneManager.GetSceneByBuildIndex(sceneId).name;
+            
+            for (int linkId = 0; linkId < _dependenciesEditor.Count; linkId++) {
+                if (_dependenciesEditor[linkId].label == name) {
+                    _dependenciesEditor.RemoveAt(linkId);
+                    break;
+                }
+            }
+        #endif
         }
         
         private DependencyContainer GetContainer() {
@@ -102,16 +126,5 @@ namespace TinyMVC.Boot {
             
             return result;
         }
-        
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        private void RecreateDisplayEditor() {
-            _dependenciesEditor.Clear();
-
-            foreach (DependencyContainer container in _dependencies.Values) {
-                _dependenciesEditor.Add(container);
-            }
-        }
-        
-        #endif
     }
 }

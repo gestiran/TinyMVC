@@ -54,9 +54,9 @@ namespace TinyMVC.Dependencies {
         }
         
         private static void TryApply(IResolving resolving) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ValidateFields(resolving, _injectType);
-            #endif
+        #endif
             
             if (resolving is IApplyResolving applyResolving) {
                 DebugUtility.CheckAndLogException(applyResolving.ApplyResolving);
@@ -78,10 +78,10 @@ namespace TinyMVC.Dependencies {
         private static void Resolve(IResolving resolving, Dictionary<Type, IDependency> dependencies, Type injectType) {
             FieldInfo[] fields = GetFields(resolving);
             
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             ProfilerMarker resolvingMarker = new ProfilerMarker(ProfilerCategory.Scripts, $"Resolve(Resolving: {resolving.GetType().Name})");
             resolvingMarker.Begin();
-            #endif
+        #endif
             
             for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
                 if (!Attribute.IsDefined(fields[fieldId], injectType)) {
@@ -97,17 +97,18 @@ namespace TinyMVC.Dependencies {
                 fields[fieldId].SetValue(resolving, dependencies[fieldType]);
             }
             
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
             resolvingMarker.End();
-            #endif
+        #endif
         }
         
         private static FieldInfo[] GetFields(IResolving resolving) {
             return resolving.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
         }
         
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
         
+        // Resharper disable Unity.ExpensiveCode
         private static void ValidateFields(IResolving resolving, Type injectType) {
             FieldInfo[] fields = GetFields(resolving);
             
@@ -173,6 +174,6 @@ namespace TinyMVC.Dependencies {
             return DebugUtility.Link(field.FieldType.Name);
         }
         
-        #endif
+    #endif
     }
 }

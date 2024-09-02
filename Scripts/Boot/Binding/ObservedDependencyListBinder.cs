@@ -1,5 +1,6 @@
 ﻿using System;
 using TinyMVC.Dependencies;
+using TinyMVC.Loop;
 
 namespace TinyMVC.Boot.Binding {
     /// <summary> Dependency objects factory </summary>
@@ -14,6 +15,10 @@ namespace TinyMVC.Boot.Binding {
         internal override Type GetBindType() => typeof(ObservedDependencyList<T>);
         
         public ObservedDependencyList<T> Bind() {
+            if (this is IInit init) {
+                init.Init();
+            }
+            
             ObservedDependencyList<T> model = new ObservedDependencyList<T>(_capacity);
             Bind(model);
             

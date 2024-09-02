@@ -69,6 +69,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
             observed.Set(value);
         }
         
+        [Obsolete("Can't subtract nothing!", true)]
+        public static void SubtractValue(this Observed<int> observed) {
+            // Do nothing
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SubtractValue(this Observed<int> observed, int value) => observed.Set(observed.value - value);
         
