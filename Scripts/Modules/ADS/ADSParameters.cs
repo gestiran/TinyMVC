@@ -32,12 +32,12 @@ namespace TinyMVC.Modules.ADS {
         [field: SerializeField]
         public Config ios { get; private set; }
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         [SerializeField, Header("Remote:")]
         private string _remote;
         
-        #endif
+    #endif
         
         public const byte TARGET_AGE = 16;
         
@@ -104,10 +104,9 @@ namespace TinyMVC.Modules.ADS {
             return data;
         }
         
-        #if UNITY_EDITOR && UNITY_NUGET_NEWTONSOFT_JSON
-        
+    #if UNITY_EDITOR && UNITY_NUGET_NEWTONSOFT_JSON
         private void OnValidate() => _remote = JsonConvert.SerializeObject(DefaultRemotes());
         
-        #endif
+    #endif
     }
 }

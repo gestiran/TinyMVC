@@ -21,16 +21,16 @@ namespace TinyMVC.Modules.ADS {
         
         public bool isCanShowConsent;
         
-        #if GOOGLE_ADS_MOBILE
+    #if GOOGLE_ADS_MOBILE
         public event Action<bool> onRewardActiveStateChange;
         
         protected GoogleInterstitialProvider _googleInterstitial;
         protected GoogleRewardedProvider _googleReward;
         protected GoogleBannerProvider _banner;
-
+        
         private ADSRating _rating;
         
-        #endif
+    #endif
         
         private bool _isADSInitialized;
         
@@ -38,15 +38,15 @@ namespace TinyMVC.Modules.ADS {
         private bool _isLoadReward;
         private bool _isLoadBanner;
         
-        #if GOOGLE_ADS_MOBILE
-        #if DEBUG_ADS
+    #if GOOGLE_ADS_MOBILE
+    #if DEBUG_ADS
         private string _consentFailedLog;
-        #endif
+    #endif
         
         private const string _MAX_AD_CONTENT_RATING = "max_ad_content_rating";
         private const int _CONSENT_CHECK_DELAY = 5000;
         
-        #endif
+    #endif
         
         public enum ConsentState : byte {
             Process,
@@ -65,19 +65,19 @@ namespace TinyMVC.Modules.ADS {
             _isLoadReward = isLoadReward;
             _isLoadBanner = isLoadBanner;
             
-            #if UNITY_ANDROID
+        #if UNITY_ANDROID
             ADSParameters.Config config = data.android;
-            #elif UNITY_IOS
+        #elif UNITY_IOS
             ADSParameters.Config config = data.ios;
-            #endif
+        #endif
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             _googleInterstitial = new GoogleInterstitialProvider(GetAdRequest, config.kids.interstitial, config.general.interstitial);
             _googleReward = new GoogleRewardedProvider(GetAdRequest, config.kids.reward, config.general.reward);
             _banner = new GoogleBannerProvider(GetAdRequest, config.kids.banner, config.general.banner);
             
             _googleReward.onActiveStateChange += isActive => onRewardActiveStateChange?.Invoke(isActive);
-            #endif
+        #endif
             
             if (ADSSaveUtility.HasSavedAge()) {
                 SetADSRating((byte)ADSSaveUtility.LoadAge());
@@ -90,11 +90,11 @@ namespace TinyMVC.Modules.ADS {
                 ADSSaveUtility.SaveAge(age);
             }
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             if (_rating != null) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("GoogleADS.SetADSRating: Already set!");
-                #endif
+            #endif
                 return;
             }
             
@@ -114,37 +114,37 @@ namespace TinyMVC.Modules.ADS {
                 }
             }
             
-            #endif
+        #endif
             
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError($"GoogleADS.SetADSRating: Saved {age} as age!");
-            #endif
+        #endif
         }
         
         private void StartModule() {
             if (!ADSSaveUtility.HasSavedAge()) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("GoogleADS.StartModule: Hasn't saved age!");
-                #endif
+            #endif
                 return;
             }
             
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError("GoogleADS.StartModule");
-            #endif
+        #endif
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             InitializeADS();
             
             return;
-            #endif
+        #endif
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             SendConsentRequest();
-            #endif
+        #endif
         }
         
-        #if UNITY_ANDROID
+    #if UNITY_ANDROID
         
         public string GetGAID() {
             string advertisingID = "";
@@ -164,51 +164,50 @@ namespace TinyMVC.Modules.ADS {
             return advertisingID;
         }
         
-        #endif
+    #endif
         
         protected virtual void ActivateADS() {
-            #if DEBUG_ADS && UNITY_ANDROID
+        #if DEBUG_ADS && UNITY_ANDROID
             Debug.LogError($"GoogleADS.ActivateAds: GAID: {GetGAID()}");
-            #endif
+        #endif
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             _googleInterstitial.Activate(_rating, _isLoadInterstitial);
             _googleReward.Activate(_rating, _isLoadReward);
             _banner.Activate(_rating, _isLoadBanner);
-            #endif
+        #endif
             
             isReady = true;
         }
         
-        
-        #if GOOGLE_ADS_MOBILE
+    #if GOOGLE_ADS_MOBILE
         private void OnConsentInfoUpdated(FormError error) {
             if (error != null) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = $"GoogleADS.OnConsentInfoUpdated: {error}";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
                 
                 return;
             }
             
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError("GoogleADS.OnConsentInfoUpdated: Success!");
-            #endif
+        #endif
             
             if (!isCanShowConsent) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = "GoogleADS.OnConsentInfoUpdated: Can't show!";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
                 
                 return;
             }
             
             if (Application.internetReachability == NetworkReachability.NotReachable) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = "GoogleADS.OnConsentInfoUpdated: No network connection!";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
                 
                 return;
@@ -217,34 +216,34 @@ namespace TinyMVC.Modules.ADS {
             try {
                 ConsentForm.LoadAndShowConsentFormIfRequired(OnFormDismissed);
             } catch (Exception e) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = $"GoogleADS.OnConsentInfoUpdated: {e}";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
             }
         }
         
         private void SendConsentRequest() {
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError("GoogleADS.SendConsentRequest: Start");
-            #endif
+        #endif
             
             consentState = ConsentState.Process;
             WaitConsentAsync(() => CheckConsentResult(InitializeADS));
             
             if (!isCanShowConsent) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = "GoogleADS.SendConsentRequest: Can't show!";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
                 
                 return;
             }
             
             if (Application.internetReachability == NetworkReachability.NotReachable) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = "GoogleADS.SendConsentRequest: No network connection!";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
                 
                 return;
@@ -256,49 +255,49 @@ namespace TinyMVC.Modules.ADS {
                 
                 ConsentInformation.Update(consentRequest, OnConsentInfoUpdated);
             } catch (Exception e) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = $"GoogleADS.SendConsentRequest - {e}";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
             }
         }
         
         private void OnFormDismissed(FormError error) {
             if (error != null) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = $"GoogleADS.OnFormDismissed: {error}";
-                #endif
+            #endif
                 return;
             }
             
             try {
                 if (!ConsentInformation.CanRequestAds()) {
-                    #if DEBUG_ADS
+                #if DEBUG_ADS
                     _consentFailedLog = "GoogleADS.OnFormDismissed: Can`t request!";
-                    #endif
+                #endif
                     consentState = ConsentState.Failed;
                     
                     return;
                 }
                 
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("GoogleADS.OnFormDismissed: Success!");
-                #endif
+            #endif
                 
                 consentState = ConsentState.Success;
             } catch (Exception e) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 _consentFailedLog = $"GoogleADS.OnFormDismissed: {e}";
-                #endif
+            #endif
                 consentState = ConsentState.Failed;
             }
         }
         
         private async void CheckConsentResult(Action onSuccess) {
             if (consentState == ConsentState.Failed) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError($"GoogleADS.CheckConsentResult - Consent Failed!\n{_consentFailedLog}");
-                #endif
+            #endif
                 
                 await Task.Delay(_CONSENT_CHECK_DELAY);
                 SendConsentRequest();
@@ -308,30 +307,30 @@ namespace TinyMVC.Modules.ADS {
             
             onSuccess();
         }
-        #endif
+    #endif
         
         private void InitializeADS() {
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError("GoogleADS.InitializeAds");
-            #endif
+        #endif
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             try {
                 MobileAds.Initialize(_ => _isADSInitialized = true);
             } catch (Exception) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("GoogleADS.InitializeAds: Success!");
-                #endif
+            #endif
                 return;
             }
-            #else
+        #else
             _isADSInitialized = true;
-            #endif
+        #endif
             
             WaitInitializeCompletedAsync(ActivateADS);
         }
         
-        #if GOOGLE_ADS_MOBILE
+    #if GOOGLE_ADS_MOBILE
         private async void WaitConsentAsync(Action action) {
             while (consentState == ConsentState.Process) {
                 await Task.Delay(33);
@@ -340,7 +339,7 @@ namespace TinyMVC.Modules.ADS {
             await Task.Delay(33);
             action();
         }
-        #endif
+    #endif
         
         private async void WaitInitializeCompletedAsync(Action action) {
             while (!_isADSInitialized) {
@@ -351,7 +350,7 @@ namespace TinyMVC.Modules.ADS {
             action();
         }
         
-        #if GOOGLE_ADS_MOBILE
+    #if GOOGLE_ADS_MOBILE
         private AdRequest GetAdRequest() {
             AdRequest request = new AdRequest();
             
@@ -360,6 +359,6 @@ namespace TinyMVC.Modules.ADS {
             
             return request;
         }
-        #endif
+    #endif
     }
 }

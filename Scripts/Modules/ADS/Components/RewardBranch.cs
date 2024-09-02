@@ -11,7 +11,7 @@ namespace TinyMVC.Modules.ADS.Components {
         [field: SerializeField]
         public GameObject inactive;
         
-        #if GOOGLE_ADS_MOBILE
+    #if GOOGLE_ADS_MOBILE
         
         private void OnEnable() {
             UpdateRequest(API<ADSModule>.module.IsLoadRewarded());
@@ -61,6 +61,6 @@ namespace TinyMVC.Modules.ADS.Components {
             }
         }
         
-        #endif
+    #endif
     }
 }

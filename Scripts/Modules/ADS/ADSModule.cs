@@ -10,12 +10,12 @@ namespace TinyMVC.Modules.ADS {
         public override bool isNoADS { get; protected set; }
         public bool isAdsVisible { get; private set; }
         
-        #if GOOGLE_ADS_MOBILE
+    #if GOOGLE_ADS_MOBILE
         public bool isVisibleBanner => _banner != null && _banner.isVisible;
         public bool isInterstitialEnable => _withoutInterstitialTime <= 0;
-        #else
+    #else
         public bool isVisibleBanner => false;
-        #endif
+    #endif
         
         public event Action onInterstitialShow;
         public event Action onInterstitialShowFailed;
@@ -32,16 +32,16 @@ namespace TinyMVC.Modules.ADS {
         }
         
         public override void Init(bool isLoadInterstitial, bool isLoadReward, bool isLoadBanner) {
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError($"ADSModule.Init: interstitial: {isLoadInterstitial}, reward: {isLoadReward}, banner: {isLoadBanner}");
-            #endif
+        #endif
             
             base.Init(isLoadInterstitial, isLoadReward, isLoadBanner);
         }
         
         protected override void ActivateADS() {
             _withoutInterstitialTime = Mathf.Max(ADSSaveUtility.LoadWithoutInterstitialTime(data.beforeFirstInterstitial), data.beforeAppStartInterstitial);
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             if (IsActiveADS()) {
                 
                 if (ADSSaveUtility.LoadBannerVisibility()) {
@@ -50,11 +50,10 @@ namespace TinyMVC.Modules.ADS {
                     _banner.Hide();
                 }
                 
-                
                 UpdateBannerProcess(ADSSaveUtility.LoadRemainingBannerTime(data.bannerUpdateTime));
                 UpdateInterstitialProcess();
             }
-            #endif
+        #endif
             base.ActivateADS();
         }
         
@@ -66,35 +65,35 @@ namespace TinyMVC.Modules.ADS {
             }
             
             if (isNoADS) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("ADSModule.LoadInterstitial: NoAds active, operation canceled!");
-                #endif
+            #endif
                 return;
             }
             
             if (!isReady) {
-                #if DEBUG_ADS
-                Debug.LogError("ADSModule.LoadInterstitial: Isn't ready!");
-                #endif
-                return;
-            }
-            
-            #if GOOGLE_ADS_MOBILE
-            if (_googleInterstitial.IsLoaded()) {
-                #if DEBUG_ADS
-                Debug.LogError("ADSModule.LoadInterstitial: Already loaded!");
-                #endif
-                return;
-            }
-            #endif
-            
             #if DEBUG_ADS
-            Debug.LogError("ADSModule.LoadInterstitial: Success!");
+                Debug.LogError("ADSModule.LoadInterstitial: Isn't ready!");
             #endif
+                return;
+            }
             
-            #if GOOGLE_ADS_MOBILE
-            _googleInterstitial.Load();
+        #if GOOGLE_ADS_MOBILE
+            if (_googleInterstitial.IsLoaded()) {
+            #if DEBUG_ADS
+                Debug.LogError("ADSModule.LoadInterstitial: Already loaded!");
             #endif
+                return;
+            }
+        #endif
+            
+        #if DEBUG_ADS
+            Debug.LogError("ADSModule.LoadInterstitial: Success!");
+        #endif
+            
+        #if GOOGLE_ADS_MOBILE
+            _googleInterstitial.Load();
+        #endif
         }
         
         public bool IsLoadRewarded() {
@@ -106,11 +105,11 @@ namespace TinyMVC.Modules.ADS {
                 return false;
             }
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             return _googleReward.IsLoaded();
-            #else
+        #else
             return true;
-            #endif
+        #endif
         }
         
         public void LoadReward() {
@@ -119,28 +118,28 @@ namespace TinyMVC.Modules.ADS {
             }
             
             if (!isReady) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("ADSModule.LoadReward: Isn't ready!");
-                #endif
+            #endif
                 return;
             }
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             if (_googleReward.IsLoaded()) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError($"ADSModule.LoadReward: Already loaded!");
-                #endif
+            #endif
                 return;
             }
             
             _googleReward.Load();
-            #endif
+        #endif
         }
         
         public void BuyNoADS() {
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError($"ADSModule.BuyNoADS");
-            #endif
+        #endif
             
             isNoADS = true;
             ADSSaveUtility.SaveIsNoADS(isNoADS);
@@ -148,9 +147,9 @@ namespace TinyMVC.Modules.ADS {
         }
         
         public void RemoveNoADS() {
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError($"ADSModule.RemoveNoADS");
-            #endif
+        #endif
             
             isNoADS = false;
             ADSSaveUtility.SaveIsNoADS(isNoADS);
@@ -181,9 +180,9 @@ namespace TinyMVC.Modules.ADS {
             if (!isReady) {
                 onClose();
                 isAdsVisible = false;
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("ADSModule.TryShowInterstitialProcess: Is not ready!");
-                #endif
+            #endif
                 
                 return false;
             }
@@ -191,27 +190,27 @@ namespace TinyMVC.Modules.ADS {
             if (IsNeedInterstitial()) {
                 onInterstitialShow?.Invoke();
                 
-                #if GOOGLE_ADS_MOBILE
+            #if GOOGLE_ADS_MOBILE
                 if (_googleInterstitial.IsLoaded()) {
-                    #if DEBUG_ADS
+                #if DEBUG_ADS
                     Debug.LogError("ADSModule.TryShowInterstitialProcess: Show interstitial!");
-                    #endif
+                #endif
                     
                     return _googleInterstitial.TryShow(() => LoadNextInterstitialAndClose(onClose));
                 }
                 
                 _googleInterstitial.Load();
-                #endif
+            #endif
                 
-                #if DEBUG_ADS
-                Debug.LogError("ADSModule.TryShowInterstitialProcess: Isn't loaded!");
-                #endif
-            }
             #if DEBUG_ADS
+                Debug.LogError("ADSModule.TryShowInterstitialProcess: Isn't loaded!");
+            #endif
+            }
+        #if DEBUG_ADS
             else {
                 Debug.LogError("ADSModule.TryShowInterstitialProcess: Isn't need!");
             }
-            #endif
+        #endif
             
             onClose();
             isAdsVisible = false;
@@ -228,31 +227,31 @@ namespace TinyMVC.Modules.ADS {
             if (!isReady) {
                 onFailed();
                 
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("ADSModule.TryShowRewardProcess: Is not ready!");
-                #endif
+            #endif
                 
                 return false;
             }
             
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             if (_googleReward.IsLoaded()) {
-                #if DEBUG_ADS
+            #if DEBUG_ADS
                 Debug.LogError("ADSModule.TryShowRewardProcess: Show first reward!");
-                #endif
+            #endif
                 
                 return _googleReward.TryShow(() => OnShowingReward(onSuccess), onFailed);
             }
             
             _googleReward.Load();
-            #else
+        #else
             onSuccess();
             
             return true;
-            #endif
-            #if DEBUG_ADS
+        #endif
+        #if DEBUG_ADS
             Debug.LogError("ADSModule.TryShowRewardProcess: Failed!");
-            #endif
+        #endif
             
             onFailed();
             
@@ -260,11 +259,11 @@ namespace TinyMVC.Modules.ADS {
         }
         
         public bool IsCanShowInterstitial() {
-            #if GOOGLE_ADS_MOBILE
+        #if GOOGLE_ADS_MOBILE
             return IsNeedInterstitial() && _googleInterstitial.IsLoaded();
-            #else
+        #else
             return IsNeedInterstitial();
-            #endif
+        #endif
         }
         
         private bool IsNeedInterstitial() {
@@ -285,11 +284,11 @@ namespace TinyMVC.Modules.ADS {
             return true;
         }
         
-        #if GOOGLE_ADS_MOBILE
+    #if GOOGLE_ADS_MOBILE
         private async void UpdateInterstitialProcess() {
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError($"ADSModule.UpdateInterstitialProcess: time: {_withoutInterstitialTime}");
-            #endif
+        #endif
             
             while (Application.isPlaying) {
                 await Task.Delay(60000);
@@ -308,9 +307,9 @@ namespace TinyMVC.Modules.ADS {
         private async void UpdateBannerProcess(int updateTime) {
             _bannerRewardsCount = ADSSaveUtility.LoadBannerRewardsCount();
             
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError($"ADSModule.UpdateBannerProcess: time: {updateTime}");
-            #endif
+        #endif
             
             while (Application.isPlaying) {
                 for (int time = updateTime - 1; time >= 0; time--) {
@@ -337,9 +336,9 @@ namespace TinyMVC.Modules.ADS {
         }
         
         private void UpdateBannerState() {
-            #if DEBUG_ADS
+        #if DEBUG_ADS
             Debug.LogError($"ADSModule.UpdateBannerState: rewards: {_bannerRewardsCount}, need: {data.bannerRewardsLimit}");
-            #endif
+        #endif
             
             if (_bannerRewardsCount < data.bannerRewardsLimit) {
                 if (TryShowBanner()) {
@@ -402,6 +401,6 @@ namespace TinyMVC.Modules.ADS {
             
             onComplete();
         }
-        #endif
+    #endif
     }
 }
