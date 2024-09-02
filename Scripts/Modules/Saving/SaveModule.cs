@@ -15,12 +15,12 @@ using SirenixSerializationUtility = Sirenix.Serialization.SerializationUtility;
 
 namespace TinyMVC.Modules.Saving {
     public sealed class SaveModule : IApplicationModule {
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         public static event Action onDataClearEditor;
         
         public static event Action<string> onDataSaveEditor;
         
-        #endif
+    #endif
         
         private Dictionary<string, VDirectory> _directories;
         
@@ -52,19 +52,19 @@ namespace TinyMVC.Modules.Saving {
             _directories = new Dictionary<string, VDirectory>(_CAPACITY);
             _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             
             UnityEditor.EditorApplication.playModeStateChanged += PlayModeChange;
             
             if (Application.isPlaying) {
                 SaveProcess();
             }
-            #else
+        #else
             SaveProcess();
-            #endif
+        #endif
         }
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         [UnityEditor.MenuItem("Edit/Clear All Saves", false, 280)]
         public static void DeleteAll() {
@@ -179,7 +179,7 @@ namespace TinyMVC.Modules.Saving {
             ConnectDirectories_Editor(root, element);
         }
         
-        #endif
+    #endif
         
         public bool HasGroup([NotNull] params string[] group) {
             if (group.Length <= 0) {
@@ -261,21 +261,21 @@ namespace TinyMVC.Modules.Saving {
         }
         
         public void Save<T>(T value, [NotNull] string key) {
-            #if ODIN_SERIALIZATION
+        #if ODIN_SERIALIZATION
             _directories[_MAIN_FILE_NAME].WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             
             if (Application.isPlaying == false) {
                 SaveDirectories(_directories);
             }
             
-            #endif
-            #endif
+        #endif
+        #endif
         }
         
         public void Save<T>(T value, [NotNull] string key, [NotNull] params string[] group) {
-            #if ODIN_SERIALIZATION
+        #if ODIN_SERIALIZATION
             string directoryName = group[0];
             
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
@@ -287,14 +287,14 @@ namespace TinyMVC.Modules.Saving {
                 directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
             }
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             
             if (Application.isPlaying == false) {
                 SaveDirectories(_directories);
             }
             
-            #endif
-            #endif
+        #endif
+        #endif
         }
         
         public bool TryLoad<T>(out T result, [NotNull] string key) {
@@ -366,13 +366,13 @@ namespace TinyMVC.Modules.Saving {
                 }
             }
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             
             if (Application.isPlaying == false) {
                 SaveDirectories(_directories);
             }
             
-            #endif
+        #endif
         }
         
         public void Delete([NotNull] string key, [NotNull] params string[] group) {
@@ -403,13 +403,13 @@ namespace TinyMVC.Modules.Saving {
                 }
             }
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             
             if (Application.isPlaying == false) {
                 SaveDirectories(_directories);
             }
             
-            #endif
+        #endif
         }
         
         public void Delete([NotNull] string key) {
@@ -419,13 +419,13 @@ namespace TinyMVC.Modules.Saving {
             
             _directories[_MAIN_FILE_NAME].SetDirty();
             
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             
             if (Application.isPlaying == false) {
                 SaveDirectories(_directories);
             }
             
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -440,16 +440,16 @@ namespace TinyMVC.Modules.Saving {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T LoadData<T>([NotNull] string key) {
-            #if ODIN_SERIALIZATION
+        #if ODIN_SERIALIZATION
             return SerializationUtility.DeserializeValue<T>(_directories[_MAIN_FILE_NAME].GetFile(key), DataFormat.Binary);
-            #else
+        #else
             return default;
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T LoadData<T>([NotNull] string key, [NotNull] params string[] group) {
-            #if ODIN_SERIALIZATION
+        #if ODIN_SERIALIZATION
             string directoryName = group[0];
             
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
@@ -460,9 +460,9 @@ namespace TinyMVC.Modules.Saving {
             _directories.Add(directoryName, directory);
             
             return SerializationUtility.DeserializeValue<T>(directory.GetDirectory(group).GetFile(key), DataFormat.Binary);
-            #else
+        #else
             return default;
-            #endif
+        #endif
         }
         
         private async void SaveProcess() {
@@ -486,9 +486,9 @@ namespace TinyMVC.Modules.Saving {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task SaveDirectoriesAsync(Dictionary<string, VDirectory> directories) {
-            #if !UNITY_EDITOR
+        #if !UNITY_EDITOR
             UnityEngine.Scripting.GarbageCollector.GCMode = UnityEngine.Scripting.GarbageCollector.Mode.Manual;
-            #endif
+        #endif
             
             List<VDirectory> saveList = new List<VDirectory>(directories.Count);
             
@@ -497,11 +497,11 @@ namespace TinyMVC.Modules.Saving {
                     continue;
                 }
                 
-                #if UNITY_EDITOR
+            #if UNITY_EDITOR
                 
                 onDataSaveEditor?.Invoke(directory.name);
                 
-                #endif
+            #endif
                 
                 saveList.Add(directory.Clone());
                 directory.ClearDirty();
@@ -511,14 +511,14 @@ namespace TinyMVC.Modules.Saving {
                 await Task.Run(() => SaveDirectory(directory));
                 directory.Dispose();
                 
-                #if !UNITY_EDITOR
+            #if !UNITY_EDITOR
                 UnityEngine.Scripting.GarbageCollector.CollectIncremental(500000);
-                #endif
+            #endif
             }
             
-            #if !UNITY_EDITOR
+        #if !UNITY_EDITOR
             UnityEngine.Scripting.GarbageCollector.GCMode = UnityEngine.Scripting.GarbageCollector.Mode.Enabled;
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -527,7 +527,7 @@ namespace TinyMVC.Modules.Saving {
             string tempPath = GetPath(directory.name, _TEMP_EXTENSION);
             
             try {
-                #if ODIN_SERIALIZATION
+            #if ODIN_SERIALIZATION
                 
                 if (File.Exists(tempPath)) {
                     File.Delete(tempPath);
@@ -535,7 +535,7 @@ namespace TinyMVC.Modules.Saving {
                 
                 using FileStream fileStream = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 16384, FileOptions.None);
                 SirenixSerializationUtility.SerializeValue(directory, fileStream, DataFormat.Binary);
-                #endif
+            #endif
             } catch (Exception exception) {
                 Console.WriteLine(exception);
                 
@@ -573,11 +573,11 @@ namespace TinyMVC.Modules.Saving {
         private VDirectory LoadRoot(string path) {
             using FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.None);
             
-            #if ODIN_SERIALIZATION
+        #if ODIN_SERIALIZATION
             return SerializationUtility.DeserializeValue<VDirectory>(fileStream, DataFormat.Binary);
-            #else
+        #else
             return default;
-            #endif
+        #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
