@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
 
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies.Components {
-    /// <summary> Marker of an object marking it as a possible dependency </summary>
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
     [HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
+#endif
     public abstract class Model : IDependency, IEquatable<Model> {
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if UNITY_EDITOR
         [ShowInInspector, HideLabel]
-        #endif
+    #endif
         private readonly ObservedDictionary<string, ModelComponent> _components;
+        
         private readonly int _id;
         
         private static int _globalId;
@@ -152,12 +152,12 @@ namespace TinyMVC.Dependencies.Components {
         // Resharper disable Unity.ExpensiveCode
         public void RemoveOnRemoveListener(Action<ModelComponent> listener) => _components.RemoveOnRemoveListener(listener);
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset_Editor() => _globalId = 0;
         
-        #endif
+    #endif
         
         
         public bool Equals(Model other) => other != null && other._id == _id;

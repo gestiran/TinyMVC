@@ -1,0 +1,26 @@
+{
+    "name": "TinyMVC.Samples",
+    "rootNamespace": "TinyMVC",
+    "references": [
+        "TinyMVC.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Sirenix.OdinInspector.Attributes.dll",
+        "Sirenix.Serialization.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "12.1",
+            "define": "URP_RENDER_PIPELINE"
+        }
+    ],
+    "noEngineReferences": false
+}

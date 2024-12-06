@@ -28,9 +28,9 @@ namespace TinyMVC.Modules.RateUs {
             _isFirstShow = RateUsSaveUtility.LoadIsFirstShow();
             
             if (_isFirstShow) {
-                _toShowTimer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.firstShowDelay), data.afterAppStartDelay);
+                _toShowTimer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.remoteConfig.firstShowDelay), data.remoteConfig.afterAppStartDelay);
             } else {
-                _toShowTimer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.otherShowDelay), data.afterAppStartDelay);
+                _toShowTimer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.remoteConfig.otherShowDelay), data.remoteConfig.afterAppStartDelay);
             }
             
             TimerProcess();
@@ -55,7 +55,7 @@ namespace TinyMVC.Modules.RateUs {
                 RateUsSaveUtility.SaveIsNeedShow(false);
             }
             
-            #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
+        #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
             
             if (await TryShowForm()) {
                 // TODO : Need test rate-us showing!
@@ -65,9 +65,9 @@ namespace TinyMVC.Modules.RateUs {
                 Application.OpenURL($"market://details?id={Application.identifier}");
             }
             
-            #else
+        #else
             Application.OpenURL($"market://details?id={Application.identifier}");
-            #endif
+        #endif
         }
         
         public void SendToMail(string email, string title) => Application.OpenURL($"mailto:{email}?subject={title}&body={MyEscapeURL("")}");
@@ -75,10 +75,10 @@ namespace TinyMVC.Modules.RateUs {
         public void OnClose() {
             _isFirstShow = false;
             RateUsSaveUtility.SaveIsFirstShow(_isFirstShow);
-            _toShowTimer = data.otherShowDelay;
+            _toShowTimer = data.remoteConfig.otherShowDelay;
         }
         
-        #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
+    #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
         
         private async Task<bool> TryShowForm() {
             try {
@@ -107,7 +107,7 @@ namespace TinyMVC.Modules.RateUs {
             return false;
         }
         
-        #endif
+    #endif
         
         private string MyEscapeURL(string url) => UnityWebRequest.EscapeURL(url).Replace("+", "%20");
         

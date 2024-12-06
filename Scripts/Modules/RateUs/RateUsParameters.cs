@@ -1,7 +1,8 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
-#if UNITY_EDITOR && UNITY_NUGET_NEWTONSOFT_JSON
+#if UNITY_NUGET_NEWTONSOFT_JSON
 using Newtonsoft.Json;
 #endif
 
@@ -11,82 +12,66 @@ namespace TinyMVC.Modules.RateUs {
         [field: SerializeField]
         public bool isEnableRateUs { get; private set; } = true;
         
-        [field: SerializeField, Header("Timers:")]
-        public int firstShowDelay { get; private set; } = 20;
-        
-        [field: SerializeField]
-        public int otherShowDelay { get; private set; } = 60;
-        
-        [field: SerializeField]
-        public int afterAppStartDelay { get; private set; } = 10;
-        
-        [field: SerializeField]
-        public int playerDeadDelay { get; private set; } = 3;
-        
-        [field: SerializeField]
-        public int eventFailedDelay { get; private set; } = 3;
-        
-        [field: SerializeField]
-        public int interstitialShowDelay { get; private set; } = 3;
+        [field: SerializeField, BoxGroup("Remote")]
+        public RemoteConfig remoteConfig { get; private set; }
         
         private const string _PATH = "Application/" + nameof(RateUsParameters);
         
+        [Serializable, HideLabel, InlineProperty]
+        public sealed class RemoteConfig {
+            [JsonIgnore] public int firstShowDelay => _firstShowDelay;
+            [JsonIgnore] public int otherShowDelay => _otherShowDelay;
+            [JsonIgnore] public int afterAppStartDelay => _afterAppStartDelay;
+            [JsonIgnore] public int playerDeadDelay => _playerDeadDelay;
+            [JsonIgnore] public int eventFailedDelay => _eventFailedDelay;
+            [JsonIgnore] public int interstitialShowDelay => _interstitialShowDelay;
+            
+            [SerializeField, JsonProperty("firstShowDelay"), OnValueChanged("UpdateRemote")]
+            private int _firstShowDelay;
+            
+            [SerializeField, JsonProperty("otherShowDelay"), OnValueChanged("UpdateRemote")]
+            private int _otherShowDelay;
+            
+            [SerializeField, JsonProperty("afterAppStartDelay"), OnValueChanged("UpdateRemote")]
+            private int _afterAppStartDelay;
+            
+            [SerializeField, JsonProperty("playerDeadDelay"), OnValueChanged("UpdateRemote")]
+            private int _playerDeadDelay;
+            
+            [SerializeField, JsonProperty("eventFailedDelay"), OnValueChanged("UpdateRemote")]
+            private int _eventFailedDelay;
+            
+            [SerializeField, JsonProperty("interstitialShowDelay"), OnValueChanged("UpdateRemote")]
+            private int _interstitialShowDelay;
+            
         #if UNITY_EDITOR
-        
-        [SerializeField, Header("Remote:")]
-        private string _remote;
-        
+            [ShowInInspector, JsonIgnore, ReadOnly]
+            private string _remote;
         #endif
-        
-        [Serializable]
-        public sealed class Remotes {
-            [SerializeField]
-            public int firstShowDelay; 
             
-            [SerializeField]
-            public int otherShowDelay; 
+            public RemoteConfig() {
+                try {
+                    RemoteConfig config = LoadFromResources().remoteConfig;
+                    
+                    _firstShowDelay = config._firstShowDelay;
+                    _otherShowDelay = config._otherShowDelay;
+                    _afterAppStartDelay = config._afterAppStartDelay;
+                    _playerDeadDelay = config._playerDeadDelay;
+                    _eventFailedDelay = config._eventFailedDelay;
+                    _interstitialShowDelay = config._interstitialShowDelay;
+                } catch (Exception) {
+                    // Ignore
+                }
+            }
             
-            [SerializeField]
-            public int afterAppStartDelay; 
-            
-            [SerializeField]
-            public int playerDeadDelay;
-            
-            [SerializeField]
-            public int eventFailedDelay;
-            
-            [SerializeField]
-            public int interstitialShowDelay;
+        #if UNITY_EDITOR
+            [OnInspectorInit]
+            private void UpdateRemote() => _remote = JsonConvert.SerializeObject(this);
+        #endif
         }
         
         public static RateUsParameters LoadFromResources() => Resources.Load<RateUsParameters>(_PATH);
         
-        public void SetRemoteData(Remotes data) {
-            firstShowDelay = data.firstShowDelay;
-            otherShowDelay = data.otherShowDelay;
-            afterAppStartDelay = data.afterAppStartDelay;
-            playerDeadDelay = data.playerDeadDelay;
-            eventFailedDelay = data.eventFailedDelay;
-            interstitialShowDelay = data.interstitialShowDelay;
-        }
-        
-        public Remotes DefaultRemotes() {
-            Remotes data = new Remotes();
-            
-            data.firstShowDelay = firstShowDelay;
-            data.otherShowDelay = otherShowDelay;
-            data.afterAppStartDelay = afterAppStartDelay;
-            data.playerDeadDelay = playerDeadDelay;
-            data.eventFailedDelay = eventFailedDelay;
-            data.interstitialShowDelay = interstitialShowDelay;
-            
-            return data;
-        }
-        
-        #if UNITY_EDITOR && UNITY_NUGET_NEWTONSOFT_JSON
-        
-        private void OnValidate() => _remote = JsonConvert.SerializeObject(DefaultRemotes());
-        
-        #endif
+        public void SetRemoteData(RemoteConfig config) => remoteConfig = config;
     }
 }

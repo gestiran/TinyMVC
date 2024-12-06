@@ -1,70 +1,52 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TinyMVC.Debugging;
 
 namespace TinyMVC.Loop.Extensions {
     public static class InitExtension {
-        public static void TryInit<T>(this T[] objects) {
-            for (int objId = 0; objId < objects.Length; objId++) {
-                if (objects[objId] is IInitAsync otherAsync) {
-                    DebugUtility.CheckAndLogException(otherAsync.Init, objects[objId]);
-                } else if (objects[objId] is IInit other) {
-                    DebugUtility.CheckAndLogException(other.Init, objects[objId]);
-                }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void TryInit<T>(this ICollection<T> collection) {
+            foreach (T obj in collection) {
+                obj.TryInitSingle();
             }
         }
         
-        public static async Task TryInitAsync<T>(this T[] objects) {
-            for (int objId = 0; objId < objects.Length; objId++) {
-                if (objects[objId] is IInitAsync otherAsync) {
-                    await DebugUtility.CheckAndLogExceptionAsync(otherAsync.Init, objects[objId]);
-                } else if (objects[objId] is IInit other) {
-                    DebugUtility.CheckAndLogException(other.Init, objects[objId]);
-                }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task TryInitAsync<T>(this ICollection<T> collection) {
+            foreach (T obj in collection) {
+                await obj.TryInitAsyncSingle();
             }
         }
         
-        public static void TryInit<T>(this List<T> objects) {
-            for (int objId = 0; objId < objects.Count; objId++) {
-                if (objects[objId] is IInitAsync otherAsync) {
-                    DebugUtility.CheckAndLogException(otherAsync.Init, objects[objId]);
-                } else if (objects[objId] is IInit other) {
-                    DebugUtility.CheckAndLogException(other.Init, objects[objId]);
-                }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Init<T>(this ICollection<T> collection) where T : IInit {
+            foreach (T obj in collection) {
+                obj.Init();
             }
         }
         
-        public static async Task TryInitAsync<T>(this List<T> objects) {
-            for (int objId = 0; objId < objects.Count; objId++) {
-                if (objects[objId] is IInitAsync otherAsync) {
-                    await DebugUtility.CheckAndLogExceptionAsync(otherAsync.Init, objects[objId]);
-                } else if (objects[objId] is IInit other) {
-                    DebugUtility.CheckAndLogException(other.Init, objects[objId]);
-                }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task InitAsync<T>(this ICollection<T> collection) where T : IInitAsync {
+            foreach (T obj in collection) {
+                await obj.Init();
             }
         }
         
-        public static void Init<TInit>(this TInit[] objects) where TInit : IInit {
-            for (int objId = 0; objId < objects.Length; objId++) {
-                DebugUtility.CheckAndLogException(objects[objId].Init, objects[objId]);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void TryInitSingle<T>(this T obj) {
+            if (obj is IInitAsync otherAsync) {
+                otherAsync.Init();
+            } else if (obj is IInit other) {
+                other.Init();
             }
         }
         
-        public static async Task InitAsync<TInit>(this TInit[] objects) where TInit : IInitAsync {
-            for (int objId = 0; objId < objects.Length; objId++) {
-                await DebugUtility.CheckAndLogExceptionAsync(objects[objId].Init, objects[objId]);
-            }
-        }
-        
-        public static void Init<TInit>(this List<TInit> objects) where TInit : IInit {
-            for (int objId = 0; objId < objects.Count; objId++) {
-                DebugUtility.CheckAndLogException(objects[objId].Init, objects[objId]);
-            }
-        }
-        
-        public static async Task InitAsync<TInit>(this List<TInit> objects) where TInit : IInitAsync {
-            for (int objId = 0; objId < objects.Count; objId++) {
-                await DebugUtility.CheckAndLogExceptionAsync(objects[objId].Init, objects[objId]);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task TryInitAsyncSingle<T>(this T obj) {
+            if (obj is IInitAsync otherAsync) {
+                await otherAsync.Init();
+            } else if (obj is IInit other) {
+                other.Init();
             }
         }
     }

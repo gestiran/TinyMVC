@@ -1,5 +1,4 @@
-﻿using TinyMVC.Modules;
-using TinyMVC.Modules.Saving;
+﻿using TinyMVC.Modules.Saving;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -39,7 +38,7 @@ namespace TinyMVC.Editor.Modules.Saving {
 
         private void UpdateData() {
             _group.Clear();
-            API<SaveModule>.module.GetHierarchy_Editor(_group.contentContainer);
+            SaveService.GetHierarchy_Editor(_group.contentContainer);
         }
     }
 }

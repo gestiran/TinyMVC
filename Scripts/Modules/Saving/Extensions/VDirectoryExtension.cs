@@ -9,16 +9,17 @@ namespace TinyMVC.Modules.Saving.Extensions {
             VDirectory result = new VDirectory(name);
             
             directory.directories.Add(name, result);
-            directory.SetDirty();
+            directory.isDirty = true;
             
             return result;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static VFile WriteOrCreateFile(this VDirectory directory, string name, byte[] data) {
+            
             if (directory.files.TryGetValue(name, out VFile file)) {
                 file.data = data;
-                directory.SetDirty();
+                directory.isDirty = true;
                 
                 return file;
             }
@@ -26,7 +27,7 @@ namespace TinyMVC.Modules.Saving.Extensions {
             VFile result = new VFile(name, data);
             
             directory.files.Add(name, result);
-            directory.SetDirty();
+            directory.isDirty = true;
             
             return result;
         }
@@ -64,6 +65,7 @@ namespace TinyMVC.Modules.Saving.Extensions {
                 directory = root;
                 
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
+                    root.isDirty = true;
                     root = other;
                 } else {
                     return;
@@ -72,14 +74,13 @@ namespace TinyMVC.Modules.Saving.Extensions {
                 directoryName = group[groupId];
             }
             
-            directory.SetDirty();
             directory.directories.Remove(directoryName);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void DeleteFile(this VDirectory directory, string name) {
             directory.files.Remove(name);
-            directory.SetDirty();
+            directory.isDirty = true;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,7 +129,7 @@ namespace TinyMVC.Modules.Saving.Extensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static VDirectory OpenOrCreateDirectory(this VDirectory directory, string[] group) {
             VDirectory root = directory;
-            root.SetDirty();
+            root.isDirty = true;
             
             for (int groupId = 1; groupId < group.Length; groupId++) {
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {

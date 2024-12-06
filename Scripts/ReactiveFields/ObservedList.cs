@@ -4,18 +4,17 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using TinyMVC.Debugging;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 using TinyMVC.Utilities.Async;
 using UnityEngine;
 
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.ReactiveFields {
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class ObservedList<T> : IEnumerable<T>, IEnumerator<T> {
@@ -29,9 +28,9 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<Action<T>> _onRemoveWithValue;
         private readonly List<Action> _onClear;
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, LabelText("Elements"),
-         ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@GetType().Name")]
+    #if UNITY_EDITOR
+        [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox,
+         ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, DefaultExpandedState = false)]
     #endif
         private List<T> _value;
         
@@ -57,11 +56,9 @@ namespace TinyMVC.ReactiveFields {
             _currentId = -1;
         }
         
-        public T this[int index]
-        {
+        public T this[int index] {
             get => _value[index];
-            set
-            {
+            set {
                 _onRemove.Invoke();
                 _onRemoveWithValue.Invoke(_value[index]);
                 
@@ -70,6 +67,11 @@ namespace TinyMVC.ReactiveFields {
                 _onAdd.Invoke();
                 _onAddWithValue.Invoke(value);
             }
+        }
+        
+        [Obsolete("Can't add nothing!", true)]
+        public void Add() {
+            // Do nothing
         }
         
         public void Add([NotNull] params T[] values) {
@@ -84,9 +86,20 @@ namespace TinyMVC.ReactiveFields {
             _onAddWithValue.Invoke(value);
         }
         
+        [Obsolete("Can't add nothing!", true)]
+        public Task AddAsync() => null;
+        
         public Task AddAsync([NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
         
+        [Obsolete("Can't add nothing!", true)]
+        public Task AddAsync(ICancellation cancellation) => null;
+        
         public Task AddAsync(ICancellation cancellation, [NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, cancellation, values);
+        
+        [Obsolete("Can't add nothing!", true)]
+        public Task AddAsync(int anr, ICancellation cancellation) {
+            return null;
+        }
         
         public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
             if (_lock) {
@@ -101,7 +114,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onAdd.Count - 1; i >= 0; i--) {
-                DebugUtility.CheckAndLogException(_onAdd[i].Invoke);
+                _onAdd[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -122,7 +135,7 @@ namespace TinyMVC.ReactiveFields {
             
             for (int i = _onAddWithValue.Count - 1; i >= 0; i--) {
                 for (int j = 0; j < values.Length; j++) {
-                    DebugUtility.CheckAndLogException(_onAddWithValue[i].Invoke, values[j]);
+                    _onAddWithValue[i].Invoke(values[j]);
                 }
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -162,7 +175,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onAdd.Count - 1; i >= 0; i--) {
-                DebugUtility.CheckAndLogException(_onAdd[i].Invoke);
+                _onAdd[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -182,7 +195,7 @@ namespace TinyMVC.ReactiveFields {
             }
             
             for (int i = _onAddWithValue.Count - 1; i >= 0; i--) {
-                DebugUtility.CheckAndLogException(_onAddWithValue[i].Invoke, value);
+                _onAddWithValue[i].Invoke(value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -204,6 +217,11 @@ namespace TinyMVC.ReactiveFields {
             _lock = false;
         }
         
+        [Obsolete("Can't remove nothing!", true)]
+        public void Remove() {
+            // Do nothing
+        }
+        
         public void Remove([NotNull] params T[] values) {
             for (int i = values.Length - 1; i >= 0; i--) {
                 _value.Remove(values[i]);
@@ -213,10 +231,23 @@ namespace TinyMVC.ReactiveFields {
             _onRemoveWithValue.Invoke(values);
         }
         
-        public void Remove([NotNull] T value) {
-            _value.Remove(value);
-            _onRemove.Invoke();
-            _onRemoveWithValue.Invoke(value);
+        public bool Remove([NotNull] T value) {
+            if (_value.Remove(value)) {
+                _onRemove.Invoke();
+                _onRemoveWithValue.Invoke(value);
+                return true;
+            }
+            
+            return false;
+        }
+        
+        public void RemoveAll() {
+            for (int i = count - 1; i >= 0; i--) {
+                T value = _value[i];
+                _value.RemoveAt(i);
+                _onRemove.Invoke();
+                _onRemoveWithValue.Invoke(value);
+            }
         }
         
         public Task RemoveAsync([NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
@@ -240,7 +271,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onRemove.Count - 1; i >= 0; i--) {
-                DebugUtility.CheckAndLogException(_onRemove[i].Invoke);
+                _onRemove[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -261,7 +292,7 @@ namespace TinyMVC.ReactiveFields {
             
             for (int i = _onRemoveWithValue.Count - 1; i >= 0; i--) {
                 for (int j = 0; j < values.Length; j++) {
-                    DebugUtility.CheckAndLogException(_onRemoveWithValue[i].Invoke, values[j]);
+                    _onRemoveWithValue[i].Invoke(values[j]);
                 }
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -301,7 +332,7 @@ namespace TinyMVC.ReactiveFields {
             DateTime now = DateTime.Now;
             
             for (int i = _onRemove.Count - 1; i >= 0; i--) {
-                DebugUtility.CheckAndLogException(_onRemove[i].Invoke);
+                _onRemove[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {
@@ -321,7 +352,7 @@ namespace TinyMVC.ReactiveFields {
             }
             
             for (int i = _onRemoveWithValue.Count - 1; i >= 0; i--) {
-                DebugUtility.CheckAndLogException(_onRemoveWithValue[i].Invoke, value);
+                _onRemoveWithValue[i].Invoke(value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
                     if (cancellation.isCancel) {

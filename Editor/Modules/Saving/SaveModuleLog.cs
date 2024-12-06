@@ -1,14 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using TinyMVC.Modules.Saving;
 using UnityEditor;
 using UnityEngine;
-
-#if ODIN_SERIALIZATION
 using Sirenix.Serialization;
 using SerializationUtility = Sirenix.Serialization.SerializationUtility;
-#endif
 
 namespace TinyMVC.Editor.Modules.Saving {
     internal static class SaveModuleLog {
@@ -50,7 +48,7 @@ namespace TinyMVC.Editor.Modules.Saving {
         }
         
         [InitializeOnLoadMethod]
-        private static void Connect() => SaveModule.onDataSaveEditor += AddData;
+        private static void Connect() => SaveService.onDataSaveEditor += AddData;
         
         private static void AddData(string directoryName) {
             if (stats.TryGetValue(directoryName, out StatsData data)) {
@@ -67,18 +65,22 @@ namespace TinyMVC.Editor.Modules.Saving {
         private static string CalculateSize(string name) {
             string path = GetPath(name);
             
-            if (File.Exists(path)) {
-                long size = new FileInfo(GetPath(name)).Length;
-                
-                if (size < 1000) {
-                    return $"<color=#00ff00>{size}b</color>";
+            try {
+                if (File.Exists(path)) {
+                    long size = new FileInfo(GetPath(name)).Length;
+                    
+                    if (size < 1000) {
+                        return $"<color=#00ff00>{size}b</color>";
+                    }
+                    
+                    if (size < 1000000) {
+                        return $"<color=#ffff00>{((double)size / 1000):0.0}kb</color>";
+                    }
+                    
+                    return $"<color=#ff0000>{((double)size / 1000000):0.0}mb</color>";
                 }
-                
-                if (size < 1000000) {
-                    return $"<color=#ffff00>{((double)size / 1000):0.0}kb</color>";
-                }
-                
-                return $"<color=#ff0000>{((double)size / 1000000):0.0}mb</color>";
+            } catch (Exception exception) {
+                Debug.LogWarning(exception);
             }
             
             return "0";
@@ -97,15 +99,12 @@ namespace TinyMVC.Editor.Modules.Saving {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Save(Dictionary<string, StatsData> data) {
-            #if ODIN_SERIALIZATION
             using FileStream fileStream = new FileStream(GetPath(_SAVE_STATS_FILE_NAME), FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 16384, FileOptions.None);
             SerializationUtility.SerializeValue(data, fileStream, DataFormat.Binary);
-            #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Dictionary<string, StatsData> Load() {
-            #if ODIN_SERIALIZATION
             string path = GetPath(_SAVE_STATS_FILE_NAME);
             
             if (File.Exists(path)) {
@@ -113,7 +112,6 @@ namespace TinyMVC.Editor.Modules.Saving {
                 
                 return SerializationUtility.DeserializeValue<Dictionary<string, StatsData>>(fileStream, DataFormat.Binary);
             }
-            #endif
             
             return new Dictionary<string, StatsData>();
         }

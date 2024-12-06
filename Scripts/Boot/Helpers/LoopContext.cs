@@ -2,11 +2,6 @@
 using TinyMVC.Loop;
 using System;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Debugging;
-using TinyMVC.Debugging.Exceptions;
-#endif
-
 namespace TinyMVC.Boot.Helpers {
     internal sealed class LoopContext {
         private List<Action> _actions;
@@ -157,12 +152,7 @@ namespace TinyMVC.Boot.Helpers {
             if (_fixedTicks.TryGetContext(sceneId, out List<IFixedTick> current, out int _)) {
                 current.Add(tick);
             } else {
-                _fixedTicks.Add(new FixedTickContext(sceneId,
-                                                     new List<IFixedTick>() {
-                                                         tick
-                                                     }
-                                )
-                );
+                _fixedTicks.Add(new FixedTickContext(sceneId, new List<IFixedTick>() { tick }));
             }
         }
         
@@ -170,12 +160,7 @@ namespace TinyMVC.Boot.Helpers {
             if (_ticks.TryGetContext(sceneId, out List<ITick> current, out int _)) {
                 current.Add(tick);
             } else {
-                _ticks.Add(new TickContext(sceneId,
-                                           new List<ITick>() {
-                                               tick
-                                           }
-                           )
-                );
+                _ticks.Add(new TickContext(sceneId, new List<ITick>() { tick }));
             }
         }
         
@@ -183,12 +168,7 @@ namespace TinyMVC.Boot.Helpers {
             if (_lateTicks.TryGetContext(sceneId, out List<ILateTick> current, out int _)) {
                 current.Add(tick);
             } else {
-                _lateTicks.Add(new LateTickContext(sceneId,
-                                                   new List<ILateTick>() {
-                                                       tick
-                                                   }
-                               )
-                );
+                _lateTicks.Add(new LateTickContext(sceneId, new List<ILateTick>() { tick }));
             }
         }
         

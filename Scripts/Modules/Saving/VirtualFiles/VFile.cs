@@ -2,21 +2,23 @@
 
 namespace TinyMVC.Modules.Saving.VirtualFiles {
     [Serializable]
-    internal sealed class VFile : IDisposable {
+    internal sealed class VFile : IEquatable<VFile> {
         public byte[] data;
         public readonly string name;
         
         public VFile(string name, byte[] data) : this(name) => this.data = data;
-
+        
         private VFile(string name) => this.name = name;
-
-        public VFile Clone() {
-            VFile file = new VFile(name);
-            file.data = new byte[data.Length];
-            Array.Copy(data, file.data, data.Length);
-            return file;
+        
+        public bool Equals(VFile other) => other != null && other.name.Equals(name);
+        
+        public VFile GetClone() {
+            VFile clone = new VFile(name);
+            
+            clone.data = new byte[data.Length];
+            Array.Copy(data, clone.data, data.Length);
+            
+            return clone;
         }
-
-        public void Dispose() => data = null;
     }
 }

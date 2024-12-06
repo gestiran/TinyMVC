@@ -1,17 +1,12 @@
 ﻿using System.Collections.Generic;
-using TinyMVC.Debugging;
+using System.Runtime.CompilerServices;
 
 namespace TinyMVC.Loop.Extensions {
     public static class FixedTickExtension {
-        public static void FixedTick<T>(this T[] objects) where T : IFixedTick {
-            for (int objId = 0; objId < objects.Length; objId++) {
-                DebugUtility.CheckAndLogException(objects[objId].FixedTick, objects[objId]);
-            }
-        }
-        
-        public static void FixedTick<T>(this List<T> objects) where T : IFixedTick {
-            for (int objId = 0; objId < objects.Count; objId++) {
-                DebugUtility.CheckAndLogException(objects[objId].FixedTick, objects[objId]);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FixedTick<T>(this ICollection<T> collection) where T : IFixedTick {
+            foreach (T obj in collection) {
+                obj.FixedTick();
             }
         }
     }

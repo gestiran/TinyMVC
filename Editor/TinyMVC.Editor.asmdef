@@ -13,6 +13,8 @@
     "precompiledReferences": [
         "Sirenix.OdinInspector.Attributes.dll",
         "Sirenix.OdinInspector.Editor.dll",
+        "Sirenix.Utilities.dll",
+        "Sirenix.Utilities.Editor.dll",
         "Sirenix.Serialization.dll"
     ],
     "autoReferenced": true,

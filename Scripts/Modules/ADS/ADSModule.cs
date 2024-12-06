@@ -25,6 +25,7 @@ namespace TinyMVC.Modules.ADS {
         
         private int _withoutInterstitialTime;
         private int _bannerRewardsCount;
+        private AsyncCancellation _bannerProcessCancellation;
         
         public ADSModule() : base() {
             isCanShowConsent = true;
@@ -40,17 +41,24 @@ namespace TinyMVC.Modules.ADS {
         }
         
         protected override void ActivateADS() {
-            _withoutInterstitialTime = Mathf.Max(ADSSaveUtility.LoadWithoutInterstitialTime(data.beforeFirstInterstitial), data.beforeAppStartInterstitial);
+            _withoutInterstitialTime = Mathf.Max(ADSSaveUtility.LoadWithoutInterstitialTime(data.remoteConfig.beforeFirstInterstitial),
+                                                 data.remoteConfig.beforeAppStartInterstitial);
         #if GOOGLE_ADS_MOBILE
             if (IsActiveADS()) {
-                
                 if (ADSSaveUtility.LoadBannerVisibility()) {
                     _banner.Show();
                 } else {
                     _banner.Hide();
                 }
                 
-                UpdateBannerProcess(ADSSaveUtility.LoadRemainingBannerTime(data.bannerUpdateTime));
+                if (_bannerProcessCancellation != null) {
+                    _bannerProcessCancellation.Cancel();
+                    _bannerProcessCancellation = null;
+                }
+                
+                AsyncCancellation cancellation = new AsyncCancellation();
+                UpdateBannerProcess(ADSSaveUtility.LoadRemainingBannerTime(data.remoteConfig.bannerUpdateTime), cancellation);
+                _bannerProcessCancellation = cancellation;
                 UpdateInterstitialProcess();
             }
         #endif
@@ -143,6 +151,22 @@ namespace TinyMVC.Modules.ADS {
             
             isNoADS = true;
             ADSSaveUtility.SaveIsNoADS(isNoADS);
+            
+        #if GOOGLE_ADS_MOBILE
+            if (_banner != null) {
+                _banner.Hide();
+            }
+
+            
+            if (_bannerProcessCancellation != null) {
+                _bannerProcessCancellation.Cancel();
+                _bannerProcessCancellation = null;
+            }
+            
+            _bannerRewardsCount = 0;
+            ADSSaveUtility.SaveBannerRewardsCount(_bannerRewardsCount);
+            ADSSaveUtility.SaveRemainingBannerTime(data.remoteConfig.bannerUpdateTime);
+        #endif
             noAdsStateChange?.Invoke(true);
         }
         
@@ -153,7 +177,26 @@ namespace TinyMVC.Modules.ADS {
             
             isNoADS = false;
             ADSSaveUtility.SaveIsNoADS(isNoADS);
+            
+        #if GOOGLE_ADS_MOBILE
+            if (_bannerProcessCancellation != null) {
+                _bannerProcessCancellation.Cancel();
+                _bannerProcessCancellation = null;
+            }
+            
+            AsyncCancellation cancellation = new AsyncCancellation();
+            UpdateBannerProcess(ADSSaveUtility.LoadRemainingBannerTime(data.remoteConfig.bannerUpdateTime), cancellation);
+            _bannerProcessCancellation = cancellation;
+        #endif
             noAdsStateChange?.Invoke(false);
+        }
+        
+        public void OnPurchaseTokens() {
+            _withoutInterstitialTime += data.remoteConfig.tokensPurchaseInterstitialDisable;
+            _bannerRewardsCount += 5;
+            
+            ADSSaveUtility.SaveBannerRewardsCount(_bannerRewardsCount);
+            ADSSaveUtility.SaveWithoutInterstitialTime(_withoutInterstitialTime);
         }
         
         public bool TryShowInterstitial() {
@@ -293,6 +336,10 @@ namespace TinyMVC.Modules.ADS {
             while (Application.isPlaying) {
                 await Task.Delay(60000);
                 
+                if (IsActiveADS() == false) {
+                    break;
+                }
+                
                 if (_withoutInterstitialTime > 0) {
                     _withoutInterstitialTime--;
                     ADSSaveUtility.SaveWithoutInterstitialTime(_withoutInterstitialTime);
@@ -304,75 +351,66 @@ namespace TinyMVC.Modules.ADS {
             }
         }
         
-        private async void UpdateBannerProcess(int updateTime) {
+        private async void UpdateBannerProcess(int updateTime, AsyncCancellation cancellation) {
             _bannerRewardsCount = ADSSaveUtility.LoadBannerRewardsCount();
             
         #if DEBUG_ADS
             Debug.LogError($"ADSModule.UpdateBannerProcess: time: {updateTime}");
         #endif
             
-            while (Application.isPlaying) {
+            while (cancellation.isCancel == false) {
                 for (int time = updateTime - 1; time >= 0; time--) {
                     await Task.Delay(60000);
+                    
+                    if (cancellation.isCancel) {
+                        return;
+                    }
+                    
                     ADSSaveUtility.SaveRemainingBannerTime(time);
                 }
                 
-                updateTime = data.bannerUpdateTime;
+                updateTime = data.remoteConfig.bannerUpdateTime;
                 
-                if (IsActiveADS()) {
-                    UpdateBannerState();
-                    
-                    _bannerRewardsCount = 0;
-                    ADSSaveUtility.SaveBannerRewardsCount(_bannerRewardsCount);
-                    ADSSaveUtility.SaveRemainingBannerTime(updateTime);
-                } else {
-                    _bannerRewardsCount = 0;
-                    ADSSaveUtility.SaveBannerRewardsCount(_bannerRewardsCount);
-                    ADSSaveUtility.SaveRemainingBannerTime(updateTime);
-                    
-                    break;
-                }
+                UpdateBannerState();
+                
+                _bannerRewardsCount = 0;
+                ADSSaveUtility.SaveBannerRewardsCount(_bannerRewardsCount);
+                ADSSaveUtility.SaveRemainingBannerTime(updateTime);
             }
         }
         
         private void UpdateBannerState() {
         #if DEBUG_ADS
-            Debug.LogError($"ADSModule.UpdateBannerState: rewards: {_bannerRewardsCount}, need: {data.bannerRewardsLimit}");
+            Debug.LogError($"ADSModule.UpdateBannerState: rewards: {_bannerRewardsCount}, need: {data.remoteConfig.bannerRewardsLimit}");
         #endif
             
-            if (_bannerRewardsCount < data.bannerRewardsLimit) {
-                if (TryShowBanner()) {
-                    onBannerShow?.Invoke();
-                }
+            if (_bannerRewardsCount < data.remoteConfig.bannerRewardsLimit) {
+                TryShowBanner();
             } else {
-                if (TryHideBanner()) {
-                    onBannerHide?.Invoke();
-                }
+                TryHideBanner();
             }
         }
         
-        private bool TryShowBanner() {
+        private void TryShowBanner() {
             ADSSaveUtility.SaveBannerVisibility(true);
             
             if (_banner.isVisible) {
-                return false;
+                return;
             }
             
             _banner.Show();
-            
-            return true;
+            onBannerShow?.Invoke();
         }
         
-        private bool TryHideBanner() {
+        private void TryHideBanner() {
             ADSSaveUtility.SaveBannerVisibility(false);
             
             if (_banner.isVisible == false) {
-                return false;
+                return;
             }
             
             _banner.Hide();
-            
-            return true;
+            onBannerHide?.Invoke();
         }
         
         private void LoadNextInterstitialAndClose(Action onClose) {
@@ -394,7 +432,7 @@ namespace TinyMVC.Modules.ADS {
         }
         
         private void OnShowingReward(Action onComplete) {
-            _withoutInterstitialTime += data.rewardInterstitialDisable;
+            _withoutInterstitialTime += data.remoteConfig.rewardInterstitialDisable;
             
             ADSSaveUtility.SaveBannerRewardsCount(++_bannerRewardsCount);
             ADSSaveUtility.SaveWithoutInterstitialTime(_withoutInterstitialTime);

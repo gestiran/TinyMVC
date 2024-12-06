@@ -73,9 +73,9 @@ namespace TinyMVC.Editor.Test {
             }
             
             bool isHaveControllerInterface = interfaces.Contains(typeof(IController));
-            bool isHaveViewInterface = interfaces.Contains(typeof(IView));
+            bool isHaveViewInterface = interfaces.Contains(typeof(View));
             
-            string message = $"{type.FullName} is have interface {interfaceType.Name} and not have {nameof(IController)} or {nameof(IView)} interface!";
+            string message = $"{type.FullName} is have interface {interfaceType.Name} and not have {nameof(IController)} or {nameof(View)} interface!";
             Assert.IsTrue(isHaveControllerInterface || isHaveViewInterface, message);
         }
     }

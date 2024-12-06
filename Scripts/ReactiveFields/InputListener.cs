@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.ReactiveFields {
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener : IUnload {
@@ -22,18 +22,10 @@ namespace TinyMVC.ReactiveFields {
         
         public InputListener(Action action, UnloadPool unload) : this() => AddListener(action, unload);
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if UNITY_EDITOR
         [Button]
     #endif
-        public void Send() {
-            Action listeners = null;
-            
-            foreach (Action listener in _listeners) {
-                listeners += listener;
-            }
-            
-            listeners?.Invoke();
-        }
+        public void Send() => _listeners.Invoke();
         
         // Resharper disable Unity.ExpensiveCode
         public void AddListener(Action listener) => _listeners.Add(listener);
@@ -51,7 +43,7 @@ namespace TinyMVC.ReactiveFields {
         public void Unload() => _listeners.Clear();
     }
     
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T> : IUnload {
@@ -65,7 +57,15 @@ namespace TinyMVC.ReactiveFields {
             _valueListeners = new List<Action<T>>(_CAPACITY);
         }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+        public InputListener(Action action) : this() => AddListener(action);
+        
+        public InputListener(Action<T> action) : this() => AddListener(action);
+        
+        public InputListener(Action action, UnloadPool unload) : this() => AddListener(action, unload);
+        
+        public InputListener(Action<T> action, UnloadPool unload) : this() => AddListener(action, unload);
+        
+    #if UNITY_EDITOR
         [Button]
     #endif
         public void Send(T data = default) {
@@ -109,7 +109,7 @@ namespace TinyMVC.ReactiveFields {
         }
     }
     
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2> : IUnload {
@@ -123,7 +123,7 @@ namespace TinyMVC.ReactiveFields {
             _valueListeners = new List<Action<T1, T2>>(_CAPACITY);
         }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if UNITY_EDITOR
         [Button]
     #endif
         public void Send(T1 data1 = default, T2 data2 = default) {
@@ -162,7 +162,7 @@ namespace TinyMVC.ReactiveFields {
         }
     }
     
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2, T3> : IUnload {
@@ -176,7 +176,7 @@ namespace TinyMVC.ReactiveFields {
             _valueListeners = new List<Action<T1, T2, T3>>(_CAPACITY);
         }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+    #if UNITY_EDITOR
         [Button]
     #endif
         public void Send(T1 data1 = default, T2 data2 = default, T3 data3 = default) {

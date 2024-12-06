@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Sirenix.OdinInspector;
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TinyMVC.Views {
-    public abstract class View : MonoBehaviour, IView {
-        public ConnectState connectState { get; private set; }
+    public abstract class View : MonoBehaviour, ISelfValidator {
+        public ConnectState connectState { get; internal set; }
         
-        public delegate T ConnectViewDelegate<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : Component, IView, IResolving;
-        public delegate void ConnectViewDelegate([NotNull] params IView[] views);
-        
-        internal int sceneId;
+        [field: SerializeField, FoldoutGroup("Generated", 1000), ReadOnly]
+        public View parent { get; private set; }
         
         public enum ConnectState : byte {
             Disconnected,
@@ -28,101 +28,174 @@ namespace TinyMVC.Views {
             init();
         }
         
-        public void ConnectView([NotNull] params IView[] views) {
-            for (int viewId = 0; viewId < views.Length; viewId++) {
-                TryApply(views[viewId], ConnectState.Connected);
-                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, ProjectContext.data.Resolve);
-            }
+        [Obsolete("Can't connect nothing!", true)]
+        public static void Connect() {
+            // Do nothing!
         }
         
-        public T ConnectView<T>([NotNull] T view) where T : class, IView {
-            TryApply(view, ConnectState.Connected);
-            SceneContext.GetContext(sceneId).Connect(view, sceneId, ProjectContext.data.Resolve);
-            
+        [Obsolete("Can't connect nothing!", true)]
+        public static void Connect(int sceneId) {
+            // Do nothing!
+        }
+        
+        [Obsolete("Can't disconnect nothing!", true)]
+        public static void Disconnect() {
+            // Do nothing!
+        }
+        
+        [Obsolete("Can't disconnect nothing!", true)]
+        public static void Disconnect(int sceneId) {
+            // Do nothing!
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Connect<T>([NotNull] T view) where T : View => Connect(view, SceneManager.GetActiveScene().buildIndex);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Connect<T>([NotNull] T view, int sceneId) where T : View {
+            view.connectState = ConnectState.Connected;
+            SceneContext.GetContext(sceneId).Connect(view, sceneId, ResolveUtility.Resolve);
             return view;
         }
         
-        public void ConnectView([NotNull] params View[] views) {
-            for (int viewId = 0; viewId < views.Length; viewId++) {
-                TryApplyView(views[viewId], ConnectState.Connected);
-                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, ProjectContext.data.Resolve);
-            }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T>([NotNull] params T[] views) where T : View {
+            Connect(SceneManager.GetActiveScene().buildIndex, views);
         }
         
-        public void ConnectView<T>(T[] views, params IDependency[] dependencies) where T : Component, IView, IResolving {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T>([NotNull] T[] views, [NotNull] params IDependency[] dependencies) where T : View {
+            Connect(views, SceneManager.GetActiveScene().buildIndex, dependencies);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T>([NotNull] T[] views, int sceneId, [NotNull] params IDependency[] dependencies) where T : View {
             DependencyContainer container = new DependencyContainer(dependencies);
             
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                TryApply(views[viewId], ConnectState.Connected);
-                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, resolving => ProjectContext.data.Resolve(container, resolving));
+                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, resolving => ResolveUtility.Resolve(resolving, container));
+                views[viewId].connectState = ConnectState.Connected;
             }
         }
         
-        public void ConnectView(View[] views, params IDependency[] dependencies) {
-            DependencyContainer container = new DependencyContainer(dependencies);
-            
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T>(int sceneId, [NotNull] params T[] views) where T : View {
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                TryApplyView(views[viewId], ConnectState.Connected);
-                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, resolving => ProjectContext.data.Resolve(container, resolving));
+                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, ResolveUtility.Resolve);
+                views[viewId].connectState = ConnectState.Connected;
             }
         }
         
-        public T ConnectView<T>([NotNull] T view, [NotNull] IDependency dependency) where T : Component, IView, IResolving {
-            return ConnectView(view, new DependencyContainer(dependency));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Connect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
+            return Connect(view, new DependencyContainer(dependency));
         }
         
-        public T ConnectView<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : Component, IView, IResolving {
-            return ConnectView(view, new DependencyContainer(dependencies));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Connect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
+            return Connect(view, new DependencyContainer(dependencies));
         }
         
-        public T ConnectView<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : Component, IView, IResolving {
-            TryApply(view, ConnectState.Connected);
-            SceneContext.GetContext(sceneId).Connect(view, sceneId, resolving => ProjectContext.data.Resolve(container, resolving));
-            
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View, IResolving {
+            return Connect(view, SceneManager.GetActiveScene().buildIndex, container);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Connect<T>([NotNull] T view, int sceneId, [NotNull] DependencyContainer container) where T : View, IResolving {
+            SceneContext.GetContext(sceneId).Connect(view, sceneId, resolving => ResolveUtility.Resolve(resolving, container));
+            view.connectState = ConnectState.Connected;
             return view;
         }
         
-        public T DisconnectView<T>(T view) where T : Component, IView {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Disconnect<T>(T view) where T : View => Disconnect(view, SceneManager.GetActiveScene().buildIndex);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Disconnect<T>(T view, int sceneId) where T : View {
             SceneContext.GetContext(sceneId).Disconnect(view, sceneId);
-            TryApply(view, ConnectState.Disconnected);
-            
+            view.connectState = ConnectState.Disconnected;
             return view;
         }
         
-        public void DisconnectView([NotNull] params IView[] views) {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Disconnect<T>([NotNull] params T[] views) where T : View {
+            Disconnect(SceneManager.GetActiveScene().buildIndex, views);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Disconnect<T>(int sceneId, [NotNull] params T[] views) where T : View {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 SceneContext.GetContext(sceneId).Disconnect(views[viewId], sceneId);
-                TryApply(views[viewId], ConnectState.Disconnected);
-            }
-        }
-        
-        public T ReconnectView<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
-            if (view.connectState == ConnectState.Connected) {
-                DisconnectView(view);
-            }
-            
-            return ConnectView(view, dependency);
-        }
-        
-        public T ReconnectView<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
-            if (view.connectState == ConnectState.Connected) {
-                DisconnectView(view);
-            }
-            
-            return ConnectView(view, dependencies);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void TryApply<T>(T view, ConnectState state) where T : IView {
-            if (view is View link) {
-                TryApplyView(link, state);
+                views[viewId].connectState = ConnectState.Disconnected;
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void TryApplyView<T>(T view, ConnectState state) where T : View {
-            view.sceneId = sceneId;
-            view.connectState = state;
+        public static T Reconnect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
+            if (view.connectState == ConnectState.Connected) {
+                Disconnect(view);
+            }
+            
+            return Connect(view, dependency);
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Reconnect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
+            if (view.connectState == ConnectState.Connected) {
+                Disconnect(view);
+            }
+            
+            return Connect(view, dependencies);
+        }
+        
+        public virtual void Validate(SelfValidationResult result) {
+        #if UNITY_EDITOR
+            if (parent != null) {
+                View actualParent = GetActualParent();
+                
+                try {
+                    if (actualParent.GetInstanceID() != parent.GetInstanceID()) {
+                        result.AddError("Invalid parent data!").WithFix("Find actual parent", FixParent);
+                    }
+                } catch (NullReferenceException) {
+                    result.AddError("Invalid parent data!").WithFix("Find actual parent", FixParent);
+                }
+            }
+        #endif
+        }
+        
+    #if UNITY_EDITOR
+        
+        public virtual void Reset() {
+            parent = GetActualParent();
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+        
+        private void FixParent() {
+            parent = GetActualParent();
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+        
+        private View GetActualParent() {
+            int current = GetComponent<View>().GetInstanceID();
+            View[] parents = GetComponentsInParent<View>(true);
+            
+            for (int i = 0; i < parents.Length; i++) {
+                if (parents[i] == null) {
+                    continue;
+                }
+                
+                if (parents[i].GetInstanceID() == current) {
+                    continue;
+                }
+                
+                return parents[i];
+            }
+            
+            return null;
+        }
+        
+    #endif
     }
 }

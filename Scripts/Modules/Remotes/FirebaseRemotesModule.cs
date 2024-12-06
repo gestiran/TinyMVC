@@ -13,22 +13,23 @@ using Newtonsoft.Json;
 
 namespace TinyMVC.Modules.Remotes {
     public abstract class FirebaseRemotesModule : IApplicationModule {
-        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
+        protected abstract bool _isAlwaysDefault { get; }
+        
+    #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
         public LastFetchStatus lastFetchStatus { get; private set; }
         
         private static FirebaseRemoteConfig _instance;
-        #endif
+    #endif
         
         private readonly Dictionary<string, object> _defaultValues;
-        private readonly bool _isAlwaysDefault;
         
-        protected FirebaseRemotesModule() {
-            _defaultValues = CreateDefaultValues();
-            _isAlwaysDefault = IsAlwaysDefault();
-        }
+        protected FirebaseRemotesModule() => _defaultValues = new Dictionary<string, object>();
         
         public async Task Initialize() {
-            #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
+            LoadResources();
+            FillDefaultValues(_defaultValues);
+            
+        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
             
             lastFetchStatus = LastFetchStatus.Pending;
             _instance = FirebaseRemoteConfig.DefaultInstance;
@@ -57,11 +58,11 @@ namespace TinyMVC.Modules.Remotes {
             
             ApplyRemotes();
             
-            #endif
+        #endif
         }
         
         public string GetString(string key) {
-            #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
+        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
             
             if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
@@ -71,7 +72,7 @@ namespace TinyMVC.Modules.Remotes {
                 }
             }
             
-            #endif
+        #endif
             
             if (_defaultValues.TryGetValue(key, out object value)) {
                 return (string)value;
@@ -84,27 +85,27 @@ namespace TinyMVC.Modules.Remotes {
         
         
         public T GetValue<T>(string key) {
-            #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
+        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
             if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
-                    #if UNITY_NUGET_NEWTONSOFT_JSON
+                #if UNITY_NUGET_NEWTONSOFT_JSON
                     return JsonConvert.DeserializeObject<T>(_instance.GetValue(key).StringValue);
-                    #else
+                #else
                     Debug.LogError($"Can't convert remote data with key {key}, please use unity newtonsoft JSON!");
                     
                     return default;
                     
-                    #endif
+                #endif
                 } catch (Exception exception) {
                     Debug.LogException(exception);
                 }
             }
-            #endif
+        #endif
             
             if (_defaultValues.TryGetValue(key, out object value)) {
-                #if UNITY_NUGET_NEWTONSOFT_JSON
+            #if UNITY_NUGET_NEWTONSOFT_JSON
                 return JsonConvert.DeserializeObject<T>((string)value);
-                #else
+            #else
                 if (value is T result) {
                     return result;
                 }
@@ -112,7 +113,7 @@ namespace TinyMVC.Modules.Remotes {
                 Debug.LogError($"Can't convert remote data with key {key}, please use unity newtonsoft JSON!");
                 
                 return default;
-                #endif
+            #endif
             }
             
             Debug.LogError($"Can't find remote value with key {key}!");
@@ -121,7 +122,7 @@ namespace TinyMVC.Modules.Remotes {
         }
         
         public float GetFloat(string key) {
-            #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
+        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
             if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
                     if (float.TryParse($"{_instance.GetValue(key).DoubleValue}", out float remoteValue)) {
@@ -131,7 +132,7 @@ namespace TinyMVC.Modules.Remotes {
                     Debug.LogException(exception);
                 }
             }
-            #endif
+        #endif
             
             if (_defaultValues.TryGetValue(key, out object value)) {
                 return (float)value;
@@ -143,7 +144,7 @@ namespace TinyMVC.Modules.Remotes {
         }
         
         public int GetInt(string key) {
-            #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
+        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
             if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
                     if (int.TryParse($"{_instance.GetValue(key).LongValue}", out int remoteValue)) {
@@ -153,7 +154,7 @@ namespace TinyMVC.Modules.Remotes {
                     Debug.LogException(exception);
                 }
             }
-            #endif
+        #endif
             
             if (_defaultValues.TryGetValue(key, out object value)) {
                 return (int)value;
@@ -165,7 +166,7 @@ namespace TinyMVC.Modules.Remotes {
         }
         
         public bool GetBool(string key) {
-            #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
+        #if GOOGLE_FIREBASE_APP && GOOGLE_FIREBASE_REMOTE_CONFIGS
             if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
                     return _instance.GetValue(key).BooleanValue;
@@ -173,7 +174,7 @@ namespace TinyMVC.Modules.Remotes {
                     Debug.LogException(exception);
                 }
             }
-            #endif
+        #endif
             
             if (_defaultValues.TryGetValue(key, out object value)) {
                 return (bool)value;
@@ -184,10 +185,10 @@ namespace TinyMVC.Modules.Remotes {
             return false;
         }
         
-        protected abstract Dictionary<string, object> CreateDefaultValues();
+        protected abstract void LoadResources();
+        
+        protected abstract void FillDefaultValues(Dictionary<string, object> defaults);
         
         protected abstract void ApplyRemotes();
-        
-        protected abstract bool IsAlwaysDefault();
     }
 }

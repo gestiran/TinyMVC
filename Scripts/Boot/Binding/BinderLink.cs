@@ -18,8 +18,8 @@ namespace TinyMVC.Boot.Binding {
         }
         
         public BinderLink(Binder binder, [NotNull] params Type[] types) {
-            this._binder = binder;
-            this._types = types;
+            _binder = binder;
+            _types = types;
         }
         
         public IDependency GetDependency() => new Dependency(_binder.GetDependency(), _types);

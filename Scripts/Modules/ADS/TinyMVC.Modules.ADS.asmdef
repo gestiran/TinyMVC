@@ -13,7 +13,8 @@
         "GoogleMobileAds.dll",
         "GoogleMobileAds.Core.dll",
         "GoogleMobileAds.Ump.dll",
-        "Newtonsoft.Json.dll"
+        "Newtonsoft.Json.dll",
+        "Sirenix.OdinInspector.Attributes.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

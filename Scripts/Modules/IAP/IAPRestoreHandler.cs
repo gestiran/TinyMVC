@@ -10,36 +10,35 @@ namespace TinyMVC.Modules.IAP {
         private const int _BETWEEN_RESTORE_TRIES = 1000;
         
         public async Task RestoreProcess(BuyHandler[] handlers) {
-            #if UNITY_PURCHASING
+        #if UNITY_PURCHASING
             CodelessIAPStoreListener store = CodelessIAPStoreListener.Instance;
-            #endif
+        #endif
             
             while (Application.isPlaying) {
-                #if UNITY_PURCHASING
+            #if UNITY_PURCHASING
                 if (!CodelessIAPStoreListener.initializationComplete) {
                     await Task.Delay(_BETWEEN_RESTORE_TRIES);
                     
                     continue;
                 }
-                #endif
+            #endif
                 
-                #if UNITY_EDITOR
+            #if UNITY_EDITOR
                 IAPParameters parameters = IAPParameters.LoadFromResources();
                 
                 if (parameters.isUsingLastPurchases) {
                     for (int handlerId = 0; handlerId < handlers.Length; handlerId++) {
                         handlers[handlerId].CheckAndRestoreDebug(parameters.debugPurchases);
-                        
                         await Task.Yield();
                     }
                 }
                 
-                #else
+            #else
                 for (int handlerId = 0; handlerId < handlers.Length; handlerId++) {
                     handlers[handlerId].CheckAndRestore(store);
                     await Task.Yield();
                 }
-                #endif
+            #endif
                 
                 break;
             }

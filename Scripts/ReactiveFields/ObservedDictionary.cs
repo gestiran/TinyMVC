@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.ReactiveFields {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-    [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
+#if UNITY_EDITOR
+    [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox]
+#endif
     public sealed class ObservedDictionary<TKey, TValue> {
         public int count => _value.Count;
         
@@ -19,11 +19,11 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<Action> _onRemove;
         private readonly List<Action<TValue>> _onRemoveWithValue;
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, LabelText("Elements"), ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName =
- "@GetType().Name")]
+    #if UNITY_EDITOR
+        [ShowInInspector, LabelText("Elements"),
+         ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@GetType().Name")]
         private List<TValue> _inspectorDisplay;
-        #endif
+    #endif
         
         private Dictionary<TKey, TValue> _value;
         
@@ -40,14 +40,14 @@ namespace TinyMVC.ReactiveFields {
             _onRemove = new List<Action>(_CAPACITY);
             _onRemoveWithValue = new List<Action<TValue>>(_CAPACITY);
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
             _inspectorDisplay = new List<TValue>();
-
+            
             foreach (TValue data in value.Values) {
                 _inspectorDisplay.Add(data);
             }
             
-            #endif
+        #endif
         }
         
         public void Add(TKey key, TValue value) {
@@ -55,9 +55,9 @@ namespace TinyMVC.ReactiveFields {
             _onAdd.Invoke();
             _onAddWithValue.Invoke(value);
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
             _inspectorDisplay.Add(value);
-            #endif
+        #endif
         }
         
         public void RemoveByKey(TKey key) {
@@ -68,9 +68,9 @@ namespace TinyMVC.ReactiveFields {
             _onRemove.Invoke();
             _onRemoveWithValue.Invoke(value);
             
-            #if ODIN_INSPECTOR && UNITY_EDITOR
+        #if ODIN_INSPECTOR && UNITY_EDITOR
             _inspectorDisplay.Remove(value);
-            #endif
+        #endif
         }
         
         public void RemoveRange(List<TValue> values) {
@@ -93,9 +93,9 @@ namespace TinyMVC.ReactiveFields {
                     _onRemove.Invoke();
                     _onRemoveWithValue.Invoke(value);
                     
-                    #if ODIN_INSPECTOR && UNITY_EDITOR
+                #if ODIN_INSPECTOR && UNITY_EDITOR
                     _inspectorDisplay.Remove(value);
-                    #endif
+                #endif
                     break;
                 }
             }

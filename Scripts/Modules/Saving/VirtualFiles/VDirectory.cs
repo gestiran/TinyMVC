@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace TinyMVC.Modules.Saving.VirtualFiles {
     [Serializable]
-    internal sealed class VDirectory : IDisposable {
-        [field: NonSerialized]
-        public bool isDirty { get; private set; }
+    internal sealed class VDirectory : IEquatable<VDirectory> {
+        [NonSerialized] public bool isDirty;
+        [NonSerialized] public SemaphoreSlim semaphore;
         
         public readonly string name;
         public readonly Dictionary<string, VDirectory> directories;
@@ -13,12 +14,20 @@ namespace TinyMVC.Modules.Saving.VirtualFiles {
         
         public VDirectory(string name) {
             this.name = name;
+            semaphore = CreateSemaphore();
             directories = new Dictionary<string, VDirectory>();
             files = new Dictionary<string, VFile>();
         }
         
+        public VDirectory(string name, int directoriesCapacity, int filesCapacity) {
+            this.name = name;
+            directories = new Dictionary<string, VDirectory>(directoriesCapacity);
+            files = new Dictionary<string, VFile>(filesCapacity);
+        }
+        
         public VDirectory(string name, VDirectory[] directories, VFile[] files) {
             this.name = name;
+            semaphore = CreateSemaphore();
             this.directories = new Dictionary<string, VDirectory>(directories.Length);
             
             for (int i = 0; i < directories.Length; i++) {
@@ -34,39 +43,22 @@ namespace TinyMVC.Modules.Saving.VirtualFiles {
             }
         }
         
-        public void SetDirty() => isDirty = true;
+        public static SemaphoreSlim CreateSemaphore() => new SemaphoreSlim(1, 1);
         
-        public void ClearDirty() => isDirty = false;
+        public bool Equals(VDirectory other) => other != null && other.name.Equals(name);
         
-        public VDirectory Clone() {
-            VDirectory result = new VDirectory(name);
+        public VDirectory GetClone() {
+            VDirectory clone = new VDirectory(name, directories.Count, files.Count);
             
-            CopyDirectories(directories, result.directories);
-            CopyFiles(files, result.files);
-            
-            return result;
-        }
-        
-        private void CopyDirectories(Dictionary<string, VDirectory> source, Dictionary<string, VDirectory> destination) {
-            foreach (VDirectory directory in source.Values) {
-                destination.Add(directory.name, directory.Clone());
-            }
-        }
-        
-        private void CopyFiles(Dictionary<string, VFile> source, Dictionary<string, VFile> destination) {
-            foreach (VFile file in source.Values) {
-                destination.Add(file.name, file.Clone());
-            }
-        }
-        
-        public void Dispose() {
-            foreach (VDirectory directory in directories.Values) {
-                directory.Dispose();
+            foreach (KeyValuePair<string, VDirectory> directory in directories) {
+                clone.directories.Add(directory.Key, directory.Value.GetClone());
             }
             
-            foreach (VFile file in files.Values) {
-                file.Dispose();
+            foreach (KeyValuePair<string, VFile> file in files) {
+                clone.files.Add(file.Key, file.Value.GetClone());
             }
+            
+            return clone;
         }
     }
 }

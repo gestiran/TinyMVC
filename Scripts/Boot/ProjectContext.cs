@@ -1,62 +1,24 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Helpers;
+using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-using TinyMVC.Debugging;
-using Unity.Profiling;
-#endif
-
 namespace TinyMVC.Boot {
-    /// <summary> Global initialization context, auto created on any scene at start game </summary>
-    public sealed class ProjectContext {
-        public static float deltaTime { get; internal set; }
-        public static float unscaledDeltaTime { get; internal set; }
-        
-        public static BindAPI binding { get; private set; }
+    public static class ProjectContext {
         public static ProjectData data { get; private set; }
-        public static ProjectContext current { get; private set; }
         
-        /// <summary> Boot contexts list </summary>
-        /// <remarks> Scene can contain one or more <see cref="IContext"/> initializers, always, they will be invoked on <see cref="CreateContext"/> when scene is loaded </remarks>
-        private List<BootstrapContext> _contexts;
-        
-        /// <summary> Controls updating process </summary>
-        /// <remarks> Run <see cref="Tick"/>, <see cref="FixedTick"/>, <see cref="LateTick"/> all scenes </remarks>
-        private LoopContext _loopContext;
+        private static Dictionary<int, SceneContext> _contexts;
+        private static LoopContext _loopContext;
         
         private const int _NULL_SCENE_ID = 1;
         
-        static ProjectContext() {
-            float delta = Time.unscaledDeltaTime;
-            deltaTime = delta * Time.timeScale;
-            unscaledDeltaTime = delta;
-        }
-        
-        private sealed class BootstrapContext : ContextLink<IContext> {
-            public readonly UnloadPool unload;
-            private readonly SceneCoroutines _coroutines;
-            
-            public BootstrapContext(int sceneId, IContext context) : base(sceneId, context) {
-                unload = new UnloadPool();
-                _coroutines = new GameObject(nameof(SceneCoroutines)).AddComponent<SceneCoroutines>();
-            }
-            
-            public Coroutine StartCoroutine(IEnumerator enumerator) => _coroutines.AddCoroutine(enumerator);
-            
-            public void StopCoroutine(Coroutine coroutine) => _coroutines.RemoveCoroutine(coroutine);
-            
-            public void StopAllCoroutines() => _coroutines.StopAll();
-        }
-        
-        public async void LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single) {
+        public static async void LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single) {
             if (mode == LoadSceneMode.Single) {
                 UnloadScene(SceneManager.GetActiveScene().buildIndex);
                 await Task.Yield();
@@ -65,7 +27,7 @@ namespace TinyMVC.Boot {
             SceneManager.LoadScene(sceneBuildIndex, mode);
         }
         
-        public async void ChangeScene(int sceneBuildIndex) {
+        public static async void ChangeScene(int sceneBuildIndex) {
             int currentSceneId = SceneManager.GetActiveScene().buildIndex;
             
             UnloadScene(currentSceneId);
@@ -114,41 +76,22 @@ namespace TinyMVC.Boot {
             await Task.Delay(100);
         }
         
-        public Coroutine StartCoroutine(IEnumerator enumerator) => StartCoroutine(SceneManager.GetActiveScene().buildIndex, enumerator);
+        public static bool TryGetGlobalUnload(out UnloadPool unload) => TryGetGlobalUnload(SceneManager.GetActiveScene().buildIndex, out unload);
         
-        public Coroutine StartCoroutine(int sceneId, IEnumerator enumerator) {
-            if (_contexts.TryGetContext(sceneId, out IContext _, out int id)) {
-                return _contexts[id].StartCoroutine(enumerator);
-            }
-            
-            return null;
-        }
-        
-        public void StopCoroutine(Coroutine coroutine) => StopCoroutine(SceneManager.GetActiveScene().buildIndex, coroutine);
-        
-        public void StopCoroutine(int sceneId, Coroutine coroutine) {
-            if (_contexts.TryGetContext(sceneId, out IContext _, out int id)) {
-                _contexts[id].StopCoroutine(coroutine);
-            }
-        }
-        
-        public bool TryGetGlobalUnload(out UnloadPool unload) => TryGetGlobalUnload(SceneManager.GetActiveScene().buildIndex, out unload);
-        
-        public bool TryGetGlobalUnload(int sceneId, out UnloadPool unload) {
-            if (_contexts.TryGetContext(sceneId, out IContext _, out int id)) {
-                unload = _contexts[id].unload;
+        public static bool TryGetGlobalUnload(int sceneId, out UnloadPool unload) {
+            if (_contexts.TryGetValue(sceneId, out SceneContext context)) {
+                unload = context.unload;
                 
                 return true;
             }
             
             unload = null;
-            
             return false;
         }
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
-        public void LoadSceneEditor(string path, LoadSceneMode mode = LoadSceneMode.Single) {
+        public static void LoadScene_Editor(string path, LoadSceneMode mode = LoadSceneMode.Single) {
             if (mode == LoadSceneMode.Single) {
                 UnloadScene(SceneManager.GetActiveScene().buildIndex);
             }
@@ -157,23 +100,21 @@ namespace TinyMVC.Boot {
             UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(path, parameters);
         }
         
-        #endif
+    #endif
         
         /// <summary> First project context creating </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         internal static void CreateContext() {
-            binding = new BindAPI();
             data = new ProjectData();
-            current = new ProjectContext();
             
-            current.Init();
-            current.BeginPlay();
+            Init();
+            BeginPlay();
             
-            LoopComponent.Create(current.Tick, current.FixedTick, current.LateTick);
+            LoopComponent.Create(Tick, FixedTick, LateTick);
         }
         
-        private void Init() {
-            _contexts = new List<BootstrapContext>();
+        private static void Init() {
+            _contexts = new Dictionary<int, SceneContext>();
             _loopContext = new LoopContext();
             
             _loopContext.Init();
@@ -181,93 +122,75 @@ namespace TinyMVC.Boot {
             Application.quitting += Unload;
         }
         
-        private void BeginPlay() {
+        private static void BeginPlay() {
             InitScene(SceneManager.GetActiveScene(), LoadSceneMode.Single);
             
             SceneManager.sceneLoaded += InitScene;
         }
         
-        private void Unload() {
+        private static void Unload() {
             _contexts = null;
             _loopContext = null;
             
             SceneManager.sceneLoaded -= InitScene;
-            current = null;
         }
         
-        private void FixedTick() {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DebugUtility.ProfilerMarkerScripts("Project.FixedTick", () => _loopContext.FixedTick());
-            #else
-            _loopContext.FixedTick();
-            #endif
-        }
+        private static void FixedTick() => _loopContext.FixedTick();
         
-        private void Tick() {
+        private static void Tick() {
             TimelineUtility.Next();
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DebugUtility.ProfilerMarkerScripts("Project.Tick", () => _loopContext.Tick());
-            #else
             _loopContext.Tick();
-            #endif
         }
         
-        private void LateTick() {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DebugUtility.ProfilerMarkerScripts("Project.LateTick", () => _loopContext.LateTick());
-            #else
-            _loopContext.LateTick();
-            #endif
-        }
+        private static void LateTick() => _loopContext.LateTick();
         
-        internal void AddFixedTicks(int sceneId, List<IFixedTick> ticks) => _loopContext.AddFixedTicks(sceneId, ticks);
+        internal static void AddFixedTicks(int sceneId, List<IFixedTick> ticks) => _loopContext.AddFixedTicks(sceneId, ticks);
         
-        internal void AddTicks(int sceneId, List<ITick> ticks) => _loopContext.AddTicks(sceneId, ticks);
+        internal static void AddTicks(int sceneId, List<ITick> ticks) => _loopContext.AddTicks(sceneId, ticks);
         
-        internal void AddLateTicks(int sceneId, List<ILateTick> ticks) => _loopContext.AddLateTicks(sceneId, ticks);
+        internal static void AddLateTicks(int sceneId, List<ILateTick> ticks) => _loopContext.AddLateTicks(sceneId, ticks);
         
-        internal void ConnectLoop(int sceneId, ILoop loop) => _loopContext.ConnectLoop(sceneId, loop);
+        internal static void ConnectLoop(int sceneId, ILoop loop) => _loopContext.ConnectLoop(sceneId, loop);
         
-        internal void DisconnectLoop(int sceneId, ILoop loop) => _loopContext.DisconnectLoop(sceneId, loop);
+        internal static void DisconnectLoop(int sceneId, ILoop loop) => _loopContext.DisconnectLoop(sceneId, loop);
         
-        private async void InitScene(Scene scene, LoadSceneMode mode) {
+        private static async void InitScene(Scene scene, LoadSceneMode mode) {
             int sceneId = scene.buildIndex;
             
-            if (_contexts.TryGetContext(sceneId, out IContext _, out int _)) {
+            if (_contexts.ContainsKey(sceneId)) {
                 return;
             }
             
-            if (!TryFindSceneContext(scene.GetRootGameObjects(), out IContext context)) {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (!TryFindSceneContext(scene.GetRootGameObjects(), out SceneContext context)) {
+            #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.LogWarning($"ProjectContext.InitScene() - {scene.name} not contain Bootstrap!");
-                #endif
+            #endif
                 return;
             }
             
-            _contexts.Add(new BootstrapContext(sceneId, context));
+            _contexts.Add(sceneId, context);
             context.Create();
             
-            await context.InitAsync(this, sceneId);
+            await context.InitAsync(sceneId);
         }
         
-        private bool TryFindSceneContext(GameObject[] rootObjects, out IContext contexts) {
+        private static bool TryFindSceneContext(GameObject[] rootObjects, out SceneContext context) {
             for (int rootId = 0; rootId < rootObjects.Length; rootId++) {
-                contexts = rootObjects[rootId].GetComponent<IContext>();
+                context = rootObjects[rootId].GetComponent<SceneContext>();
                 
-                if (contexts == null) {
+                if (context == null) {
                     continue;
                 }
                 
                 return true;
             }
             
-            contexts = null;
-            
+            context = null;
             return false;
         }
         
-        private void UnloadScene(int buildId) {
-            if (!_contexts.TryGetContext(buildId, out IContext context, out int contextId)) {
+        private static void UnloadScene(int sceneBuildId) {
+            if (!_contexts.TryGetValue(sceneBuildId, out SceneContext context)) {
                 return;
             }
             
@@ -275,24 +198,18 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ProfilerMarker contextCreate = new ProfilerMarker(ProfilerCategory.Scripts, "Context: Unload");
-            contextCreate.Begin();
-            #endif
-            
             context.Unload();
             
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            contextCreate.End();
-            #endif
+            RemoveGroupAttribute attribute = (RemoveGroupAttribute)Attribute.GetCustomAttribute(context.GetType(), typeof(RemoveGroupAttribute));
             
-            data.Remove(buildId);
+            if (attribute != null) {
+                data.Remove(attribute.groups);
+            }
             
-            _contexts[contextId].unload.Unload();
-            _contexts[contextId].StopAllCoroutines();
+            context.unload.Unload();
             
-            _loopContext.RemoveAllContextsWithId(buildId);
-            _contexts.RemoveAt(contextId);
+            _loopContext.RemoveAllContextsWithId(sceneBuildId);
+            _contexts.Remove(sceneBuildId);
         }
     }
 }

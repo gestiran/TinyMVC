@@ -1,17 +1,12 @@
 ﻿using System.Collections.Generic;
-using TinyMVC.Debugging;
+using System.Runtime.CompilerServices;
 
 namespace TinyMVC.Loop.Extensions {
     public static class TickExtension {
-        public static void Tick<T>(this T[] objects) where T : ITick {
-            for (int objId = 0; objId < objects.Length; objId++) {
-                DebugUtility.CheckAndLogException(objects[objId].Tick, objects[objId]);
-            }
-        }
-        
-        public static void Tick<T>(this List<T> objects) where T : ITick {
-            for (int objId = 0; objId < objects.Count; objId++) {
-                DebugUtility.CheckAndLogException(objects[objId].Tick, objects[objId]);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Tick<T>(this ICollection<T> collection) where T : ITick {
+            foreach (T obj in collection) {
+                obj.Tick();
             }
         }
     }

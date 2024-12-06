@@ -2,25 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-
-#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
-#endif
 
 namespace TinyMVC.Dependencies {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
     [HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
     public sealed class DependencyPool<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
         public int length => _objects.Length;
         public T Current => _objects[_currentId];
         object IEnumerator.Current => _objects[_currentId];
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, IsReadOnly = true)]
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, IsReadOnly = true, ListElementLabelName = "@ToString()"), Searchable]
         [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox, LabelText("@ToString()")]
-        #endif
         private T[] _objects;
+        
         private int _currentId;
         
         public DependencyPool(int count) {
@@ -62,7 +56,8 @@ namespace TinyMVC.Dependencies {
             _currentId = -1;
         }
         
-        public T this[int index] {
+        public T this[int index]
+        {
             get => _objects[index];
             set => _objects[index] = value;
         }
@@ -85,6 +80,13 @@ namespace TinyMVC.Dependencies {
         
         public void Dispose() {
             Reset();
+            
+            if (_objects.Length > 0 && _objects[0] is IDisposable) {
+                foreach (T obj in _objects) {
+                    (obj as IDisposable).Dispose();
+                }
+            }
+            
             _objects = null;
         }
         

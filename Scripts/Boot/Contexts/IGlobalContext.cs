@@ -1,3 +1,3 @@
 ﻿namespace TinyMVC.Boot.Contexts {
-    public interface IGlobalContext : IContext { }
+    public interface IGlobalContext { }
 }

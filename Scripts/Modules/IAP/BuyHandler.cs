@@ -16,9 +16,9 @@ namespace TinyMVC.Modules.IAP {
         protected readonly string _productId;
         
         protected BuyHandler(string productId) {
-            #if UNITY_EDITOR
+        #if UNITY_EDITOR
             ValidateProductID(productId);
-            #endif
+        #endif
             
             _productId = productId;
         }
@@ -33,7 +33,7 @@ namespace TinyMVC.Modules.IAP {
         
         public abstract bool IsPurchased();
         
-        #if UNITY_PURCHASING
+    #if UNITY_PURCHASING
         public virtual void CheckAndRestore(CodelessIAPStoreListener store) {
             if (store.HasProductInCatalog(_productId)) {
                 Product product = store.GetProduct(_productId);
@@ -51,9 +51,9 @@ namespace TinyMVC.Modules.IAP {
                 Confiscate();
             }
         }
-        #endif
+    #endif
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         public virtual void CheckAndRestoreDebug(string[] store) {
             if (ContainsKey(store, _productId)) {
                 if (!IsPurchased()) {
@@ -112,6 +112,6 @@ namespace TinyMVC.Modules.IAP {
             return list.ToArray();
         }
         
-        #endif
+    #endif
     }
 }

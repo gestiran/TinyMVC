@@ -16,10 +16,10 @@ namespace TinyMVC.Modules.Saving {
         
         public static SaveParameters LoadFromResources() => Resources.Load<SaveParameters>(_PATH);
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         public static SaveParameters LoadFromAssets() => UnityEditor.AssetDatabase.LoadAssetAtPath<SaveParameters>(System.IO.Path.Combine($"Assets/Resources/{_PATH}"));
         
-        #endif
+    #endif
     }
 }

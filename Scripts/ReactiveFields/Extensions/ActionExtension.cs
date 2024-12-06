@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using TinyMVC.Debugging;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class ActionExtension {
@@ -19,25 +18,7 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
             
             for (i = 0; i < temp.Length; i++) {
-                DebugUtility.CheckAndLogException(temp[i].Invoke);
-            }
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Invoke<T>(this List<Action<T>> actions, T value) {
-            if (actions.Count <= 0) {
-                return;
-            }
-            
-            Action<T>[] temp = new Action<T>[actions.Count];
-            int i;
-            
-            for (i = 0; i < actions.Count; i++) {
-                temp[i] = actions[i];
-            }
-            
-            for (i = 0; i < temp.Length; i++) {
-                DebugUtility.CheckAndLogException(temp[i].Invoke, value);
+                temp[i].Invoke();
             }
         }
         
@@ -56,8 +37,26 @@ namespace TinyMVC.ReactiveFields.Extensions {
             
             for (i = 0; i < temp.Length; i++) {
                 for (int v = 0; v < value.Length; v++) {
-                    DebugUtility.CheckAndLogException(temp[i].Invoke, value[v]);
+                    temp[i].Invoke(value[v]);
                 }
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Invoke<T>(this List<Action<T>> actions, T value) {
+            if (actions.Count <= 0) {
+                return;
+            }
+            
+            Action<T>[] temp = new Action<T>[actions.Count];
+            int i;
+            
+            for (i = 0; i < actions.Count; i++) {
+                temp[i] = actions[i];
+            }
+            
+            for (i = 0; i < temp.Length; i++) {
+                temp[i].Invoke(value);
             }
         }
         
@@ -75,7 +74,7 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
             
             for (i = 0; i < temp.Length; i++) {
-                DebugUtility.CheckAndLogException(temp[i].Invoke, value1, value2);
+                temp[i].Invoke(value1, value2);
             }
         }
         
@@ -93,7 +92,7 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
             
             for (i = 0; i < temp.Length; i++) {
-                DebugUtility.CheckAndLogException(temp[i].Invoke, value1, value2, value3);
+                temp[i].Invoke(value1, value2, value3);
             }
         }
     }

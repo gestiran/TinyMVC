@@ -1,5 +1,6 @@
 ﻿#if UNITASK_ENABLE
-using Cysharp.Threading.Tasks;
+    using System;
+    using Cysharp.Threading.Tasks;
 
 #else
 using System.Threading.Tasks;
@@ -14,6 +15,23 @@ namespace TinyMVC.Utilities.Async {
 
             return cancellation.isCancel;
         }
+        
+        public static AsyncCancellation CallAfterFrame(Action callback) {
+            AsyncCancellation cancellation = new AsyncCancellation();
+            CallAfterFrame(callback, cancellation);
+            
+            return cancellation;
+        }
+        
+        private static async void CallAfterFrame(Action callback, AsyncCancellation cancellation) {
+            await UniTask.Yield();
+            
+            if (cancellation.isCancel) {
+                return;
+            }
+            
+            callback();
+        } 
         
         #else
         public static async Task<bool> Delay(int millisecondsDelay, AsyncCancellation cancellation, bool ignoreTimeScale = false) {

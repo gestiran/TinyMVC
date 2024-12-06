@@ -1,92 +1,117 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using TinyMVC.Loop;
+using Sirenix.OdinInspector;
 using TinyMVC.ReactiveFields.Extensions;
 
-#if ODIN_SERIALIZATION
-using Sirenix.Serialization;
-#endif
-
-#if ODIN_INSPECTOR && UNITY_EDITOR
-using Sirenix.OdinInspector;
-#endif
-
 namespace TinyMVC.ReactiveFields {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
+    public static class Observed {
+        internal static int globalId;
+        
+        static Observed() => globalId = 0;
+    }
+    
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
-    [Serializable]
-    public sealed class Observed<T> : IUnload {
+    public sealed class Observed<T> : IEquatable<Observed<T>>, IEquatable<T> {
         public T value => _value;
         
-        private List<Action> _listeners;
-        private List<Action<T>> _valueListeners;
-        
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, HideLabel, OnValueChanged("@" + nameof(Set) + "(" + nameof(_value) + ")"), HideDuplicateReferenceBox, HideReferenceObjectPicker]
-        #endif
-        #if ODIN_SERIALIZATION
-        [OdinSerialize]
-        #else
-        [UnityEngine.SerializeField]
-        #endif
+        [ShowInInspector, HorizontalGroup, HideLabel, OnValueChanged("@Set(_value)"), HideDuplicateReferenceBox, HideReferenceObjectPicker]
         private T _value;
         
-        private const int _CAPACITY = 16;
+        internal readonly int id;
         
-        public Observed(T value) : this() => _value = value;
+        public Observed(T data) : this() => _value = data;
         
         public Observed() {
-            _listeners = new List<Action>(_CAPACITY);
-            _valueListeners = new List<Action<T>>(_CAPACITY);
+            id = Observed.globalId++;
+            
+            Listeners.pool.Add(id, new List<Action>());
+            Listeners<T>.pool.Add(id, new List<Action<T>>());
         }
         
         public void SetSilent(T newValue) => _value = newValue;
         
         public void Set(T newValue) {
             _value = newValue;
-            _listeners.Invoke();
-            _valueListeners.Invoke(newValue);
+            Listeners.pool[id].Invoke();
+            Listeners<T>.pool[id].Invoke(newValue);
         }
         
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener) => _listeners.Add(listener);
+        public static implicit operator T(Observed<T> observed) => observed.value;
         
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener, UnloadPool unload) {
-            _listeners.Add(listener);
-            unload.Add(new UnloadAction(() => RemoveListener(listener)));
-        }
+        public override string ToString() => $"{value}";
         
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T> listener) => _valueListeners.Add(listener);
+        public override int GetHashCode() => id;
         
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T> listener, UnloadPool unload) {
-            _valueListeners.Add(listener);
-            unload.Add(new UnloadAction(() => RemoveListener(listener)));
-        }
+    #if UNITY_EDITOR
+        private bool IsInt() => typeof(T) == typeof(int);
         
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action listener) => _listeners.Remove(listener);
+        private bool IsFloat() => typeof(T) == typeof(float);
         
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action<T> listener) => _valueListeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void Unload() {
-            _listeners.Clear();
-            _valueListeners.Clear();
-        }
-        
-        public static implicit operator T(Observed<T> value) => value._value;
-        
-        public override string ToString() {
-            if (_value == null) {
-                return "null";
+        [Button("x2"), HorizontalGroup, ShowIf("IsInt")]
+        private void AddInt() {
+            if (_value is int intValue) {
+                if (intValue == 0) {
+                    intValue = 10;
+                } else {
+                    intValue *= 2;
+                }
+                
+                if (intValue is T result) {
+                    Set(result);
+                }
             }
-            
-            return _value.ToString();
         }
+        
+        [Button("x2"), HorizontalGroup, ShowIf("IsFloat")]
+        private void AddFloat() {
+            if (_value is float floatValue) {
+                if (floatValue == 0f) {
+                    floatValue = 10f;
+                } else {
+                    floatValue *= 2f;
+                }
+                
+                if (floatValue is T result) {
+                    Set(result);
+                }
+            }
+        }
+        
+        [Button("x0.5"), HorizontalGroup, ShowIf("IsInt")]
+        private void SubtractInt() {
+            if (_value is int intValue) {
+                if (intValue > 0 && intValue <= 10) {
+                    intValue = 0;
+                } else {
+                    intValue /= 2;
+                }
+                
+                if (intValue is T result) {
+                    Set(result);
+                }
+            }
+        }
+        
+        [Button("x0.5"), HorizontalGroup, ShowIf("IsFloat")]
+        private void SubtractFloat() {
+            if (_value is float floatValue) {
+                if (floatValue > 0f && floatValue <= 10f) {
+                    floatValue = 0f;
+                } else {
+                    floatValue *= 0.5f;
+                }
+                
+                if (floatValue is T result) {
+                    Set(result);
+                }
+            }
+        }
+        
+    #endif
+        public bool Equals(Observed<T> other) => other != null && other.id == id;
+        
+        public bool Equals(T other) => other != null && other.Equals(value);
+        
+        public override bool Equals(object obj) => obj is Observed<T> other && other.id == id;
     }
 }

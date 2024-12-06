@@ -1,15 +1,14 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 
 namespace TinyMVC.Boot.Binding {
-    /// <summary> Dependency objects factory </summary>
-    /// <typeparam name="T"> Dependency object type </typeparam>
     public abstract class DependencyPoolBinder<T> : Binder where T : IDependency, new() {
         protected abstract int _count { get; }
         
-        /// <summary> Internal create first state dependency object </summary>
-        /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
+        protected DependencyPoolBinder(string key = null) => keyValue = key;
+        
         public override IDependency GetDependency() => Bind();
         
         internal override Type GetBindType() => typeof(DependencyPool<T>);
@@ -20,14 +19,23 @@ namespace TinyMVC.Boot.Binding {
             }
             
             DependencyPool<T> models = new DependencyPool<T>(_count);
-            
-            for (int modelId = 0; modelId < models.length; modelId++) {
-                T model = new T();
-                Bind(model, modelId);
-                models[modelId] = model;
-            }
-            
+            FillModels(models);
+            Bind(models);
             return models;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void FillModels(DependencyPool<T> models) {
+            for (int modelId = 0; modelId < models.length; modelId++) {
+                models[modelId] = new T();
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual void Bind(DependencyPool<T> models) {
+            for (int modelId = 0; modelId < models.length; modelId++) {
+                Bind(models[modelId], modelId);
+            }
         }
         
         protected abstract void Bind(T model, int index);

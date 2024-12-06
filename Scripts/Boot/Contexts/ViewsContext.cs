@@ -1,45 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TinyMVC.Debugging;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using UnityEngine;
-
-#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
-#endif
-
 using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.Boot.Contexts {
-    /// <summary> Contains references to scene objects </summary>
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-    [InlineProperty, HideLabel]
-    #endif
-    [Serializable]
+    [Serializable, InlineProperty, HideLabel]
     public abstract class ViewsContext {
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ListDrawerSettings(HideAddButton = true, ShowFoldout = false), Searchable, Required]
-        #endif
-        [SerializeField]
+        [InfoBox("Instantiated automatically after scene loaded.")]
+        [SerializeField, ListDrawerSettings(HideAddButton = true, NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
         private View[] _assets;
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        [SceneObjectsOnly, ShowIn(PrefabKind.InstanceInScene), ReadOnly, RequiredIn(PrefabKind.InstanceInScene)]
-        #endif
-        [SerializeField]
+        [InfoBox("Auto found in scene by Generate button.")]
+        [SerializeField, LabelText("Generated Assets"), ShowIn(PrefabKind.InstanceInScene), RequiredIn(PrefabKind.InstanceInScene), ReadOnly]
         private View[] _generated;
         
-        private List<IView> _mainViews;
-        private List<IView> _subViews;
+        private List<View> _mainViews;
+        private List<View> _subViews;
         
-        /// <summary> Instantiate new objects to scene before initialization process </summary>
         internal void Instantiate() {
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
+            #if UNITY_EDITOR
+                if (_assets[assetId] == null) {
+                    Debug.LogError("Context contain null element!");
+                    continue;
+                }
+            #endif
+                
                 _assets[assetId] = UnityObject.Instantiate(_assets[assetId]);
             }
         }
@@ -53,8 +46,8 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         internal void CreateViews() {
-            _mainViews = new List<IView>();
-            _subViews = new List<IView>();
+            _mainViews = new List<View>();
+            _subViews = new List<View>();
             
             Create();
             
@@ -62,11 +55,9 @@ namespace TinyMVC.Boot.Contexts {
             _mainViews.AddRange(_generated);
         }
         
-        internal async Task InitAsync(int sceneId) {
+        internal async Task InitAsync() {
             for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
-                if (_mainViews[viewId] is View view) {
-                    view.sceneId = sceneId;
-                }
+                _mainViews[viewId].connectState = View.ConnectState.Connected;
             }
             
             await _mainViews.TryInitAsync();
@@ -75,7 +66,7 @@ namespace TinyMVC.Boot.Contexts {
         internal async Task BeginPlay() => await _mainViews.TryBeginPlayAsync();
         
         internal void CheckAndAdd<T>(List<T> list) {
-            list.Capacity += list.Count;
+            list.Capacity += _mainViews.Count;
             
             for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
                 if (_mainViews[viewId] is T view) {
@@ -92,33 +83,37 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Connect(IView view, int sceneId, Action<IResolving> resolve) {
+        internal void Connect(View view, int sceneId, Action<IResolving> resolve) {
             if (view is IInit init) {
-                DebugUtility.CheckAndLogException(init.Init);
+                init.Init();
             }
             
             if (view is IResolving resolving) {
                 resolve(resolving);
+                
+                if (view is IApplyResolving apply) {
+                    apply.ApplyResolving();
+                }
             }
             
             if (view is IBeginPlay beginPlay) {
-                DebugUtility.CheckAndLogException(beginPlay.BeginPlay);
+                beginPlay.BeginPlay();
             }
             
             if (view is ILoop loop) {
-                ProjectContext.current.ConnectLoop(sceneId, loop);
+                ProjectContext.ConnectLoop(sceneId, loop);
             }
             
             _subViews.Add(view);
         }
         
-        internal void Disconnect(IView view, int sceneId) {
+        internal void Disconnect(View view, int sceneId) {
             if (view is ILoop loop) {
-                ProjectContext.current.DisconnectLoop(sceneId, loop);
+                ProjectContext.DisconnectLoop(sceneId, loop);
             }
             
             if (view is IUnload unload) {
-                DebugUtility.CheckAndLogException(unload.Unload);
+                unload.Unload();
             }
             
             _subViews.Remove(view);
@@ -129,24 +124,29 @@ namespace TinyMVC.Boot.Contexts {
             _mainViews.TryUnload();
         }
         
-        protected void Add<T>(T view) where T : IView => _mainViews.Add(view);
+        protected void Add<T>(T view) where T : View => _mainViews.Add(view);
         
-        /// <summary> Create and connect views to initialization </summary>
         protected abstract void Create();
         
-        protected virtual void Generate() { }
+    #if UNITY_EDITOR
         
-        #if UNITY_EDITOR
+        protected bool TryGetGenerated_Editor<T>(out T view) where T : View, IGeneratedContext {
+            for (int i = 0; i < _generated.Length; i++) {
+                if (_generated[i] is T result) {
+                    view = result;
+                    return true;
+                }
+            }
+            
+            view = null;
+            return false;
+        }
         
-        internal void Generate_Editor() {
-            View[] views = UnityObject.FindObjectsOfType<View>(includeInactive: true);
+        public virtual void Reset() {
+            View[] views = UnityObject.FindObjectsOfType<View>(true);
             List<View> generated = new List<View>();
             
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                if (views[viewId] is not IGenerated) {
-                    continue;
-                }
-                
                 if (views[viewId] is IGeneratedContext) {
                     generated.Add(views[viewId]);
                 }
@@ -161,9 +161,8 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             _generated = generated.ToArray();
-            Generate();
         }
         
-        #endif
+    #endif
     }
 }

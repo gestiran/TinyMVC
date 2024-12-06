@@ -1,27 +1,33 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using TinyMVC.Boot.Binding;
-using TinyMVC.Boot.Empty;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop.Extensions;
-using TinyMVC.Debugging;
 
 namespace TinyMVC.Boot.Contexts {
-    /// <summary> Contains models initialization </summary>
     public abstract class ModelsContext : IResolving {
         private readonly List<IBinder> _binders;
         private readonly List<IDependency> _models;
+        
+        public sealed class EmptyContext : ModelsContext {
+            internal EmptyContext() { }
+            
+            protected override void Bind() { }
+            
+            protected override void Create(List<IDependency> models) { }
+        }
         
         protected ModelsContext() {
             _binders = new List<IBinder>();
             _models = new List<IDependency>();
         }
         
-        public static ModelsEmptyContext Empty() => new ModelsEmptyContext();
+        public static EmptyContext Empty() => new EmptyContext();
         
         internal void CreateBinders() => Bind();
         
-        internal List<IResolving> CreateResolving() {
+        internal List<IResolving> GetBindResolving() {
             List<IResolving> resolving = new List<IResolving>(_binders.Count);
             
             for (int binderId = 0; binderId < _binders.Count; binderId++) {
@@ -35,7 +41,13 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void ApplyBindDependencies() {
             for (int bindId = 0; bindId < _binders.Count; bindId++) {
-                _models.Add(DebugUtility.CheckAndLogExceptionResult(_binders[bindId].GetDependency));
+                IBinder binder = _binders[bindId];
+                
+                if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
+                    continue;
+                }
+                
+                _models.Add(binder.GetDependency());
             }
         }
         
@@ -45,19 +57,16 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void Unload() => _models.TryUnload();
         
-        protected void Add<T>() where T : Binder, new() => _binders.Add(new T());
-        
-        protected void Add<T>(params Type[] types) where T : Binder, new() => _binders.Add(new BinderLink(new T(), types));
+        protected void Add<T>(T binder, params Type[] types) where T : Binder => _binders.Add(new BinderLink(binder, types));
         
         protected void Add<T>(T binder) where T : Binder => _binders.Add(binder);
         
-        protected void Add<T>(T binder, params Type[] types) where T : Binder => _binders.Add(binder.AsLink(types));
+        protected void AddRuntime<T>(T binder) where T : Binder => ProjectBinding.Add(binder);
         
-        /// <summary> Create and execute binders, created models will be added by the time Create is called </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract void Bind();
         
-        /// <summary> Create models and connect initialization </summary>
-        /// <param name="models"> Data containers </param>
-        protected abstract void Create(List<IDependency> models);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual void Create(List<IDependency> models) { }
     }
 }

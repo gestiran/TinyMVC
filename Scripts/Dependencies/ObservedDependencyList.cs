@@ -9,13 +9,13 @@ using TinyMVC.ReactiveFields.Extensions;
 using TinyMVC.Utilities.Async;
 using UnityEngine;
 
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies {
-#if ODIN_INSPECTOR && UNITY_EDITOR
-    [HideLabel, ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
+#if UNITY_EDITOR
+    [HideLabel, ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class ObservedDependencyList<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
         public int count => _value.Count;
@@ -28,8 +28,9 @@ namespace TinyMVC.Dependencies {
         private readonly List<Action<T>> _onRemoveWithValue;
         private readonly List<Action> _onClear;
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, HideLabel, ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+    #if UNITY_EDITOR
+        [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox,
+         ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@ToString()"), Searchable]
     #endif
         private List<T> _value;
         
@@ -113,9 +114,6 @@ namespace TinyMVC.Dependencies {
             _onAddWithValue.Invoke(values);
         }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [Button(Expanded = true), HorizontalGroup]
-    #endif
         public void Add([NotNull] T value) {
             _value.Add(value);
             
@@ -252,14 +250,15 @@ namespace TinyMVC.Dependencies {
             _onRemoveWithValue.Invoke(values);
         }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [Button(Expanded = true), HorizontalGroup]
-    #endif
         public void Remove([NotNull] T value) {
             _value.Remove(value);
             
             _onRemove.Invoke();
             _onRemoveWithValue.Invoke(value);
+            
+            if (value is IDisposable disposable) {
+                disposable.Dispose();
+            }
         }
         
         public Task RemoveAsync([NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
@@ -386,9 +385,6 @@ namespace TinyMVC.Dependencies {
             _lock = false;
         }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [Button]
-    #endif
         public void Clear() {
             _value.Clear();
             _onClear.Invoke();
@@ -405,31 +401,40 @@ namespace TinyMVC.Dependencies {
             _onRemoveWithValue.Invoke(element);
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action listener) => _onAdd.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action listener, UnloadPool unload) {
             _onAdd.Add(listener);
             unload.Add(new UnloadAction(() => _onAdd.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action<T> listener) => _onAddWithValue.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(Action<T> listener, UnloadPool unload) {
             _onAddWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onAddWithValue.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnAddListener(Action listener) => _onAdd.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnAddListener(Action<T> listener) => _onAddWithValue.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(Action listener) => _onRemove.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(Action listener, UnloadPool unload) {
             _onRemove.Add(listener);
             unload.Add(new UnloadAction(() => _onRemove.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(Action<T> listener) => _onRemoveWithValue.Add(listener);
         
         public void AddOnRemoveListener(Action<T> listener, UnloadPool unload) {
@@ -437,17 +442,22 @@ namespace TinyMVC.Dependencies {
             unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnRemoveListener(Action listener) => _onRemove.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnRemoveListener(Action<T> listener) => _onRemoveWithValue.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnClearListener(Action listener) => _onClear.Add(listener);
         
+        // Resharper disable Unity.ExpensiveCode
         public void AddOnClearListener(Action listener, UnloadPool unload) {
             _onClear.Add(listener);
             unload.Add(new UnloadAction(() => _onClear.Remove(listener)));
         }
         
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnClearListener(Action listener) => _onClear.Remove(listener);
         
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -468,6 +478,13 @@ namespace TinyMVC.Dependencies {
         
         public void Dispose() {
             Reset();
+            
+            if (_value.Count > 0 && _value[0] is IDisposable) {
+                foreach (T obj in _value) {
+                    (obj as IDisposable).Dispose();
+                }
+            }
+            
             _value = null;
             _onAdd.Clear();
             _onAddWithValue.Clear();

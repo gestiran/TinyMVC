@@ -7,7 +7,7 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Modules.IAP {
     [CreateAssetMenu(fileName = nameof(IAPParameters), menuName = "API/" + nameof(IAPParameters))]
     public sealed class IAPParameters : ScriptableObject {
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         [field: SerializeField, Header("Debug:")]
         public string pathToProductCatalog { get; private set; } = "IAPProductCatalog";
@@ -19,13 +19,13 @@ namespace TinyMVC.Modules.IAP {
         public bool isUsingLastPurchases { get; private set; }
         
         [field: SerializeField
-                #if ODIN_INSPECTOR
+            #if ODIN_INSPECTOR
               , ValueDropdown("@BuyHandler.LoadPurchasesValues()")
-            #endif
+    #endif
         ]
         public string[] debugPurchases { get; private set; }
         
-        #endif
+    #endif
         
         private const string _PATH = "Application/" + nameof(IAPParameters);
         

@@ -67,7 +67,7 @@ namespace TinyMVC.Modules.Analytics {
         #if UNITY_EDITOR
         
         [UnityEditor.InitializeOnLoadMethod]
-        private static void ClearDataInitialization() => SaveModule.onDataClearEditor += ClearData;
+        private static void ClearDataInitialization() => SaveService.onDataClearEditor += ClearData;
         
         private static void ClearData() {
             if (File.Exists(_pathToLog)) {

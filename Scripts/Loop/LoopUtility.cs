@@ -4,7 +4,7 @@ using UnityEngine.LowLevel;
 
 namespace TinyMVC.Loop {
     internal static class LoopUtility {
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         static LoopUtility() => UnityEditor.EditorApplication.playModeStateChanged += PlayModeStateChanged;
         
@@ -16,7 +16,7 @@ namespace TinyMVC.Loop {
             PlayerLoop.SetPlayerLoop(PlayerLoop.GetDefaultPlayerLoop());
         }
         
-        #endif
+    #endif
         
         private const string _FIXED_TICK = "FixedUpdate";
         private const string _TICK = "Update";

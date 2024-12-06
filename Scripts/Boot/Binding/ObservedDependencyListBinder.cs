@@ -3,13 +3,11 @@ using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 
 namespace TinyMVC.Boot.Binding {
-    /// <summary> Dependency objects factory </summary>
-    /// <typeparam name="T"> Dependency object type </typeparam>
     public abstract class ObservedDependencyListBinder<T> : Binder where T : IDependency, new() {
         protected virtual int _capacity { get; } = 4;
         
-        /// <summary> Internal create first state dependency object </summary>
-        /// <returns> Dependency object result created on <see cref="Bind"/> function </returns>
+        protected ObservedDependencyListBinder(string key = null) => keyValue = key;
+        
         public override IDependency GetDependency() => Bind();
         
         internal override Type GetBindType() => typeof(ObservedDependencyList<T>);
@@ -33,8 +31,6 @@ namespace TinyMVC.Boot.Binding {
             }
         }
         
-        /// <summary> Create and load first state dependency object </summary>
-        /// <returns> Dependency object result </returns>
         protected abstract void Bind(ObservedDependencyList<T> model);
     }
 }

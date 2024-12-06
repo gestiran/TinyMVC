@@ -1,5 +1,6 @@
-﻿namespace TinyMVC.Controllers {
-    /// <summary> Project logic container </summary>
-    /// <remarks> First created on any <see cref="TinyMVC.Boot.SceneContext"/>.<see cref="TinyMVC.Boot.SceneContext{T}.CreateControllers()"/> </remarks>
+﻿using Sirenix.OdinInspector;
+
+namespace TinyMVC.Controllers {
+    [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
     public interface IController { }
 }

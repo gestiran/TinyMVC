@@ -1,5 +1,4 @@
-﻿#if ODIN_INSPECTOR
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using TinyMVC.Boot;
@@ -35,5 +34,3 @@ namespace TinyMVC.Editor {
         private void Reset() => _data = ProjectContext.data;
     }
 }
-
-#endif

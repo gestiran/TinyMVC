@@ -12,6 +12,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
+        "Sirenix.OdinInspector.Attributes.dll",
         "Newtonsoft.Json.dll"
     ],
     "autoReferenced": true,

@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using TinyMVC.Dependencies;
 using UnityEngine;
-
-#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
-using UnityEngine.SceneManagement;
-#endif
 
 namespace TinyMVC.Boot {
-#if ODIN_INSPECTOR && UNITY_EDITOR
     [ShowInInspector, InlineProperty, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-#endif
     public sealed class ProjectData {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox, Searchable]
+    #if UNITY_EDITOR
+        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false, ListElementLabelName = "@label")]
         private List<DependencyLink> _dependenciesEditor;
         
@@ -24,8 +17,7 @@ namespace TinyMVC.Boot {
             [HideLabel, ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
             private DependencyContainer _container;
             
-            [HideInInspector]
-            public readonly string label;
+            [HideInInspector] public readonly string label;
             
             public DependencyLink(string label, DependencyContainer container) {
                 this.label = label;
@@ -35,96 +27,102 @@ namespace TinyMVC.Boot {
         
     #endif
         
-        private DependencyContainer _container;
+        private readonly Dictionary<string, DependencyContainer> _dependencies;
+        private readonly Type _resolveContainers = typeof(ResolveGroupAttribute);
         
-        private readonly Dictionary<int, DependencyContainer> _dependencies;
+        public const string MAIN = "Project";
         
         private const int _CAPACITY = 16;
         
         internal ProjectData() {
-            _dependencies = new Dictionary<int, DependencyContainer>(_CAPACITY);
-        #if ODIN_INSPECTOR && UNITY_EDITOR
+            _dependencies = new Dictionary<string, DependencyContainer>(_CAPACITY);
+        #if UNITY_EDITOR
             _dependenciesEditor = new List<DependencyLink>(_CAPACITY);
         #endif
         }
         
-        public void Resolve(List<IResolving> resolving) {
-            ResolveUtility.Resolve(resolving, GetContainer());
-        }
-        
-        public void Resolve([NotNull] IResolving resolving) {
-            ResolveUtility.Resolve(resolving, GetContainer());
-        }
-        
-        public void Resolve([NotNull] DependencyContainer container, [NotNull] IResolving resolving) {
-            ResolveUtility.Resolve(resolving, container);
-        }
-        
-        internal void ResolveWithoutApply(List<IResolving> resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, GetContainer());
-        }
-        
-        internal void ResolveWithoutApply([NotNull] IResolving resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, GetContainer());
-        }
-        
-        internal void ResolveWithoutApply([NotNull] DependencyContainer container, List<IResolving> resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, container);
-        }
-        
-        internal void ResolveWithoutApply([NotNull] DependencyContainer container, [NotNull] IResolving resolving) {
-            ResolveUtility.ResolveWithoutApply(resolving, container);
-        }
-        
-        internal void Add(int sceneId, DependencyContainer container) {
-            if (_dependencies.ContainsKey(sceneId)) {
-                _dependencies[sceneId] = container;
-            }
-            
-            _dependencies.Add(sceneId, container);
-            _container = null;
-            
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-            _dependenciesEditor.Add(new DependencyLink(SceneManager.GetSceneByBuildIndex(sceneId).name, container));
-        #endif
-        }
-        
-        internal void Remove(int sceneId) {
-            if (_dependencies.ContainsKey(sceneId) == false) {
-                return;
-            }
-            
-            _dependencies.Remove(sceneId);
-            _container = null;
-            
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-            string name = SceneManager.GetSceneByBuildIndex(sceneId).name;
-            
-            for (int linkId = 0; linkId < _dependenciesEditor.Count; linkId++) {
-                if (_dependenciesEditor[linkId].label == name) {
-                    _dependenciesEditor.RemoveAt(linkId);
-                    break;
-                }
-            }
-        #endif
-        }
-        
-        private DependencyContainer GetContainer() {
-            if (_container != null) {
-                return _container;
-            }
-            
-            DependencyContainer result = new DependencyContainer(64);
-            
-            foreach (DependencyContainer container in _dependencies.Values) {
-                foreach (KeyValuePair<Type, IDependency> dependencies in container.dependencies) {
-                    result.dependencies.Add(dependencies.Key, dependencies.Value);
+        public bool TryGetDependency<T>(string key, out T dependency) where T : IDependency {
+            if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
+                if (container.dependencies.TryGetValue(typeof(T), out IDependency value)) {
+                    dependency = (T)value;
+                    return true;
                 }
             }
             
-            _container = result;
-            
-            return result;
+            dependency = default;
+            return false;
         }
+        
+        public bool TryGetDependency(string key, Type type, out IDependency dependency) {
+            if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
+                if (container.dependencies.TryGetValue(type, out IDependency value)) {
+                    dependency = value;
+                    return true;
+                }
+            }
+            
+            dependency = default;
+            return false;
+        }
+        
+        public bool Get<T>(out T dependency) where T : IDependency {
+            Type type = typeof(T);
+            ResolveGroupAttribute attribute = (ResolveGroupAttribute)Attribute.GetCustomAttribute(type, _resolveContainers);
+            string key = attribute != null ? attribute.group : MAIN;
+            
+            if (_dependencies.TryGetValue(key, out DependencyContainer container) && container.dependencies.TryGetValue(type, out IDependency value)) {
+                dependency = (T)value;
+                return true;
+            }
+            
+        #if UNITY_EDITOR
+            
+            Debug.LogError($"Can't find {type.Name} dependency!");
+            
+        #endif
+            
+            dependency = default;
+            return false;
+        }
+        
+        internal void Remove(string[] groups) {
+            foreach (string group in groups) {
+                _dependencies.Remove(group);
+            }
+            
+        #if UNITY_EDITOR
+            UpdateEditor();
+        #endif
+        }
+        
+        internal void Add(List<IDependency> dependencies) {
+            foreach (IDependency dependency in dependencies) {
+                ResolveGroupAttribute attribute = (ResolveGroupAttribute)Attribute.GetCustomAttribute(dependency.GetType(), _resolveContainers);
+                
+                string key = attribute != null ? attribute.group : MAIN;
+                
+                if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
+                    container.Update(dependency);
+                } else {
+                    _dependencies.Add(key, new DependencyContainer(dependency));
+                }
+            }
+            
+        #if UNITY_EDITOR
+            UpdateEditor();
+        #endif
+        }
+        
+    #if UNITY_EDITOR
+        
+        private void UpdateEditor() {
+            _dependenciesEditor = new List<DependencyLink>();
+            
+            foreach (KeyValuePair<string, DependencyContainer> pair in _dependencies) {
+                _dependenciesEditor.Add(new DependencyLink(pair.Key, pair.Value));
+            }
+        }
+        
+    #endif
     }
 }

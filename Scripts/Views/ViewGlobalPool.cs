@@ -1,29 +1,26 @@
 ﻿using UnityEngine;
-
-#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
-#endif
 
 namespace TinyMVC.Views {
-    public abstract class ViewGlobalPool<T> : View where T : Object, IView {
+    public abstract class ViewGlobalPool<T> : View where T : View {
         public int length => views.Length;
         
-        #if ODIN_INSPECTOR && UNITY_EDITOR
-        [field: SerializeField, OnValueChanged(nameof(OnViewsChanged))]
-        #else
-        [field: SerializeField]
-        #endif
+        [field: SerializeField, OnValueChanged("OnViewsChanged")]
         public T[] views { get; private set; }
         
         public T this[int index] => views[index];
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
-        public virtual void Reset() => views = FindObjectsOfType<T>(true);
+        public override void Reset() {
+            ApplyViews_Editor(FindObjectsOfType<T>(true));
+            base.Reset();
+        }
         
-        #if ODIN_INSPECTOR
+        protected virtual void ApplyViews_Editor(T[] value) => views = value;
+        
         protected virtual void OnViewsChanged() { }
-        #endif
-        #endif
+    
+    #endif
     }
 }
