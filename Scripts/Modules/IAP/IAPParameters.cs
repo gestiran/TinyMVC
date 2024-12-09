@@ -1,6 +1,6 @@
 using UnityEngine;
 
-#if ODIN_INSPECTOR
+#if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
@@ -18,11 +18,7 @@ namespace TinyMVC.Modules.IAP {
         [field: SerializeField]
         public bool isUsingLastPurchases { get; private set; }
         
-        [field: SerializeField
-            #if ODIN_INSPECTOR
-              , ValueDropdown("@BuyHandler.LoadPurchasesValues()")
-    #endif
-        ]
+        [field: SerializeField, ValueDropdown("@BuyHandler.LoadPurchasesValues()")]
         public string[] debugPurchases { get; private set; }
         
     #endif
