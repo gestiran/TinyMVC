@@ -38,7 +38,7 @@ namespace TinyMVC.Boot.Binding {
             }
         }
         
-        protected abstract void Bind(T model, int index);
+        protected virtual void Bind(T model, int index) { }
         
         protected abstract T New(int index);
     }
