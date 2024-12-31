@@ -35,12 +35,16 @@ namespace TinyMVC.Modules.Analytics {
                 
                 logResult.Append("[");
                 logResult.Append(data.eventName);
-                logResult.Append("]=");
+                logResult.Append("]");
                 
-                for (int parameterId = 0; parameterId < data.parameters.Length; parameterId++) {
-                    logResult.Append("[");
-                    logResult.Append(data.parameters[parameterId]);
-                    logResult.Append("]");
+                if (data.parameters != null) {
+                    logResult.Append("=");
+                    
+                    for (int parameterId = 0; parameterId < data.parameters.Length; parameterId++) {
+                        logResult.Append("[");
+                        logResult.Append(data.parameters[parameterId]);
+                        logResult.Append("]");
+                    }   
                 }
                 
                 logResult.AppendLine();

@@ -12,6 +12,7 @@ namespace TinyMVC.Modules.IAP {
         public string productId => _productId;
         
         public event Action onBuySuccess;
+        public event Action onRestoreSuccess;
         
         protected readonly string _productId;
         
@@ -24,6 +25,8 @@ namespace TinyMVC.Modules.IAP {
         }
         
         protected void OnBuySuccess() => onBuySuccess?.Invoke();
+        
+        protected void OnRestoreSuccess() => onRestoreSuccess?.Invoke();
         
         public abstract void Purchase(bool markAsPurchased = true);
         
@@ -78,7 +81,6 @@ namespace TinyMVC.Modules.IAP {
             if (string.IsNullOrEmpty(id)) {
                 return;
             }
-            
             
             string[] products = LoadPurchasesValues();
             bool isFind = false;

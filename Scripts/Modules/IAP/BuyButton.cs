@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Sirenix.OdinInspector;
 
 #if UNITY_PURCHASING
 using System.Threading.Tasks;
@@ -11,18 +12,18 @@ using UnityEngine.Purchasing;
 namespace TinyMVC.Modules.IAP {
     [RequireComponent(typeof(Button))]
     [DisallowMultipleComponent]
-    #if UNITY_PURCHASING
-    public sealed class BuyButton : CodelessIAPButton, IDisposable {
-        #else
+#if UNITY_PURCHASING
+    public sealed class BuyButton : CodelessIAPButton, IDisposable, ISelfValidator {
+    #else
     public sealed class BuyButton : MonoBehaviour, IDisposable {
-        #endif
+    #endif
         [SerializeField]
         private Text _price;
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         [SerializeField]
         private string _productIdEditor;
-        #endif
+    #endif
         
         [SerializeField]
         private UnityEvent _onBuySuccess;
@@ -33,18 +34,19 @@ namespace TinyMVC.Modules.IAP {
         private BuyHandler _handler;
         
         private void Awake() {
-            #if UNITY_PURCHASING
+        #if UNITY_PURCHASING
             if (string.IsNullOrEmpty(productId)) {
                 productId = "com.inkosgames.holein.packboosters1";
             }
-            #endif
+        #endif
         }
         
         public void Init(BuyHandler handler) {
             _handler = handler;
             handler.onBuySuccess += _onBuySuccess.Invoke;
+            handler.onRestoreSuccess += _onBuySuccess.Invoke;
             
-            #if UNITY_PURCHASING
+        #if UNITY_PURCHASING
             productId = handler.productId;
             
             if (TryUpdatePrice()) {
@@ -52,18 +54,20 @@ namespace TinyMVC.Modules.IAP {
                 _isActive = true;
             }
             
-            #endif
+        #endif
         }
         
         public void Dispose() {
             _handler.onBuySuccess -= _onBuySuccess.Invoke;
-            #if UNITY_PURCHASING
+            _handler.onRestoreSuccess -= _onBuySuccess.Invoke;
+            
+        #if UNITY_PURCHASING
             CodelessIAPStoreListener.Instance.RemoveButton(this);
-            #endif
+        #endif
             _isActive = false;
         }
         
-        #if UNITY_PURCHASING
+    #if UNITY_PURCHASING
         protected override void OnPurchaseComplete(Product product) {
             if (!_isActive) {
                 return;
@@ -87,7 +91,7 @@ namespace TinyMVC.Modules.IAP {
         
         protected override void RemoveButtonToCodelessListener() {
             // Do nothing
-        } 
+        }
         
         private async void SendToHandler() {
             await Task.Yield();
@@ -112,11 +116,32 @@ namespace TinyMVC.Modules.IAP {
             }
         }
         
-        #if UNITY_EDITOR
+    #if UNITY_EDITOR
         
         private void Update() => _productIdEditor = productId;
         
+    #endif
+    #endif
+        public void Validate(SelfValidationResult result) {
+        #if UNITY_EDITOR
+            
+            if (_price == null) {
+                result.AddWarning("Can't find price text!");
+            } else if (_price.resizeTextForBestFit == false) {
+                result.AddError("Price text isn't adaptive!").WithFix("Apply adaptive.", FixAdaptiveText);
+            }
+            
         #endif
-        #endif
+        }
+    #if UNITY_EDITOR
+        private void FixAdaptiveText() {
+            _price.resizeTextForBestFit = true;
+            
+            _price.resizeTextMaxSize = _price.fontSize;
+            _price.resizeTextMinSize = 5;
+            
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+    #endif
     }
 }

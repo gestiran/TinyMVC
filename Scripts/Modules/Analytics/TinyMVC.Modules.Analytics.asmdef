@@ -3,14 +3,16 @@
     "rootNamespace": "TinyMVC",
     "references": [
         "GUID:58c74cb7d7df1a17dba51822087c325e",
-        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f"
+        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f",
+        "GUID:f716cb0cc6a978785ac3c0abc946627c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Firebase.Analytics.dll"
+        "Firebase.Analytics.dll",
+        "Firebase.App.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

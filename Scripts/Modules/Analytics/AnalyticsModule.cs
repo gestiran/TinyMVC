@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Firebase;
 using JetBrains.Annotations;
+using TinyMVC.Modules.Firebase;
 using UnityEngine;
 
 #if GOOGLE_FIREBASE_ANALYTICS
@@ -11,6 +15,28 @@ namespace TinyMVC.Modules.Analytics {
         private readonly AnalyticsLog _log;
         
         public AnalyticsModule() => _log = new AnalyticsLog();
+        
+        public void ApplyConsent() {
+            if (API<FirebaseModule>.module.status != DependencyStatus.Available) {
+                Debug.Log("AnalyticsModule: Apply consent success!");
+                return;
+            }
+            
+            FirebaseAnalytics.SetConsent(GeneratePermissions(ConsentStatus.Granted));
+            FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
+            Debug.Log("AnalyticsModule: Apply consent failed!");
+        }
+        
+        public void RejectConsent() {
+            if (API<FirebaseModule>.module.status != DependencyStatus.Available) {
+                Debug.Log("AnalyticsModule: Reject consent failed!");
+                return;
+            }
+            
+            FirebaseAnalytics.SetConsent(GeneratePermissions(ConsentStatus.Denied));
+            FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
+            Debug.Log("AnalyticsModule: Reject consent failed!");
+        }
         
         [Obsolete("Can't send empty event!", true)]
         public void LogEvent() => Debug.LogError("Don't have parameters!");
@@ -40,7 +66,7 @@ namespace TinyMVC.Modules.Analytics {
         }
         
         private void SendEvent(AnalyticsEvent data) {
-            #if GOOGLE_FIREBASE_ANALYTICS
+        #if GOOGLE_FIREBASE_ANALYTICS
             switch (data.eventType) {
                 case AnalyticsEvent.EventType.EventOnly: FirebaseAnalytics.LogEvent(data.eventName); break;
                 
@@ -57,9 +83,20 @@ namespace TinyMVC.Modules.Analytics {
                 
                 case AnalyticsEvent.EventType.WithParameters: FirebaseAnalytics.LogEvent(data.eventName, data.parameters.ToParameters()); break;
             }
-            #endif
+        #endif
             
             _log.LogEvent(data);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Dictionary<ConsentType, ConsentStatus> GeneratePermissions(ConsentStatus state) {
+            Dictionary<ConsentType, ConsentStatus> consent = new Dictionary<ConsentType, ConsentStatus>();
+            
+            consent.Add(ConsentType.AnalyticsStorage, state);
+            consent.Add(ConsentType.AdStorage, state);
+            consent.Add(ConsentType.AdUserData, state);
+            consent.Add(ConsentType.AdPersonalization, state);
+            return consent;
         }
     }
 }

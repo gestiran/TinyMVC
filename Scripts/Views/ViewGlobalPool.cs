@@ -5,7 +5,7 @@ namespace TinyMVC.Views {
     public abstract class ViewGlobalPool<T> : View where T : View {
         public int length => views.Length;
         
-        [field: SerializeField, OnValueChanged("OnViewsChanged")]
+        [field: SerializeField, LabelWidth(25), ListDrawerSettings(ShowIndexLabels = true, DraggableItems = false, HideRemoveButton = true), OnValueChanged("OnViewsChanged")]
         public T[] views { get; private set; }
         
         public T this[int index] => views[index];

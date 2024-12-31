@@ -53,6 +53,11 @@ namespace TinyMVC.Controllers {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Disconnect<T>(T controller, int sceneId) where T : IController {
+            _system.Disconnect(controller, sceneId);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Disconnect<T1, T2>(T1 system, T2 controller) where T1 : IController where T2 : IController {
             system.Disconnect(controller);
         }

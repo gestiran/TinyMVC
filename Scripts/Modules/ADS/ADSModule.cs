@@ -19,6 +19,8 @@ namespace TinyMVC.Modules.ADS {
         
         public event Action onInterstitialShow;
         public event Action onInterstitialShowFailed;
+        public event Action onRewardShow;
+        public event Action onRewardShowFailed;
         public event Action onBannerShow;
         public event Action onBannerHide;
         public event Action<bool> noAdsStateChange;
@@ -263,7 +265,6 @@ namespace TinyMVC.Modules.ADS {
         private bool TryShowRewardProcess(Action onSuccess, Action onFailed) {
             if (data.fullNoADSMode) {
                 onSuccess();
-                
                 return true;
             }
             
@@ -282,6 +283,14 @@ namespace TinyMVC.Modules.ADS {
             #if DEBUG_ADS
                 Debug.LogError("ADSModule.TryShowRewardProcess: Show first reward!");
             #endif
+                
+                if (onRewardShow != null) {
+                    onSuccess += onRewardShow;    
+                }
+                
+                if (onRewardShowFailed != null) {
+                    onFailed += onRewardShowFailed;
+                }
                 
                 return _googleReward.TryShow(() => OnShowingReward(onSuccess), onFailed);
             }
