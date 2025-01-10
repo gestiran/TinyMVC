@@ -25,7 +25,7 @@ namespace TinyMVC.Boot.Binding {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void FillModels(DependencyPool<T> models) {
+        private void FillModels(DependencyPool<T> models) {
             for (int modelId = 0; modelId < models.length; modelId++) {
                 models[modelId] = New(modelId);
             }
@@ -40,6 +40,7 @@ namespace TinyMVC.Boot.Binding {
         
         protected virtual void Bind(T model, int index) { }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract T New(int index);
     }
 }
