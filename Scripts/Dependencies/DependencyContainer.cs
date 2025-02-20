@@ -13,7 +13,7 @@ namespace TinyMVC.Dependencies {
 #endif
     public sealed class DependencyContainer {
     #if UNITY_EDITOR
-        [Searchable(FuzzySearch = false, Recursive = false)]
+        [Searchable(FuzzySearch = true, Recursive = false, FilterOptions = SearchFilterOptions.TypeOfValue | SearchFilterOptions.ValueToString)]
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false, ListElementLabelName = "@GetType().Name")]
         [ShowInInspector, HideInEditorMode, LabelText("Dependencies"), HideReferenceObjectPicker, HideDuplicateReferenceBox]
         internal List<IDependency> display;
