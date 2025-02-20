@@ -66,7 +66,7 @@ namespace TinyMVC.Boot.Contexts {
         
         protected void AddRuntime<T>(T binder) where T : Binder => ProjectBinding.Add(binder);
         
-        protected Binder Resolve<T>(T binder) where T : Binder {
+        protected T Resolve<T>(T binder) where T : Binder {
             ResolveUtility.Resolve(binder, initContainer);
             ResolveUtility.TryApply(binder);
             return binder;
