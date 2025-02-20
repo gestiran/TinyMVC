@@ -7,6 +7,8 @@ using TinyMVC.Loop.Extensions;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ModelsContext : IResolving {
+        internal DependencyContainer initContainer;
+        
         private readonly List<IBinder> _binders;
         private readonly List<IDependency> _models;
         
@@ -19,6 +21,7 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         protected ModelsContext() {
+            initContainer = DependencyContainer.empty;
             _binders = new List<IBinder>();
             _models = new List<IDependency>();
         }
@@ -62,6 +65,12 @@ namespace TinyMVC.Boot.Contexts {
         protected void Add<T>(T binder) where T : Binder => _binders.Add(binder);
         
         protected void AddRuntime<T>(T binder) where T : Binder => ProjectBinding.Add(binder);
+        
+        protected Binder Resolve<T>(T binder) where T : Binder {
+            ResolveUtility.Resolve(binder, initContainer);
+            ResolveUtility.TryApply(binder);
+            return binder;
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract void Bind();

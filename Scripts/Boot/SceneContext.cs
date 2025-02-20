@@ -15,6 +15,8 @@ namespace TinyMVC.Boot {
         [field: SerializeField, BoxGroup("Views")]
         public TViews views { get; private set; }
         
+        private const int _DEPENDENCIES_CAPACITY = 64;
+        
         internal override void Create() {
             unload = new UnloadPool();
             
@@ -89,8 +91,8 @@ namespace TinyMVC.Boot {
                 ResolveUtility.Resolve(parametersResolving);
             }
             
-            List<IDependency> dependencies = new List<IDependency>();
-            List<IDependency> bindDependencies = new List<IDependency>();
+            List<IDependency> dependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
+            List<IDependency> bindDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
             parameters.Init();
             
@@ -108,12 +110,16 @@ namespace TinyMVC.Boot {
             ResolveUtility.Resolve(resolvers, new DependencyContainer(bindDependencies));
             ResolveUtility.TryApply(resolvers);
             
-            bindDependencies.Clear();
-            models.ApplyBindDependencies();
-            models.AddDependencies(bindDependencies);
+            List<IDependency> runtimeDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
-            ResolveUtility.Resolve(models, new DependencyContainer(bindDependencies));
+            models.ApplyBindDependencies();
+            models.AddDependencies(runtimeDependencies);
+            
+            ResolveUtility.Resolve(models, new DependencyContainer(runtimeDependencies));
             ResolveUtility.TryApply(models);
+            
+            bindDependencies.AddRange(runtimeDependencies);
+            models.initContainer = new DependencyContainer(bindDependencies);
             
             models.Create();
             
@@ -143,12 +149,12 @@ namespace TinyMVC.Boot {
         
     #if UNITY_EDITOR
         [Button("Generate"), ShowIn(PrefabKind.InstanceInScene)]
-        public void Reset() {
+        public override void Reset() {
             if (views != null) {
                 views.Reset();
             }
             
-            UnityEditor.EditorUtility.SetDirty(gameObject);
+            base.Reset();
         }
         
     #endif
@@ -199,6 +205,10 @@ namespace TinyMVC.Boot {
             }
             
             _contexts.Clear();
+        }
+        
+        public virtual void Reset() {
+            UnityEditor.EditorUtility.SetDirty(gameObject);
         }
         
     #endif
