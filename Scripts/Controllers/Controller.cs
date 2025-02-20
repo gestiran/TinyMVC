@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TinyMVC.Dependencies;
 
@@ -38,6 +39,26 @@ namespace TinyMVC.Controllers {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect(List<IController> controller) {
+            _system.Connect(controller);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect(List<IController> controllers, params IDependency[] dependencies) {
+            _system.Connect(controllers, dependencies);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect(IController[] controller) {
+            _system.Connect(controller);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect(IController[] controllers, params IDependency[] dependencies) {
+            _system.Connect(controllers, dependencies);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T1, T2>(T1 system, T2 controller) where T1 : IController where T2 : IController {
             system.Connect(controller);
         }
@@ -45,6 +66,26 @@ namespace TinyMVC.Controllers {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T1, T2>(T1 system, T2 controller, params IDependency[] dependencies) where T1 : IController where T2 : IController, IResolving {
             system.Connect(controller, dependencies);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(T1 system, List<IController> controllers) where T1 : IController {
+            system.Connect(controllers);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(T1 system, List<IController> controllers, params IDependency[] dependencies) where T1 : IController {
+            system.Connect(controllers, dependencies);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(T1 system, IController[] controllers) where T1 : IController {
+            system.Connect(controllers);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(T1 system, IController[] controllers, params IDependency[] dependencies) where T1 : IController {
+            system.Connect(controllers, dependencies);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,6 +101,11 @@ namespace TinyMVC.Controllers {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Disconnect<T1, T2>(T1 system, T2 controller) where T1 : IController where T2 : IController {
             system.Disconnect(controller);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Disconnect<T1, T2>(T1 system, T2 controller, int sceneId) where T1 : IController where T2 : IController {
+            system.Disconnect(controller, sceneId);
         }
     }
 }

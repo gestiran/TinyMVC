@@ -19,6 +19,38 @@ namespace TinyMVC.Controllers {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, List<IController> controllers) where T1 : IController {
+            int sceneId = SceneManager.GetActiveScene().buildIndex;
+            
+            for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
+                system.Connect(controllers[controllerId], sceneId);
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, List<IController> controllers, int sceneId) where T1 : IController {
+            for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
+                system.Connect(controllers[controllerId], sceneId);
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, IController[] controllers) where T1 : IController {
+            int sceneId = SceneManager.GetActiveScene().buildIndex;
+            
+            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
+                system.Connect(controllers[controllerId], sceneId);
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, IController[] controllers, int sceneId) where T1 : IController {
+            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
+                system.Connect(controllers[controllerId], sceneId);
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T2 Connect<T1, T2>(this T1 system, T2 controller, params IDependency[] dependencies) where T1 : IController where T2 : IController, IResolving {
             Connect(system, controller, SceneManager.GetActiveScene().buildIndex, dependencies);
             return controller;
@@ -30,6 +62,44 @@ namespace TinyMVC.Controllers {
             DependencyContainer container = new DependencyContainer(dependencies);
             SceneContext.GetContext(sceneId).Connect(system, controller, sceneId, resolving => ResolveUtility.Resolve(resolving, container));
             return controller;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, List<IController> controllers, params IDependency[] dependencies) where T1 : IController {
+            int sceneId = SceneManager.GetActiveScene().buildIndex;
+            DependencyContainer container = new DependencyContainer(dependencies);
+            
+            for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
+                SceneContext.GetContext(sceneId).Connect(system, controllers[controllerId], sceneId, resolving => ResolveUtility.Resolve(resolving, container));
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, List<IController> controllers, int sceneId, params IDependency[] dependencies) where T1 : IController {
+            DependencyContainer container = new DependencyContainer(dependencies);
+            
+            for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
+                SceneContext.GetContext(sceneId).Connect(system, controllers[controllerId], sceneId, resolving => ResolveUtility.Resolve(resolving, container));
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, IController[] controllers, params IDependency[] dependencies) where T1 : IController {
+            int sceneId = SceneManager.GetActiveScene().buildIndex;
+            DependencyContainer container = new DependencyContainer(dependencies);
+            
+            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
+                SceneContext.GetContext(sceneId).Connect(system, controllers[controllerId], sceneId, resolving => ResolveUtility.Resolve(resolving, container));
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Connect<T1>(this T1 system, IController[] controllers, int sceneId, params IDependency[] dependencies) where T1 : IController {
+            DependencyContainer container = new DependencyContainer(dependencies);
+            
+            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
+                SceneContext.GetContext(sceneId).Connect(system, controllers[controllerId], sceneId, resolving => ResolveUtility.Resolve(resolving, container));
+            }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,6 +120,18 @@ namespace TinyMVC.Controllers {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Disconnect<T1>(this T1 system, List<IController> controllers, int sceneId) where T1 : IController {
             for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
+                Disconnect(system, controllers[controllerId], sceneId);
+            }
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Disconnect<T1>(this T1 system, IController[] controllers) where T1 : IController {
+            Disconnect(system, controllers, SceneManager.GetActiveScene().buildIndex);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Disconnect<T1>(this T1 system, IController[] controllers, int sceneId) where T1 : IController {
+            for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
                 Disconnect(system, controllers[controllerId], sceneId);
             }
         }
