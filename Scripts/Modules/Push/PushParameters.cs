@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using I2.Loc;
 using UnityEngine;
 
 #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
+using I2.Loc;
 using Sirenix.OdinInspector;
 #endif
 
@@ -22,14 +22,13 @@ namespace TinyMVC.Modules.Push {
             internal string key { get; private set; }
             
             [field: SerializeField
-                    #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
+            #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
                   , ValueDropdown(nameof(GetAllTerms))
-                #endif
+            #endif
             ]
             public string term { get; private set; }
             
-            #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
-            
+        #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
             private List<string> GetAllTerms() {
                 if (TryGetSources(out LanguageSourceAsset source)) {
                     return source.mSource.GetTermsList();
@@ -56,7 +55,7 @@ namespace TinyMVC.Modules.Push {
                 return new List<string>();
             }
             
-            #endif
+        #endif
         }
         
         private const string _PATH = "Application/" + nameof(PushParameters);
