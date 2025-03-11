@@ -10,16 +10,18 @@ using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.Boot {
     public abstract class ContextComponent : MonoBehaviour {
-        [SerializeField, ListDrawerSettings(HideAddButton = true, NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
+        [SerializeField, ListDrawerSettings(NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
         private View[] _assets;
         
         private DependencyContainer _initContainer;
-        
+        private View[] _instances;
         private List<IController> _systems;
         private List<IBinder> _binders;
         private List<IDependency> _parameters;
         
         internal void Instantiate() {
+            _instances = new View[_assets.Length];
+            
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
             #if UNITY_EDITOR
                 if (_assets[assetId] == null) {
@@ -28,7 +30,7 @@ namespace TinyMVC.Boot {
                 }
             #endif
                 
-                _assets[assetId] = UnityObject.Instantiate(_assets[assetId]);
+                _instances[assetId] = UnityObject.Instantiate(_assets[assetId]);
             }
         }
         
@@ -37,7 +39,7 @@ namespace TinyMVC.Boot {
             CreateControllers();
         }
         
-        internal void AddComponentsViews(List<View> mainViews) => mainViews.AddRange(_assets);
+        internal void AddComponentsViews(List<View> mainViews) => mainViews.AddRange(_instances);
         
         internal void CheckAndAdd<T>(List<T> list) {
             for (int systemId = 0; systemId < _systems.Count; systemId++) {

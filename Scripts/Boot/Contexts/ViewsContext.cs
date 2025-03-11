@@ -21,10 +21,13 @@ namespace TinyMVC.Boot.Contexts {
         [SerializeField, LabelText("Generated Assets"), ShowIn(PrefabKind.InstanceInScene), RequiredIn(PrefabKind.InstanceInScene), ReadOnly]
         private View[] _generated;
         
+        private View[] _instances;
         internal List<View> mainViews;
         internal List<View> subViews;
         
         internal void Instantiate() {
+            _instances = new View[_assets.Length];
+            
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
             #if UNITY_EDITOR
                 if (_assets[assetId] == null) {
@@ -33,7 +36,7 @@ namespace TinyMVC.Boot.Contexts {
                 }
             #endif
                 
-                _assets[assetId] = UnityObject.Instantiate(_assets[assetId]);
+                _instances[assetId] = UnityObject.Instantiate(_assets[assetId]);
             }
         }
         
@@ -51,7 +54,7 @@ namespace TinyMVC.Boot.Contexts {
             
             Create();
             
-            mainViews.AddRange(_assets);
+            mainViews.AddRange(_instances);
             mainViews.AddRange(_generated);
         }
         
