@@ -10,7 +10,7 @@ using TinyMVC.Loop.Extensions;
 namespace TinyMVC.Boot.Contexts {
     public abstract class ControllersContext {
         [ShowInInspector] 
-        private readonly List<IController> _systems;
+        internal readonly List<IController> systems;
         
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout, KeyLabel = "Group", ValueLabel = "Controllers")] 
         private readonly Dictionary<string, List<IController>> _controllers;
@@ -22,7 +22,7 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         protected ControllersContext() {
-            _systems = new List<IController>();
+            systems = new List<IController>();
             _controllers = new Dictionary<string, List<IController>>();
         }
         
@@ -30,15 +30,13 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void CreateControllers() => Create();
         
-        internal async Task InitAsync() => await _systems.TryInitAsync();
+        internal async Task InitAsync() => await systems.TryInitAsync();
         
-        internal async Task BeginPlay() => await _systems.TryBeginPlayAsync();
+        internal async Task BeginPlay() => await systems.TryBeginPlayAsync();
         
         internal void CheckAndAdd<T>(List<T> list) {
-            list.Capacity += _systems.Count;
-            
-            for (int systemId = 0; systemId < _systems.Count; systemId++) {
-                if (_systems[systemId] is T controller) {
+            for (int systemId = 0; systemId < systems.Count; systemId++) {
+                if (systems[systemId] is T controller) {
                     list.Add(controller);
                 }
             }
@@ -93,10 +91,10 @@ namespace TinyMVC.Boot.Contexts {
                 controllers.TryUnload();
             }
             
-            _systems.TryUnload();
+            systems.TryUnload();
         }
         
-        protected void Add<T>() where T : IController, new() => _systems.Add(new T());
+        protected void Add<T>() where T : IController, new() => systems.Add(new T());
         
         protected abstract void Create();
     }

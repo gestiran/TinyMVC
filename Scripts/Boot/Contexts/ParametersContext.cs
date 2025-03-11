@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ParametersContext {
-        private readonly List<IDependency> _parameters;
+        internal readonly List<IDependency> all;
         
         public sealed class EmptyContext : ParametersContext {
             internal EmptyContext() { }
@@ -12,13 +12,13 @@ namespace TinyMVC.Boot.Contexts {
             protected override void Create() { }
         }
         
-        protected ParametersContext() => _parameters = new List<IDependency>();
+        protected ParametersContext() => all = new List<IDependency>();
         
         public static EmptyContext Empty() => new EmptyContext();
         
         internal void Init() => Create();
         
-        internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(_parameters);
+        internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(all);
         
         protected abstract void Create();
         
@@ -32,7 +32,7 @@ namespace TinyMVC.Boot.Contexts {
             
         #endif
             
-            _parameters.Add(dependency);
+            all.Add(dependency);
         }
     }
 }

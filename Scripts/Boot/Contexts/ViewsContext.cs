@@ -21,8 +21,8 @@ namespace TinyMVC.Boot.Contexts {
         [SerializeField, LabelText("Generated Assets"), ShowIn(PrefabKind.InstanceInScene), RequiredIn(PrefabKind.InstanceInScene), ReadOnly]
         private View[] _generated;
         
-        private List<View> _mainViews;
-        private List<View> _subViews;
+        internal List<View> mainViews;
+        internal List<View> subViews;
         
         internal void Instantiate() {
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
@@ -38,46 +38,44 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         internal void GetDependencies(List<IDependency> dependencies) {
-            for (int assetId = 0; assetId < _mainViews.Count; assetId++) {
-                if (_mainViews[assetId] is IDependency dependency) {
+            for (int assetId = 0; assetId < mainViews.Count; assetId++) {
+                if (mainViews[assetId] is IDependency dependency) {
                     dependencies.Add(dependency);
                 }
             }
         }
         
         internal void CreateViews() {
-            _mainViews = new List<View>();
-            _subViews = new List<View>();
+            mainViews = new List<View>();
+            subViews = new List<View>();
             
             Create();
             
-            _mainViews.AddRange(_assets);
-            _mainViews.AddRange(_generated);
+            mainViews.AddRange(_assets);
+            mainViews.AddRange(_generated);
         }
         
         internal async Task InitAsync() {
-            for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
-                _mainViews[viewId].connectState = View.ConnectState.Connected;
+            for (int viewId = 0; viewId < mainViews.Count; viewId++) {
+                mainViews[viewId].connectState = View.ConnectState.Connected;
             }
             
-            await _mainViews.TryInitAsync();
+            await mainViews.TryInitAsync();
         }
         
-        internal async Task BeginPlay() => await _mainViews.TryBeginPlayAsync();
+        internal async Task BeginPlay() => await mainViews.TryBeginPlayAsync();
         
         internal void CheckAndAdd<T>(List<T> list) {
-            list.Capacity += _mainViews.Count;
-            
-            for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
-                if (_mainViews[viewId] is T view) {
+            for (int viewId = 0; viewId < mainViews.Count; viewId++) {
+                if (mainViews[viewId] is T view) {
                     list.Add(view);
                 }
             }
         }
         
         internal void ApplyDontDestroyOnLoad() {
-            for (int viewId = 0; viewId < _mainViews.Count; viewId++) {
-                if (_mainViews[viewId] is IDontDestroyOnLoad && _mainViews[viewId] is MonoBehaviour monoView) {
+            for (int viewId = 0; viewId < mainViews.Count; viewId++) {
+                if (mainViews[viewId] is IDontDestroyOnLoad && mainViews[viewId] is MonoBehaviour monoView) {
                     UnityObject.DontDestroyOnLoad(monoView);
                 }
             }
@@ -104,7 +102,7 @@ namespace TinyMVC.Boot.Contexts {
                 ProjectContext.ConnectLoop(sceneId, loop);
             }
             
-            _subViews.Add(view);
+            subViews.Add(view);
         }
         
         internal void Disconnect(View view, int sceneId) {
@@ -116,15 +114,15 @@ namespace TinyMVC.Boot.Contexts {
                 unload.Unload();
             }
             
-            _subViews.Remove(view);
+            subViews.Remove(view);
         }
         
         internal void Unload() {
-            _subViews.TryUnload();
-            _mainViews.TryUnload();
+            subViews.TryUnload();
+            mainViews.TryUnload();
         }
         
-        protected void Add<T>(T view) where T : View => _mainViews.Add(view);
+        protected void Add<T>(T view) where T : View => mainViews.Add(view);
         
         protected abstract void Create();
         
