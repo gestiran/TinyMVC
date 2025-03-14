@@ -80,11 +80,13 @@ namespace TinyMVC.Boot {
         
         protected void Add<T>() where T : IController, new() => _systems.Add(new T());
         
-        protected void Add<T>(T binder, params Type[] types) where T : Binder => _binders.Add(new BinderLink(binder, types));
+        protected void Add<T>(T controller) where T : IController => _systems.Add(controller);
         
-        protected void Add<T>(T binder) where T : Binder => _binders.Add(binder);
+        protected void AddBinder<T>(T binder, params Type[] types) where T : Binder => _binders.Add(new BinderLink(binder, types));
         
-        protected void AddRuntime<T>(T binder) where T : Binder => ProjectBinding.Add(binder);
+        protected void AddBinder<T>(T binder) where T : Binder => _binders.Add(binder);
+        
+        protected void AddRuntimeBinder<T>(T binder) where T : Binder => ProjectBinding.Add(binder);
         
         protected T Resolve<T>(T binder) where T : Binder {
             ResolveUtility.Resolve(binder, _initContainer);
