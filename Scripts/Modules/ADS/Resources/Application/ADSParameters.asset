@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f873480136b64601ada84b793119c42d, type: 3}
+  m_Name: ADSParameters
+  m_EditorClassIdentifier: 
+  <fullNoADSMode>k__BackingField: 0
+  <remoteConfig>k__BackingField:
+    _beforeFirstInterstitial: 0
+    _beforeAppStartInterstitial: 0
+    _rewardInterstitialDisable: 0
+    _tokensPurchaseInterstitialDisable: 0
+    _bannerUpdateTime: 0
+    _bannerRewardsLimit: 0
+  <initialRewardTokensCount>k__BackingField: 0
+  <android>k__BackingField:
+    <kids>k__BackingField:
+      <banner>k__BackingField: 
+      <interstitial>k__BackingField: 
+      <reward>k__BackingField: 
+    <general>k__BackingField:
+      <banner>k__BackingField: 
+      <interstitial>k__BackingField: 
+      <reward>k__BackingField: 
+  <ios>k__BackingField:
+    <kids>k__BackingField:
+      <banner>k__BackingField: 
+      <interstitial>k__BackingField: 
+      <reward>k__BackingField: 
+    <general>k__BackingField:
+      <banner>k__BackingField: 
+      <interstitial>k__BackingField: 
+      <reward>k__BackingField: 

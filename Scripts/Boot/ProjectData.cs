@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using TinyMVC.Dependencies;
 using UnityEngine;
 using Sirenix.OdinInspector;
@@ -97,20 +98,33 @@ namespace TinyMVC.Boot {
         
         internal void Add(List<IDependency> dependencies) {
             foreach (IDependency dependency in dependencies) {
-                ResolveGroupAttribute attribute = (ResolveGroupAttribute)Attribute.GetCustomAttribute(dependency.GetType(), _resolveContainers);
-                
-                string key = attribute != null ? attribute.group : MAIN;
-                
-                if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
-                    container.Update(dependency);
-                } else {
-                    _dependencies.Add(key, new DependencyContainer(dependency));
-                }
+                AddDependency(dependency);
             }
             
         #if UNITY_EDITOR
             UpdateEditor();
         #endif
+        }
+        
+        internal void Add(IDependency dependency) {
+            AddDependency(dependency);
+            
+        #if UNITY_EDITOR
+            UpdateEditor();
+        #endif
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void AddDependency(IDependency dependency) {
+            ResolveGroupAttribute attribute = (ResolveGroupAttribute)Attribute.GetCustomAttribute(dependency.GetType(), _resolveContainers);
+            
+            string key = attribute != null ? attribute.group : MAIN;
+            
+            if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
+                container.Update(dependency);
+            } else {
+                _dependencies.Add(key, new DependencyContainer(dependency));
+            }
         }
         
     #if UNITY_EDITOR

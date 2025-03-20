@@ -104,44 +104,46 @@ namespace TinyMVC.Boot {
             
             TryResolveComponents();
             
-            List<IDependency> dependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
-            List<IDependency> bindDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
+            List<IDependency> dependenciesParameters = new List<IDependency>(_DEPENDENCIES_CAPACITY);
+            List<IDependency> dependenciesViews = new List<IDependency>(_DEPENDENCIES_CAPACITY);
+            List<IDependency> dependenciesParametersAndViews = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
             parameters.Init();
             CreateParametersComponents(parameters.all);
             
-            parameters.AddDependencies(dependencies);
-            parameters.AddDependencies(bindDependencies);
+            parameters.AddDependencies(dependenciesParameters);
+            parameters.AddDependencies(dependenciesParametersAndViews);
             
-            ResolveUtility.Resolve(models, new DependencyContainer(dependencies));
+            ProjectContext.data.Add(dependenciesParameters);
+            ResolveUtility.Resolve(models, new DependencyContainer(dependenciesParameters));
             
             models.CreateBinders();
             CreateBindersComponents(models.binders, models.initContainer);
             
-            views.GetDependencies(bindDependencies);
+            views.GetDependencies(dependenciesViews);
+            views.GetDependencies(dependenciesParametersAndViews);
             
             List<IResolving> resolvers = models.GetBindResolving();
             
-            ResolveUtility.Resolve(resolvers, new DependencyContainer(bindDependencies));
-            ResolveUtility.TryApply(resolvers);
+            ResolveUtility.Resolve(resolvers, new DependencyContainer(dependenciesViews));
             
             List<IDependency> runtimeDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
             models.ApplyBindDependencies();
-            models.AddDependencies(runtimeDependencies);
+            runtimeDependencies.AddRange(models.dependenciesBinded);
             
             ResolveUtility.Resolve(models, new DependencyContainer(runtimeDependencies));
             ResolveUtility.TryApply(models);
             
-            bindDependencies.AddRange(runtimeDependencies);
-            models.initContainer = new DependencyContainer(bindDependencies);
+            dependenciesParametersAndViews.AddRange(runtimeDependencies);
+            models.initContainer = new DependencyContainer(dependenciesParametersAndViews);
             
             models.Create();
-            CreateModelsComponents(models.all);
+            CreateModelsComponents(models.dependencies);
+            ProjectContext.data.Add(models.dependencies);
             
-            models.AddDependencies(dependencies);
+            models.initContainer = null;
             
-            ProjectContext.data.Add(dependencies);
             resolvers.Clear();
             
             controllers.CheckAndAdd(resolvers);

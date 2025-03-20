@@ -8,9 +8,9 @@ using TinyMVC.Loop.Extensions;
 namespace TinyMVC.Boot.Contexts {
     public abstract class ModelsContext : IResolving {
         internal DependencyContainer initContainer;
-        
         internal readonly List<IBinder> binders;
-        internal readonly List<IDependency> all;
+        internal readonly List<IDependency> dependenciesBinded;
+        internal readonly List<IDependency> dependencies;
         
         public sealed class EmptyContext : ModelsContext {
             internal EmptyContext() { }
@@ -23,7 +23,8 @@ namespace TinyMVC.Boot.Contexts {
         protected ModelsContext() {
             initContainer = DependencyContainer.empty;
             binders = new List<IBinder>();
-            all = new List<IDependency>();
+            dependenciesBinded = new List<IDependency>();
+            dependencies = new List<IDependency>();
         }
         
         public static EmptyContext Empty() => new EmptyContext();
@@ -50,15 +51,22 @@ namespace TinyMVC.Boot.Contexts {
                     continue;
                 }
                 
-                all.Add(binder.GetDependency());
+                if (binder is IApplyResolving applyResolving) {
+                    applyResolving.ApplyResolving();
+                }
+                
+                IDependency dependency = binder.GetDependency();
+                ProjectContext.data.Add(dependency);
+                dependenciesBinded.Add(dependency);
             }
         }
         
-        internal void Create() => Create(all);
+        internal void Create() => Create(dependencies);
         
-        internal void AddDependencies(List<IDependency> dependencies) => dependencies.AddRange(all);
-        
-        internal void Unload() => all.TryUnload();
+        internal void Unload() {
+            dependenciesBinded.TryUnload();
+            dependencies.TryUnload();
+        }
         
         protected void Add<T>(T binder, params Type[] types) where T : Binder => binders.Add(new BinderLink(binder, types));
         
