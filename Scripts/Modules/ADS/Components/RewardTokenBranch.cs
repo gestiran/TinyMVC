@@ -1,21 +1,18 @@
+using UnityEngine;
+using Sirenix.OdinInspector;
+
+#if GOOGLE_ADS_MOBILE
 using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+#endif
 
 namespace TinyMVC.Modules.ADS.Components {
-    [DisallowMultipleComponent]
-    public sealed class RewardTokenBranch : MonoBehaviour {
-        [field: SerializeField]
-        public GameObject active;
-        
-        [field: SerializeField]
-        public GameObject inactive;
-        
-        [field: SerializeField]
+    internal sealed class RewardTokenBranch : RewardBranch {
+        [field: SerializeField, Required]
         public GameObject token;
         
-        [field: SerializeField]
+        [field: SerializeField, MinValue(1)]
         public int tokensPrice = 1;
         
     #if GOOGLE_ADS_MOBILE
@@ -29,19 +26,20 @@ namespace TinyMVC.Modules.ADS.Components {
         }
         
         private void OnDisable() {
-            StopAllCoroutines();
+            StopUpdateProcess();
+            
             API<ADSModule>.module.onRewardActiveStateChange -= UpdateAds;
             API<ADSTokenModule>.module.onCountChanged -= UpdateTokens;
         }
         
         private void UpdateAds(bool isLoadedReward) {
             try {
-                if (gameObject.activeInHierarchy) {
-                    StopAllCoroutines();
-                    StartCoroutine(UpdateProcess(isLoadedReward, API<ADSTokenModule>.module.tokenCount));
-                } else {
-                    UpdateState(isLoadedReward, API<ADSTokenModule>.module.tokenCount);
+                if (gameObject.activeInHierarchy == false) {
+                    return;
                 }
+                
+                StopUpdateProcess();
+                _updateProcess = StartCoroutine(UpdateProcess(isLoadedReward, API<ADSTokenModule>.module.tokenCount));
             } catch (Exception exception) {
                 Debug.LogWarning(new Exception("RewardTokenBranch.UpdateAds", exception));
             }
@@ -49,12 +47,12 @@ namespace TinyMVC.Modules.ADS.Components {
         
         private void UpdateTokens(int tokensCount) {
             try {
-                if (gameObject.activeInHierarchy) {
-                    StopAllCoroutines();
-                    StartCoroutine(UpdateProcess(API<ADSModule>.module.IsLoadRewarded(), tokensCount));
-                } else {
-                    UpdateState(API<ADSModule>.module.IsLoadRewarded(), tokensCount);
+                if (gameObject.activeInHierarchy == false) {
+                    return;
                 }
+                
+                StopUpdateProcess();
+                _updateProcess = StartCoroutine(UpdateProcess(API<ADSModule>.module.IsLoadRewarded(), tokensCount));
             } catch (Exception exception) {
                 Debug.LogWarning(new Exception("RewardTokenBranch.UpdateTokens", exception));
             }
@@ -65,15 +63,35 @@ namespace TinyMVC.Modules.ADS.Components {
             if (tokensCount >= tokensPrice) {
                 ToToken();
             } else {
-                if (isLoadedReward) {
-                    ToActive();
-                } else {
-                    ToInactive();
-                }
+                base.UpdateState(isLoadedReward);
             }
         }
         
-        private bool IsValidState() {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override void ToActive() {
+            base.ToActive();
+            token.SetActive(false);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override void ToInactive() {
+            base.ToInactive();
+            token.SetActive(false);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ToToken() {
+            active.SetActive(false);
+            inactive.SetActive(false);
+            token.SetActive(true);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override bool IsValidState() {
+            if (base.IsValidState() == false) {
+                return false;
+            }
+            
             bool activeState = active.gameObject.activeSelf;
             bool inactiveState = inactive.gameObject.activeSelf;
             bool tokenState = token.gameObject.activeSelf;
@@ -94,27 +112,6 @@ namespace TinyMVC.Modules.ADS.Components {
             
             return activeState || inactiveState || tokenState;
             
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ToActive() {
-            active.SetActive(true);
-            inactive.SetActive(false);
-            token.SetActive(false);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ToInactive() {
-            active.SetActive(false);
-            inactive.SetActive(true);
-            token.SetActive(false);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ToToken() {
-            active.SetActive(false);
-            inactive.SetActive(false);
-            token.SetActive(true);
         }
         
         private IEnumerator UpdateProcess(bool isLoadedReward, int tokensCount) {

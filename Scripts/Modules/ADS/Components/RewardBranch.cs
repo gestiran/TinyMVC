@@ -1,4 +1,5 @@
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 #if GOOGLE_ADS_MOBILE
 using System;
@@ -8,18 +9,21 @@ using System.Runtime.CompilerServices;
 
 namespace TinyMVC.Modules.ADS.Components {
     [DisallowMultipleComponent]
-    public sealed class RewardBranch : MonoBehaviour {
-        [field: SerializeField]
+    internal class RewardBranch : MonoBehaviour {
+        [field: SerializeField, Required]
         public GameObject active;
         
-        [field: SerializeField]
+        [field: SerializeField, Required]
         public GameObject inactive;
+        
+        protected Coroutine _updateProcess;
         
     #if GOOGLE_ADS_MOBILE
         private void Awake() => UpdateRequest(false);
         
         private void OnEnable() {
             UpdateRequest(API<ADSModule>.module.IsLoadRewarded());
+            
             API<ADSModule>.module.onRewardActiveStateChange += UpdateRequest;
         }
         
@@ -30,19 +34,28 @@ namespace TinyMVC.Modules.ADS.Components {
         
         private void UpdateRequest(bool isLoaded) {
             try {
-                if (gameObject.activeInHierarchy) {
-                    StopAllCoroutines();
-                    StartCoroutine(UpdateProcess(isLoaded));
-                } else {
-                    UpdateState(isLoaded);
+                if (gameObject.activeInHierarchy == false) {
+                    return;
                 }
+                
+                StopUpdateProcess();
+                _updateProcess = StartCoroutine(UpdateProcess(isLoaded));
             } catch (Exception exception) {
                 Debug.LogWarning(exception);
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateState(bool isLoaded) {
+        protected void StopUpdateProcess() {
+            if (_updateProcess != null) {
+                StopCoroutine(_updateProcess);
+            }
+            
+            _updateProcess = null;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdateState(bool isLoaded) {
             if (isLoaded) {
                 ToActive();
             } else {
@@ -50,7 +63,7 @@ namespace TinyMVC.Modules.ADS.Components {
             }
         }
         
-        private bool IsValidState() {
+        protected virtual bool IsValidState() {
             bool activeState = active.gameObject.activeSelf;
             bool inactiveState = inactive.gameObject.activeSelf;
             
@@ -66,13 +79,13 @@ namespace TinyMVC.Modules.ADS.Components {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ToActive() {
+        protected virtual void ToActive() {
             active.SetActive(true);
             inactive.SetActive(false);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ToInactive() {
+        protected virtual void ToInactive() {
             active.SetActive(false);
             inactive.SetActive(true);
         }
