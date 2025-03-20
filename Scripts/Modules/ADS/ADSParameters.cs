@@ -102,7 +102,15 @@ namespace TinyMVC.Modules.ADS {
         
         private const string _PATH = "Application/" + nameof(ADSParameters);
         
-        public static ADSParameters LoadFromResources() => Resources.Load<ADSParameters>(_PATH);
+        public static ADSParameters LoadFromResources() {
+            ADSParameters parameters = Resources.Load<ADSParameters>(_PATH);
+            
+            if (parameters != null) {
+                return parameters;
+            }
+            
+            return Resources.Load<ADSParameters>($"{_PATH}Default");
+        }
         
         public void SetRemoteData(RemoteConfig data) => remoteConfig = data;
     }
