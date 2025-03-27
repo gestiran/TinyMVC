@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class ActionListenerExtension {
@@ -14,7 +15,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
             actions.CopyTo(temp);
             
             foreach (ActionListener listener in temp) {
-                listener();
+                try {
+                    listener();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
@@ -29,7 +34,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
             
             foreach (ActionListener<T> listener in temp) {
                 foreach (T current in value) {
-                    listener(current);
+                    try {
+                        listener(current);
+                    } catch (Exception exception) {
+                        Debug.LogException(exception);
+                    }
                 }
             }
         }
@@ -44,7 +53,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
             actions.CopyTo(temp);
             
             foreach (ActionListener<T> listener in temp) {
-                listener(value);
+                try {
+                    listener(value);   
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
@@ -58,7 +71,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
             actions.CopyTo(temp);
             
             foreach (ActionListener<T1, T2> listener in actions) {
-                listener(value1, value2);
+                try {
+                    listener(value1, value2);
+                } catch (Exception e) {
+                    Debug.LogException(e);
+                }
             }
         }
         
@@ -72,7 +89,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
             actions.CopyTo(temp);
             
             foreach (ActionListener<T1, T2, T3> listener in temp) {
-                listener(value1, value2, value3);
+                try {
+                    listener(value1, value2, value3);
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
     }

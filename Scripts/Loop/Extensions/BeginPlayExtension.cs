@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace TinyMVC.Loop.Extensions {
     public static class BeginPlayExtension {
@@ -21,32 +23,56 @@ namespace TinyMVC.Loop.Extensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void BeginPlay<T>(this ICollection<T> collection) where T : IBeginPlay {
             foreach (T obj in collection) {
-                obj.BeginPlay();
+                try {
+                    obj.BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task BeginPlayAsync<T>(this ICollection<T> collection) where T : IBeginPlayAsync {
             foreach (T obj in collection) {
-                await obj.BeginPlay();
+                try {
+                    await obj.BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TryBeginPlaySingle<T>(this T obj) {
             if (obj is IBeginPlayAsync otherAsync) {
-                otherAsync.BeginPlay();
+                try {
+                    otherAsync.BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             } else if (obj is IBeginPlay other) {
-                other.BeginPlay();
+                try {
+                    other.BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task TryBeginPlayAsyncSingle<T>(this T obj)  {
             if (obj is IBeginPlayAsync otherAsync) {
-                await otherAsync.BeginPlay();
+                try {
+                    await otherAsync.BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             } else if (obj is IBeginPlay other) {
-                other.BeginPlay();
+                try {
+                    other.BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
     }

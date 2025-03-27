@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace TinyMVC.Loop.Extensions {
     public static class InitExtension {
@@ -21,32 +23,56 @@ namespace TinyMVC.Loop.Extensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Init<T>(this ICollection<T> collection) where T : IInit {
             foreach (T obj in collection) {
-                obj.Init();
+                try {
+                    obj.Init();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task InitAsync<T>(this ICollection<T> collection) where T : IInitAsync {
             foreach (T obj in collection) {
-                await obj.Init();
+                try {
+                    await obj.Init();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TryInitSingle<T>(this T obj) {
             if (obj is IInitAsync otherAsync) {
-                otherAsync.Init();
+                try {
+                    otherAsync.Init();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             } else if (obj is IInit other) {
-                other.Init();
+                try {
+                    other.Init();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task TryInitAsyncSingle<T>(this T obj) {
             if (obj is IInitAsync otherAsync) {
-                await otherAsync.Init();
+                try {
+                    await otherAsync.Init();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             } else if (obj is IInit other) {
-                other.Init();
+                try {
+                    other.Init();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
     }

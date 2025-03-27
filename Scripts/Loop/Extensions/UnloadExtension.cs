@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace TinyMVC.Loop.Extensions {
     public static class UnloadExtension {
@@ -13,15 +15,23 @@ namespace TinyMVC.Loop.Extensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Unload<T>(this ICollection<T> collection) where T : IUnload {
             foreach (T obj in collection) {
-                obj.Unload();
+                try {
+                    obj.Unload();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Unload<TUnload>(this Dictionary<TUnload, TUnload> objects) where TUnload : IUnload {
             foreach (KeyValuePair<TUnload, TUnload> unload in objects) {
-                unload.Key.Unload();
-                unload.Value.Unload();
+                try {
+                    unload.Key.Unload();
+                    unload.Value.Unload();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
@@ -35,7 +45,11 @@ namespace TinyMVC.Loop.Extensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UnloadKeys<TUnload, T>(this Dictionary<TUnload, T> objects) where TUnload : IUnload {
             foreach (TUnload unload in objects.Keys) {
-                unload.Unload();
+                try {
+                    unload.Unload();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
         
@@ -49,14 +63,18 @@ namespace TinyMVC.Loop.Extensions {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UnloadValues<T, TUnload>(this Dictionary<T, TUnload> objects) where TUnload : IUnload {
             foreach (TUnload unload in objects.Values) {
-                unload.Unload();
+                unload.TryUnloadSingle();
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TryUnloadSingle<T>(this T obj) {
             if (obj is IUnload other) {
-                other.Unload();
+                try {
+                    other.Unload();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
             }
         }
     }

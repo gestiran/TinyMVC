@@ -26,7 +26,7 @@ namespace TinyMVC.Boot.Contexts {
         internal List<View> subViews;
         
         internal void Instantiate() {
-            _instances = new View[_assets.Length];
+            List<View> instances = new List<View>(_assets.Length);
             
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
             #if UNITY_EDITOR
@@ -36,8 +36,11 @@ namespace TinyMVC.Boot.Contexts {
                 }
             #endif
                 
-                _instances[assetId] = UnityObject.Instantiate(_assets[assetId]);
+                instances.Add(UnityObject.Instantiate(_assets[assetId]));
             }
+            
+            _instances = new View[instances.Count];
+            instances.CopyTo(_instances);
         }
         
         internal void GetDependencies(List<IDependency> dependencies) {
