@@ -76,12 +76,6 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-        #if UNITY_EDITOR
-            
-            Debug.LogError($"Can't find {type.Name} dependency!");
-            
-        #endif
-            
             dependency = default;
             return false;
         }
