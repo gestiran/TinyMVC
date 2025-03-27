@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
 namespace TinyMVC.ReactiveFields {
@@ -11,7 +12,7 @@ namespace TinyMVC.ReactiveFields {
     }
     
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    public sealed class Observed<T> : IEquatable<Observed<T>>, IEquatable<T> {
+    public sealed class Observed<T> : IEquatable<Observed<T>>, IEquatable<T>, IUnload {
         public T value => _value;
         
         [ShowInInspector, HorizontalGroup, HideLabel, OnValueChanged("@Set(_value)"), HideDuplicateReferenceBox, HideReferenceObjectPicker]
@@ -36,6 +37,8 @@ namespace TinyMVC.ReactiveFields {
                 valueListeners.Invoke(newValue);
             }
         }
+        
+        public void Unload() => this.RemoveListeners();
         
         public static implicit operator T(Observed<T> observed) => observed.value;
         

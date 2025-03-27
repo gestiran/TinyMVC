@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
@@ -12,206 +11,133 @@ namespace TinyMVC.ReactiveFields {
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener : IUnload {
-        private readonly List<Action> _listeners;
+        internal readonly int id;
         
-        private const int _CAPACITY = 16;
+        public InputListener() => id = Observed.globalId++;
         
-        public InputListener() => _listeners = new List<Action>(_CAPACITY);
+        public InputListener(ActionListener action) : this() => this.AddListener(action);
         
-        public InputListener(Action action) : this() => AddListener(action);
-        
-        public InputListener(Action action, UnloadPool unload) : this() => AddListener(action, unload);
+        public InputListener(ActionListener action, UnloadPool unload) : this() => this.AddListener(action, unload);
         
     #if UNITY_EDITOR
         [Button]
     #endif
-        public void Send() => _listeners.Invoke();
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener) => _listeners.Add(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener, UnloadPool unload) {
-            _listeners.Add(listener);
-            unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
+        public void Send() {
+            if (Listeners.pool.TryGetValue(id, out List<ActionListener> listeners)) {
+                listeners.Invoke();
+            }
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action listener) => _listeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void Unload() => _listeners.Clear();
+        public void Unload() => this.RemoveListeners();
     }
     
 #if UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T> : IUnload {
-        private readonly List<Action> _listeners;
-        private readonly List<Action<T>> _valueListeners;
+        internal readonly int id;
         
-        private const int _CAPACITY = 16;
+        public InputListener() => id = Observed.globalId++;
         
-        public InputListener() {
-            _listeners = new List<Action>(_CAPACITY);
-            _valueListeners = new List<Action<T>>(_CAPACITY);
-        }
+        public InputListener(ActionListener action) : this() => this.AddListener(action);
         
-        public InputListener(Action action) : this() => AddListener(action);
+        public InputListener(ActionListener<T> action) : this() => this.AddListener(action);
         
-        public InputListener(Action<T> action) : this() => AddListener(action);
+        public InputListener(ActionListener action, UnloadPool unload) : this() => this.AddListener(action, unload);
         
-        public InputListener(Action action, UnloadPool unload) : this() => AddListener(action, unload);
-        
-        public InputListener(Action<T> action, UnloadPool unload) : this() => AddListener(action, unload);
+        public InputListener(ActionListener<T> action, UnloadPool unload) : this() => this.AddListener(action, unload);
         
     #if UNITY_EDITOR
         [Button]
     #endif
         public void Send(T data = default) {
-            _listeners.Invoke();
-            _valueListeners.Invoke(data);
+            if (Listeners.pool.TryGetValue(id, out List<ActionListener> listeners)) {
+                listeners.Invoke();
+            }
+            
+            if (Listeners<T>.pool.TryGetValue(id, out List<ActionListener<T>> valueListeners)) {
+                valueListeners.Invoke(data);
+            }
         }
         
         public void Send(params T[] data) {
-            _listeners.Invoke();
-            _valueListeners.Invoke(data);
+            if (Listeners.pool.TryGetValue(id, out List<ActionListener> listeners)) {
+                listeners.Invoke();
+            }
+            
+            if (Listeners<T>.pool.TryGetValue(id, out List<ActionListener<T>> valueListeners)) {
+                valueListeners.Invoke(data);
+            }
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener) => _listeners.Add(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener, UnloadPool unload) {
-            _listeners.Add(listener);
-            unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T> listener) => _valueListeners.Add(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T> listener, UnloadPool unload) {
-            _valueListeners.Add(listener);
-            unload.Add(new UnloadAction(() => _valueListeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action listener) => _listeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action<T> listener) => _valueListeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void Unload() {
-            _listeners.Clear();
-            _valueListeners.Clear();
-        }
+        public void Unload() => this.RemoveListeners();
     }
     
 #if UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2> : IUnload {
-        private readonly List<Action> _listeners;
-        private readonly List<Action<T1, T2>> _valueListeners;
+        internal readonly int id;
         
-        private const int _CAPACITY = 16;
+        public InputListener() => id = Observed.globalId++;
         
-        public InputListener() {
-            _listeners = new List<Action>(_CAPACITY);
-            _valueListeners = new List<Action<T1, T2>>(_CAPACITY);
-        }
+        public InputListener(ActionListener action) : this() => this.AddListener(action);
+        
+        public InputListener(ActionListener<T1, T2> action) : this() => this.AddListener(action);
+        
+        public InputListener(ActionListener action, UnloadPool unload) : this() => this.AddListener(action, unload);
+        
+        public InputListener(ActionListener<T1, T2> action, UnloadPool unload) : this() => this.AddListener(action, unload);
         
     #if UNITY_EDITOR
         [Button]
     #endif
         public void Send(T1 data1 = default, T2 data2 = default) {
-            _listeners.Invoke();
-            _valueListeners.Invoke(data1, data2);
+            if (Listeners.pool.TryGetValue(id, out List<ActionListener> listeners)) {
+                listeners.Invoke();
+            }
+            
+            if (Listeners<T1, T2>.pool.TryGetValue(id, out List<ActionListener<T1, T2>> valueListeners)) {
+                valueListeners.Invoke(data1, data2);
+            }
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener) => _listeners.Add(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener, UnloadPool unload) {
-            _listeners.Add(listener);
-            unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T1, T2> listener) => _valueListeners.Add(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T1, T2> listener, UnloadPool unload) {
-            _valueListeners.Add(listener);
-            unload.Add(new UnloadAction(() => _valueListeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action listener) => _listeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action<T1, T2> listener) => _valueListeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void Unload() {
-            _listeners.Clear();
-            _valueListeners.Clear();
-        }
+        public void Unload() => this.RemoveListeners();
     }
     
 #if UNITY_EDITOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputListener<T1, T2, T3> : IUnload {
-        private readonly List<Action> _listeners;
-        private readonly List<Action<T1, T2, T3>> _valueListeners;
+        internal readonly int id;
         
-        private const int _CAPACITY = 16;
+        public InputListener() => id = Observed.globalId++;
         
-        public InputListener() {
-            _listeners = new List<Action>(_CAPACITY);
-            _valueListeners = new List<Action<T1, T2, T3>>(_CAPACITY);
-        }
+        public InputListener(ActionListener action) : this() => this.AddListener(action);
+        
+        public InputListener(ActionListener<T1, T2, T3> action) : this() => this.AddListener(action);
+        
+        public InputListener(ActionListener action, UnloadPool unload) : this() => this.AddListener(action, unload);
+        
+        public InputListener(ActionListener<T1, T2, T3> action, UnloadPool unload) : this() => this.AddListener(action, unload);
         
     #if UNITY_EDITOR
         [Button]
     #endif
         public void Send(T1 data1 = default, T2 data2 = default, T3 data3 = default) {
-            _listeners.Invoke();
-            _valueListeners.Invoke(data1, data2, data3);
+            if (Listeners.pool.TryGetValue(id, out List<ActionListener> listeners)) {
+                listeners.Invoke();
+            }
+            
+            if (Listeners<T1, T2, T3>.pool.TryGetValue(id, out List<ActionListener<T1, T2, T3>> valueListeners)) {
+                valueListeners.Invoke(data1, data2, data3);
+            }
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener) => _listeners.Add(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action listener, UnloadPool unload) {
-            _listeners.Add(listener);
-            unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T1, T2, T3> listener) => _valueListeners.Add(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListener(Action<T1, T2, T3> listener, UnloadPool unload) {
-            _valueListeners.Add(listener);
-            unload.Add(new UnloadAction(() => _valueListeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action listener) => _listeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(Action<T1, T2, T3> listener) => _valueListeners.Remove(listener);
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void Unload() {
-            _listeners.Clear();
-            _valueListeners.Clear();
-        }
+        public void Unload() => this.RemoveListeners();
     }
 }
