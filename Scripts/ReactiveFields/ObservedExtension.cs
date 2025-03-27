@@ -323,30 +323,48 @@ namespace TinyMVC.ReactiveFields {
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListener<T>(this Observed<T> observed, Action listener) {
-            Listeners.pool[observed.id].Add(listener);
+        public static void AddListener<T>(this Observed<T> observed, ActionListener listener) {
+            if (Listeners.pool.TryGetValue(observed.id, out List<ActionListener> list)) {
+                list.Add(listener);
+            } else {
+                Listeners.pool.Add(observed.id, new List<ActionListener>() { listener });
+            }
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListener<T>(this Observed<T> observed, Action listener, UnloadPool unload) {
-            List<Action> pool = Listeners.pool[observed.id];
-            pool.Add(listener);
-            unload.Add(new UnloadAction(() => pool.Remove(listener)));
+        public static void AddListener<T>(this Observed<T> observed, ActionListener listener, UnloadPool unload) {
+            if (Listeners.pool.TryGetValue(observed.id, out List<ActionListener> list)) {
+                list.Add(listener);
+            } else {
+                list = new List<ActionListener>() { listener };
+                Listeners.pool.Add(observed.id, list);
+            }
+            
+            unload.Add(new UnloadAction(() => list.Remove(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListener<T>(this Observed<T> observed, Action<T> listener) {
-            Listeners<T>.pool[observed.id].Add(listener);
+        public static void AddListener<T>(this Observed<T> observed, ActionListener<T> listener) {
+            if (Listeners<T>.pool.TryGetValue(observed.id, out List<ActionListener<T>> list)) {
+                list.Add(listener);
+            } else {
+                Listeners<T>.pool.Add(observed.id, new List<ActionListener<T>>() { listener });
+            }
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListener<T>(this Observed<T> observed, Action<T> listener, UnloadPool unload) {
-            List<Action<T>> pool = Listeners<T>.pool[observed.id];
-            pool.Add(listener);
-            unload.Add(new UnloadAction(() => pool.Remove(listener)));
+        public static void AddListener<T>(this Observed<T> observed, ActionListener<T> listener, UnloadPool unload) {
+            if (Listeners<T>.pool.TryGetValue(observed.id, out List<ActionListener<T>> list)) {
+                list.Add(listener);
+            } else {
+                list = new List<ActionListener<T>>() { listener };
+                Listeners<T>.pool.Add(observed.id, list);
+            }
+            
+            unload.Add(new UnloadAction(() => list.Remove(listener)));
         }
         
     #endregion
@@ -355,106 +373,130 @@ namespace TinyMVC.ReactiveFields {
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerFirst<T>(this Observed<T> observed, Action listener) {
-            List<Action> pool = Listeners.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(0, listener);
+        public static void AddListenerFirst<T>(this Observed<T> observed, ActionListener listener) {
+            if (Listeners.pool.TryGetValue(observed.id, out List<ActionListener> list)) {
+                if (list.Count > 0) {
+                    list.Insert(0, listener);
+                } else {
+                    list.Add(listener);
+                }
             } else {
-                pool.Add(listener);
+                list = new List<ActionListener>() { listener };
+                Listeners.pool.Add(observed.id, list);
             }
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerFirst<T>(this Observed<T> observed, Action listener, UnloadPool unload) {
-            List<Action> pool = Listeners.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(0, listener);
+        public static void AddListenerFirst<T>(this Observed<T> observed, ActionListener listener, UnloadPool unload) {
+            if (Listeners.pool.TryGetValue(observed.id, out List<ActionListener> list)) {
+                if (list.Count > 0) {
+                    list.Insert(0, listener);
+                } else {
+                    list.Add(listener);
+                }
             } else {
-                pool.Add(listener);
+                list = new List<ActionListener>() { listener };
+                Listeners.pool.Add(observed.id, list);
             }
             
-            unload.Add(new UnloadAction(() => pool.Remove(listener)));
+            unload.Add(new UnloadAction(() => list.Remove(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerFirst<T>(this Observed<T> observed, Action<T> listener) {
-            List<Action<T>> pool = Listeners<T>.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(0, listener);
+        public static void AddListenerFirst<T>(this Observed<T> observed, ActionListener<T> listener) {
+            if (Listeners<T>.pool.TryGetValue(observed.id, out List<ActionListener<T>> list)) {
+                if (list.Count > 0) {
+                    list.Insert(0, listener);
+                } else {
+                    list.Add(listener);
+                }
             } else {
-                pool.Add(listener);
-            }
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerFirst<T>(this Observed<T> observed, Action<T> listener, UnloadPool unload) {
-            List<Action<T>> pool = Listeners<T>.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(0, listener);
-            } else {
-                pool.Add(listener);
-            }
-            
-            unload.Add(new UnloadAction(() => pool.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerLast<T>(this Observed<T> observed, Action listener) {
-            List<Action> pool = Listeners.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(pool.Count - 1, listener);
-            } else {
-                pool.Add(listener);
+                list = new List<ActionListener<T>>() { listener };
+                Listeners<T>.pool.Add(observed.id, list);
             }
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerLast<T>(this Observed<T> observed, Action listener, UnloadPool unload) {
-            List<Action> pool = Listeners.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(pool.Count - 1, listener);
+        public static void AddListenerFirst<T>(this Observed<T> observed, ActionListener<T> listener, UnloadPool unload) {
+            if (Listeners<T>.pool.TryGetValue(observed.id, out List<ActionListener<T>> list)) {
+                if (list.Count > 0) {
+                    list.Insert(0, listener);
+                } else {
+                    list.Add(listener);
+                }
             } else {
-                pool.Add(listener);
+                list = new List<ActionListener<T>>() { listener };
+                Listeners<T>.pool.Add(observed.id, list);
             }
             
-            unload.Add(new UnloadAction(() => pool.Remove(listener)));
+            unload.Add(new UnloadAction(() => list.Remove(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerLast<T>(this Observed<T> observed, Action<T> listener) {
-            List<Action<T>> pool = Listeners<T>.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(pool.Count - 1, listener);
+        public static void AddListenerLast<T>(this Observed<T> observed, ActionListener listener) {
+            if (Listeners.pool.TryGetValue(observed.id, out List<ActionListener> list)) {
+                if (list.Count > 0) {
+                    list.Insert(list.Count - 1, listener);
+                } else {
+                    list.Add(listener);
+                }
             } else {
-                pool.Add(listener);
+                list = new List<ActionListener>() { listener };
+                Listeners.pool.Add(observed.id, list);
             }
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AddListenerLast<T>(this Observed<T> observed, Action<T> listener, UnloadPool unload) {
-            List<Action<T>> pool = Listeners<T>.pool[observed.id];
-            
-            if (pool.Count > 0) {
-                pool.Insert(pool.Count - 1, listener);
+        public static void AddListenerLast<T>(this Observed<T> observed, ActionListener listener, UnloadPool unload) {
+            if (Listeners.pool.TryGetValue(observed.id, out List<ActionListener> list)) {
+                if (list.Count > 0) {
+                    list.Insert(list.Count - 1, listener);
+                } else {
+                    list.Add(listener);
+                }
             } else {
-                pool.Add(listener);
+                list = new List<ActionListener>() { listener };
+                Listeners.pool.Add(observed.id, list);
             }
             
-            unload.Add(new UnloadAction(() => pool.Remove(listener)));
+            unload.Add(new UnloadAction(() => list.Remove(listener)));
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddListenerLast<T>(this Observed<T> observed, ActionListener<T> listener) {
+            if (Listeners<T>.pool.TryGetValue(observed.id, out List<ActionListener<T>> list)) {
+                if (list.Count > 0) {
+                    list.Insert(list.Count - 1, listener);
+                } else {
+                    list.Add(listener);
+                }
+            } else {
+                list = new List<ActionListener<T>>() { listener };
+                Listeners<T>.pool.Add(observed.id, list);
+            }
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddListenerLast<T>(this Observed<T> observed, ActionListener<T> listener, UnloadPool unload) {
+            if (Listeners<T>.pool.TryGetValue(observed.id, out List<ActionListener<T>> list)) {
+                if (list.Count > 0) {
+                    list.Insert(list.Count - 1, listener);
+                } else {
+                    list.Add(listener);
+                }
+            } else {
+                list = new List<ActionListener<T>>() { listener };
+                Listeners<T>.pool.Add(observed.id, list);
+            }
+            
+            unload.Add(new UnloadAction(() => list.Remove(listener)));
         }
         
     #endregion
@@ -463,14 +505,41 @@ namespace TinyMVC.ReactiveFields {
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RemoveListener<T>(this Observed<T> observed, Action listener) {
-            Listeners.pool[observed.id].Remove(listener);
+        public static void RemoveListener<T>(this Observed<T> observed, ActionListener listener) {
+            if (Listeners.pool.TryGetValue(observed.id, out List<ActionListener> list) == false) {
+                return;
+            }
+            
+            list.Remove(listener);
+            
+            if (list.Count > 0) {
+                return;
+            }
+            
+            Listeners.pool.Remove(observed.id);
         }
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RemoveListener<T>(this Observed<T> observed, Action<T> listener) {
-            Listeners<T>.pool[observed.id].Remove(listener);
+        public static void RemoveListener<T>(this Observed<T> observed, ActionListener<T> listener) {
+            if (Listeners<T>.pool.TryGetValue(observed.id, out List<ActionListener<T>> list) == false) {
+                return;
+            }
+            
+            list.Remove(listener);
+            
+            if (list.Count > 0) {
+                return;
+            }
+            
+            Listeners<T>.pool.Remove(observed.id);
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RemoveListeners<T>(this Observed<T> observed) {
+            Listeners<T>.pool.Remove(observed.id);
+            Listeners.pool.Remove(observed.id);
         }
         
     #endregion

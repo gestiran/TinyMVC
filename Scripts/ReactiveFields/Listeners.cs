@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace TinyMVC.ReactiveFields {
     internal static class Listeners {
-        internal static readonly Dictionary<int, List<Action>> pool;
+        internal static readonly Dictionary<int, List<ActionListener>> pool;
         
-        static Listeners() => pool = new Dictionary<int, List<Action>>();
+        static Listeners() => pool = new Dictionary<int, List<ActionListener>>(4096);
     }
     
     internal static class Listeners<T> {
-        internal static readonly Dictionary<int, List<Action<T>>> pool;
+        internal static readonly Dictionary<int, List<ActionListener<T>>> pool;
         
-        static Listeners() => pool = new Dictionary<int, List<Action<T>>>();
+        static Listeners() => pool = new Dictionary<int, List<ActionListener<T>>>(128);
     }
 }

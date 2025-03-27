@@ -21,19 +21,20 @@ namespace TinyMVC.ReactiveFields {
         
         public Observed(T data) : this() => _value = data;
         
-        public Observed() {
-            id = Observed.globalId++;
-            
-            Listeners.pool.Add(id, new List<Action>());
-            Listeners<T>.pool.Add(id, new List<Action<T>>());
-        }
+        public Observed() => id = Observed.globalId++;
         
         public void SetSilent(T newValue) => _value = newValue;
         
         public void Set(T newValue) {
             _value = newValue;
-            Listeners.pool[id].Invoke();
-            Listeners<T>.pool[id].Invoke(newValue);
+            
+            if (Listeners.pool.TryGetValue(id, out List<ActionListener> listeners)) {
+                listeners.Invoke();
+            }
+            
+            if (Listeners<T>.pool.TryGetValue(id, out List<ActionListener<T>> valueListeners)) {
+                valueListeners.Invoke(newValue);
+            }
         }
         
         public static implicit operator T(Observed<T> observed) => observed.value;
