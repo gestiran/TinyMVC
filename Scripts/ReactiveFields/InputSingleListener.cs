@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
@@ -11,9 +12,7 @@ namespace TinyMVC.ReactiveFields {
     public sealed class InputSingleListener : IUnload {
         private readonly List<Func<bool>> _listeners;
         
-        private const int _CAPACITY = 16;
-        
-        public InputSingleListener() => _listeners = new List<Func<bool>>(_CAPACITY);
+        public InputSingleListener() => _listeners = new List<Func<bool>>(16);
         
         public InputSingleListener(Func<bool> action) : this() => AddListener(action);
         
@@ -24,17 +23,25 @@ namespace TinyMVC.ReactiveFields {
     #endif
         public void Send() => _listeners.Invoke();
         
-        // Resharper disable Unity.ExpensiveCode
+    #region Add
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] // Resharper disable Unity.ExpensiveCode
         public void AddListener(Func<bool> listener) => _listeners.Add(listener);
         
-        // Resharper disable Unity.ExpensiveCode
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] // Resharper disable Unity.ExpensiveCode
         public void AddListener(Func<bool> listener, UnloadPool unload) {
-            _listeners.Add(listener);
+            AddListener(listener);
             unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
         }
         
-        // Resharper disable Unity.ExpensiveCode
+    #endregion
+        
+    #region Remove
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(Func<bool> listener) => _listeners.Remove(listener);
+        
+    #endregion
         
         // Resharper disable Unity.ExpensiveCode
         public void Unload() => _listeners.Clear();
