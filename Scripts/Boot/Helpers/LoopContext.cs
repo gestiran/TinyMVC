@@ -13,15 +13,15 @@ namespace TinyMVC.Boot.Helpers {
         private const int _TICKS_CAPACITY = 512;
         
         internal sealed class FixedTickContext : ContextLink<List<IFixedTick>> {
-            public FixedTickContext(int sceneId, List<IFixedTick> context) : base(sceneId, context) { }
+            public FixedTickContext(string contextKey, List<IFixedTick> context) : base(contextKey, context) { }
         }
         
         internal sealed class TickContext : ContextLink<List<ITick>> {
-            public TickContext(int sceneId, List<ITick> context) : base(sceneId, context) { }
+            public TickContext(string contextKey, List<ITick> context) : base(contextKey, context) { }
         }
         
         internal sealed class LateTickContext : ContextLink<List<ILateTick>> {
-            public LateTickContext(int sceneId, List<ILateTick> context) : base(sceneId, context) { }
+            public LateTickContext(string contextKey, List<ILateTick> context) : base(contextKey, context) { }
         }
         
         internal void Init() {
@@ -70,122 +70,122 @@ namespace TinyMVC.Boot.Helpers {
             _actions.Clear();
         }
         
-        internal void AddFixedTicks(int sceneId, List<IFixedTick> ticks) {
+        internal void AddFixedTicks(string contextKey, List<IFixedTick> ticks) {
             if (ticks.Count <= 0) {
                 return;
             }
             
-            if (_fixedTicks.TryGetContext(sceneId, out List<IFixedTick> current, out int _)) {
+            if (_fixedTicks.TryGetContext(contextKey, out List<IFixedTick> current, out int _)) {
                 current.AddRange(ticks);
             } else {
-                _fixedTicks.Add(new FixedTickContext(sceneId, ticks));
+                _fixedTicks.Add(new FixedTickContext(contextKey, ticks));
             }
         }
         
-        internal void AddTicks(int sceneId, List<ITick> ticks) {
+        internal void AddTicks(string contextKey, List<ITick> ticks) {
             if (ticks.Count <= 0) {
                 return;
             }
             
-            if (_ticks.TryGetContext(sceneId, out List<ITick> current, out int _)) {
+            if (_ticks.TryGetContext(contextKey, out List<ITick> current, out int _)) {
                 current.AddRange(ticks);
             } else {
-                _ticks.Add(new TickContext(sceneId, ticks));
+                _ticks.Add(new TickContext(contextKey, ticks));
             }
         }
         
-        internal void AddLateTicks(int sceneId, List<ILateTick> ticks) {
+        internal void AddLateTicks(string contextKey, List<ILateTick> ticks) {
             if (ticks.Count <= 0) {
                 return;
             }
             
-            if (_lateTicks.TryGetContext(sceneId, out List<ILateTick> current, out int _)) {
+            if (_lateTicks.TryGetContext(contextKey, out List<ILateTick> current, out int _)) {
                 current.AddRange(ticks);
             } else {
-                _lateTicks.Add(new LateTickContext(sceneId, ticks));
+                _lateTicks.Add(new LateTickContext(contextKey, ticks));
             }
         }
         
-        internal void ConnectLoop(int sceneId, ILoop loop) {
+        internal void ConnectLoop(string contextKey, ILoop loop) {
             if (loop is IFixedTick fixedTick) {
-                ConnectFixedTick(sceneId, fixedTick);
+                ConnectFixedTick(contextKey, fixedTick);
             }
             
             if (loop is ITick tick) {
-                ConnectTick(sceneId, tick);
+                ConnectTick(contextKey, tick);
             }
             
             if (loop is ILateTick lateTick) {
-                ConnectLateTick(sceneId, lateTick);
+                ConnectLateTick(contextKey, lateTick);
             }
         }
         
-        internal void DisconnectLoop(int sceneId, ILoop loop) {
+        internal void DisconnectLoop(string contextKey, ILoop loop) {
             if (loop is IFixedTick fixedTick) {
-                DisconnectFixedTick(sceneId, fixedTick);
+                DisconnectFixedTick(contextKey, fixedTick);
             }
             
             if (loop is ITick tick) {
-                DisconnectTick(sceneId, tick);
+                DisconnectTick(contextKey, tick);
             }
             
             if (loop is ILateTick lateTick) {
-                DisconnectLateTick(sceneId, lateTick);
+                DisconnectLateTick(contextKey, lateTick);
             }
         }
         
-        internal void RemoveAllContextsWithId(int sceneId) {
-            if (_fixedTicks.TryGetContext(sceneId, out List<IFixedTick> _, out int fixedTickId)) {
+        internal void RemoveAllContextsWithId(string contextKey) {
+            if (_fixedTicks.TryGetContext(contextKey, out List<IFixedTick> _, out int fixedTickId)) {
                 _fixedTicks.RemoveAt(fixedTickId);
             }
             
-            if (_ticks.TryGetContext(sceneId, out List<ITick> _, out int tickId)) {
+            if (_ticks.TryGetContext(contextKey, out List<ITick> _, out int tickId)) {
                 _ticks.RemoveAt(tickId);
             }
             
-            if (_lateTicks.TryGetContext(sceneId, out List<ILateTick> _, out int lateTickId)) {
+            if (_lateTicks.TryGetContext(contextKey, out List<ILateTick> _, out int lateTickId)) {
                 _lateTicks.RemoveAt(lateTickId);
             }
         }
         
-        private void ConnectFixedTick(int sceneId, IFixedTick tick) {
-            if (_fixedTicks.TryGetContext(sceneId, out List<IFixedTick> current, out int _)) {
+        private void ConnectFixedTick(string contextKey, IFixedTick tick) {
+            if (_fixedTicks.TryGetContext(contextKey, out List<IFixedTick> current, out int _)) {
                 current.Add(tick);
             } else {
-                _fixedTicks.Add(new FixedTickContext(sceneId, new List<IFixedTick>() { tick }));
+                _fixedTicks.Add(new FixedTickContext(contextKey, new List<IFixedTick>() { tick }));
             }
         }
         
-        private void ConnectTick(int sceneId, ITick tick) {
-            if (_ticks.TryGetContext(sceneId, out List<ITick> current, out int _)) {
+        private void ConnectTick(string contextKey, ITick tick) {
+            if (_ticks.TryGetContext(contextKey, out List<ITick> current, out int _)) {
                 current.Add(tick);
             } else {
-                _ticks.Add(new TickContext(sceneId, new List<ITick>() { tick }));
+                _ticks.Add(new TickContext(contextKey, new List<ITick>() { tick }));
             }
         }
         
-        private void ConnectLateTick(int sceneId, ILateTick tick) {
-            if (_lateTicks.TryGetContext(sceneId, out List<ILateTick> current, out int _)) {
+        private void ConnectLateTick(string contextKey, ILateTick tick) {
+            if (_lateTicks.TryGetContext(contextKey, out List<ILateTick> current, out int _)) {
                 current.Add(tick);
             } else {
-                _lateTicks.Add(new LateTickContext(sceneId, new List<ILateTick>() { tick }));
+                _lateTicks.Add(new LateTickContext(contextKey, new List<ILateTick>() { tick }));
             }
         }
         
-        private void DisconnectFixedTick(int sceneId, IFixedTick tick) {
-            if (_fixedTicks.TryGetContext(sceneId, out List<IFixedTick> current, out int _)) {
+        private void DisconnectFixedTick(string contextKey, IFixedTick tick) {
+            if (_fixedTicks.TryGetContext(contextKey, out List<IFixedTick> current, out int _)) {
                 current.Remove(tick);
             }
         }
         
-        private void DisconnectTick(int sceneId, ITick tick) {
-            if (_ticks.TryGetContext(sceneId, out List<ITick> current, out int _)) {
+        private void DisconnectTick(string contextKey, ITick tick) {
+            if (_ticks.TryGetContext(contextKey, out List<ITick> current, out int _)) {
                 current.Remove(tick);
             }
         }
         
-        private void DisconnectLateTick(int sceneId, ILateTick tick) {
-            if (_lateTicks.TryGetContext(sceneId, out List<ILateTick> current, out int _)) {
+        private void DisconnectLateTick(string contextKey, ILateTick tick) {
+            if (_lateTicks.TryGetContext(contextKey, out List<ILateTick> current, out int _)) {
                 current.Remove(tick);
             }
         }

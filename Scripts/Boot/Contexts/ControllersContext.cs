@@ -42,7 +42,7 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Connect<T1, T2>(T2 system, T1 controller, int sceneId, Action<IResolving> resolve) where T1 : IController where T2 : IController {
+        internal void Connect<T1, T2>(T2 system, T1 controller, string contextKey, Action<IResolving> resolve) where T1 : IController where T2 : IController {
             if (controller is IInit init) {
                 init.Init();
             }
@@ -60,7 +60,7 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (controller is ILoop loop) {
-                ProjectContext.ConnectLoop(sceneId, loop);
+                ProjectContext.ConnectLoop(contextKey, loop);
             }
             
             Type systemType = system.GetType();
@@ -72,9 +72,9 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Disconnect<T1, T2>(T2 system, T1 controller, int sceneId) where T1 : IController where T2 : IController {
+        internal void Disconnect<T1, T2>(T2 system, T1 controller, string contextKey) where T1 : IController where T2 : IController {
             if (controller is ILoop loop) {
-                ProjectContext.DisconnectLoop(sceneId, loop);
+                ProjectContext.DisconnectLoop(contextKey, loop);
             }
             
             if (controller is IUnload unload) {

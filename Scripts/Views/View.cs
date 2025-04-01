@@ -5,7 +5,6 @@ using Sirenix.OdinInspector;
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace TinyMVC.Views {
     public abstract class View : MonoBehaviour, ISelfValidator {
@@ -49,40 +48,48 @@ namespace TinyMVC.Views {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Connect<T>([NotNull] T view) where T : View => Connect(view, SceneManager.GetActiveScene().buildIndex);
+        public static T Connect<T>([NotNull] T view) where T : View => Connect(view, ProjectContext.activeContext.key);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Connect<T>([NotNull] T view, int sceneId) where T : View {
-            view.connectState = ConnectState.Connected;
-            SceneContext.GetContext(sceneId).Connect(view, sceneId, ResolveUtility.Resolve);
+        public static T Connect<T>([NotNull] T view, string contextKey) where T : View {
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                view.connectState = ConnectState.Connected;
+                context.Connect(view, ResolveUtility.Resolve);
+            }
+            
             return view;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T>([NotNull] params T[] views) where T : View {
-            Connect(SceneManager.GetActiveScene().buildIndex, views);
+            Connect(ProjectContext.activeContext.key, views);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T>([NotNull] T[] views, [NotNull] params IDependency[] dependencies) where T : View {
-            Connect(views, SceneManager.GetActiveScene().buildIndex, dependencies);
+            Connect(views, ProjectContext.activeContext.key, dependencies);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Connect<T>([NotNull] T[] views, int sceneId, [NotNull] params IDependency[] dependencies) where T : View {
+        public static void Connect<T>([NotNull] T[] views, string contextKey, [NotNull] params IDependency[] dependencies) where T : View {
             DependencyContainer container = new DependencyContainer(dependencies);
+            ProjectContext.data.tempContainer = container;
             
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, resolving => ResolveUtility.Resolve(resolving, container));
-                views[viewId].connectState = ConnectState.Connected;
+                if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                    context.Connect(views[viewId], resolving => ResolveUtility.Resolve(resolving, container));
+                    views[viewId].connectState = ConnectState.Connected;
+                }
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Connect<T>(int sceneId, [NotNull] params T[] views) where T : View {
+        public static void Connect<T>(string contextKey, [NotNull] params T[] views) where T : View {
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                SceneContext.GetContext(sceneId).Connect(views[viewId], sceneId, ResolveUtility.Resolve);
-                views[viewId].connectState = ConnectState.Connected;
+                if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                    context.Connect(views[viewId], ResolveUtility.Resolve);
+                    views[viewId].connectState = ConnectState.Connected;
+                }
             }
         }
         
@@ -98,36 +105,45 @@ namespace TinyMVC.Views {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View, IResolving {
-            return Connect(view, SceneManager.GetActiveScene().buildIndex, container);
+            return Connect(view, ProjectContext.activeContext.key, container);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Connect<T>([NotNull] T view, int sceneId, [NotNull] DependencyContainer container) where T : View, IResolving {
-            SceneContext.GetContext(sceneId).Connect(view, sceneId, resolving => ResolveUtility.Resolve(resolving, container));
-            view.connectState = ConnectState.Connected;
+        public static T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View, IResolving {
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                ProjectContext.data.tempContainer = container;
+                context.Connect(view, resolving => ResolveUtility.Resolve(resolving, container));
+                view.connectState = ConnectState.Connected;
+            }
+            
             return view;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Disconnect<T>(T view) where T : View => Disconnect(view, SceneManager.GetActiveScene().buildIndex);
+        public static T Disconnect<T>(T view) where T : View => Disconnect(view, ProjectContext.activeContext.key);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Disconnect<T>(T view, int sceneId) where T : View {
-            SceneContext.GetContext(sceneId).Disconnect(view, sceneId);
-            view.connectState = ConnectState.Disconnected;
+        public static T Disconnect<T>(T view, string contextKey) where T : View {
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                context.Disconnect(view);
+                view.connectState = ConnectState.Disconnected;
+            }
+            
             return view;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Disconnect<T>([NotNull] params T[] views) where T : View {
-            Disconnect(SceneManager.GetActiveScene().buildIndex, views);
+            Disconnect(ProjectContext.activeContext.key, views);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Disconnect<T>(int sceneId, [NotNull] params T[] views) where T : View {
+        public static void Disconnect<T>(string contextKey, [NotNull] params T[] views) where T : View {
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                SceneContext.GetContext(sceneId).Disconnect(views[viewId], sceneId);
-                views[viewId].connectState = ConnectState.Disconnected;
+                if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                    context.Disconnect(views[viewId]);
+                    views[viewId].connectState = ConnectState.Disconnected;
+                }
             }
         }
         

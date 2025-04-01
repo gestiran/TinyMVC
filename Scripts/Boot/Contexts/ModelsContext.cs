@@ -43,7 +43,7 @@ namespace TinyMVC.Boot.Contexts {
             return resolving;
         }
         
-        internal void ApplyBindDependencies() {
+        internal void ApplyBindDependencies(string contextKey) {
             for (int bindId = 0; bindId < binders.Count; bindId++) {
                 IBinder binder = binders[bindId];
                 
@@ -56,7 +56,7 @@ namespace TinyMVC.Boot.Contexts {
                 }
                 
                 IDependency dependency = binder.GetDependency();
-                ProjectContext.data.Add(dependency);
+                ProjectContext.data.Add(contextKey, dependency);
                 dependenciesBinded.Add(dependency);
             }
         }

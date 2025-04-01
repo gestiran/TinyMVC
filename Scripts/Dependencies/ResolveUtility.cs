@@ -11,47 +11,35 @@ using System.Text;
 namespace TinyMVC.Dependencies {
     internal static class ResolveUtility {
         private static readonly Type _injectType;
-        private static readonly Type _groupType;
-        private static readonly Dictionary<Type, FieldData[]> _cache;
-        
-        private readonly struct FieldData {
-            public readonly FieldInfo info;
-            public readonly string group;
-            
-            public FieldData(FieldInfo info, string group) {
-                this.info = info;
-                this.group = group;
-            }
-        }
+        private static readonly Dictionary<Type, FieldInfo[]> _cache;
         
         static ResolveUtility() {
             _injectType = typeof(InjectAttribute);
-            _groupType = typeof(ResolveGroupAttribute);
-            _cache = new Dictionary<Type, FieldData[]>(256);
+            _cache = new Dictionary<Type, FieldInfo[]>(256);
         }
         
         internal static void Resolve(IResolving resolving, DependencyContainer container) {
-            Resolve(resolving, container, _injectType, _groupType);
+            Resolve(resolving, container, _injectType);
         }
         
         internal static void Resolve(IResolving resolving) {
-            Resolve(resolving, DependencyContainer.empty, _injectType, _groupType);
+            Resolve(resolving, DependencyContainer.empty, _injectType);
         }
         
         internal static void Resolve(List<IResolving> resolving, DependencyContainer container) {
-            Resolve(resolving, container, _injectType, _groupType);
+            Resolve(resolving, container, _injectType);
         }
         
         internal static void Resolve(List<IResolving> resolving) {
-            Resolve(resolving, DependencyContainer.empty, _injectType, _groupType);
+            Resolve(resolving, DependencyContainer.empty, _injectType);
         }
         
         internal static void Resolve(IResolving[] resolving, DependencyContainer container) {
-            Resolve(resolving, container, _injectType, _groupType);
+            Resolve(resolving, container, _injectType);
         }
         
         internal static void Resolve(IResolving[] resolving) {
-            Resolve(resolving, DependencyContainer.empty, _injectType, _groupType);
+            Resolve(resolving, DependencyContainer.empty, _injectType);
         }
         
         internal static void TryApply(List<IResolving> resolving) {
@@ -76,38 +64,38 @@ namespace TinyMVC.Dependencies {
             }
         }
         
-        private static void Resolve(List<IResolving> resolving, DependencyContainer container, Type injectType, Type groupType) {
+        private static void Resolve(List<IResolving> resolving, DependencyContainer container, Type injectType) {
             for (int resolvingId = 0; resolvingId < resolving.Count; resolvingId++) {
-                Resolve(resolving[resolvingId], container, injectType, groupType);
+                Resolve(resolving[resolvingId], container, injectType);
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Resolve(IResolving[] resolving, DependencyContainer container, Type injectType, Type groupType) {
+        private static void Resolve(IResolving[] resolving, DependencyContainer container, Type injectType) {
             for (int resolvingId = 0; resolvingId < resolving.Length; resolvingId++) {
-                Resolve(resolving[resolvingId], container, injectType, groupType);
+                Resolve(resolving[resolvingId], container, injectType);
             }
         }
         
-        private static void Resolve(IResolving resolving, DependencyContainer container, Type injectType, Type groupType) {
+        private static void Resolve(IResolving resolving, DependencyContainer container, Type injectType) {
             Type resolvingType = resolving.GetType();
             
-            if (_cache.TryGetValue(resolvingType, out FieldData[] data)) {
+            if (_cache.TryGetValue(resolvingType, out FieldInfo[] data)) {
                 for (int fieldId = 0; fieldId < data.Length; fieldId++) {
-                    Type fieldType = data[fieldId].info.FieldType;
+                    Type fieldType = data[fieldId].FieldType;
                     
                     if (container.dependencies.TryGetValue(fieldType, out IDependency dependency)) {
-                        data[fieldId].info.SetValue(resolving, dependency);
+                        data[fieldId].SetValue(resolving, dependency);
                         continue;
                     }
                     
-                    if (ProjectContext.data.TryGetDependency(data[fieldId].group, fieldType, out dependency)) {
-                        data[fieldId].info.SetValue(resolving, dependency);
+                    if (ProjectContext.data.TryGetDependency(fieldType, out dependency)) {
+                        data[fieldId].SetValue(resolving, dependency);
                     }
                 }
             } else {
                 FieldInfo[] fields = GetFields(resolvingType);
-                List<FieldData> result = new List<FieldData>(fields.Length);
+                List<FieldInfo> result = new List<FieldInfo>(fields.Length);
                 
                 for (int fieldId = 0; fieldId < fields.Length; fieldId++) {
                     if (Attribute.IsDefined(fields[fieldId], injectType) == false) {
@@ -116,17 +104,14 @@ namespace TinyMVC.Dependencies {
                     
                     Type fieldType = fields[fieldId].FieldType;
                     
-                    ResolveGroupAttribute attribute = (ResolveGroupAttribute)Attribute.GetCustomAttribute(fieldType, groupType);
-                    string group = attribute != null ? attribute.group : ProjectData.MAIN;
-                    
-                    result.Add(new FieldData(fields[fieldId], group));
+                    result.Add(fields[fieldId]);
                     
                     if (container.dependencies.TryGetValue(fieldType, out IDependency dependency)) {
                         fields[fieldId].SetValue(resolving, dependency);
                         continue;
                     }
                     
-                    if (ProjectContext.data.TryGetDependency(group, fieldType, out dependency)) {
+                    if (ProjectContext.data.TryGetDependency(fieldType, out dependency)) {
                         fields[fieldId].SetValue(resolving, dependency);
                     }
                 }

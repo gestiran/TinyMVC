@@ -28,8 +28,8 @@ namespace TinyMVC.Boot {
         
     #endif
         
+        internal DependencyContainer tempContainer;
         private readonly Dictionary<string, DependencyContainer> _dependencies;
-        private readonly Type _resolveContainers = typeof(ResolveGroupAttribute);
         
         public const string MAIN = "Project";
         
@@ -42,8 +42,15 @@ namespace TinyMVC.Boot {
         #endif
         }
         
-        public bool TryGetDependency<T>(string key, out T dependency) where T : IDependency {
-            if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
+        public bool TryGetDependency<T>(out T dependency) where T : IDependency {
+            Type type = typeof(T);
+            
+            if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            }
+            
+            foreach (DependencyContainer container in _dependencies.Values) {
                 if (container.dependencies.TryGetValue(typeof(T), out IDependency value)) {
                     dependency = (T)value;
                     return true;
@@ -54,8 +61,49 @@ namespace TinyMVC.Boot {
             return false;
         }
         
-        public bool TryGetDependency(string key, Type type, out IDependency dependency) {
-            if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
+        public bool TryGetDependency<T>(string contextKey, out T dependency) where T : IDependency {
+            Type type = typeof(T);
+            
+            if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            } 
+            
+            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container)) {
+                if (container.dependencies.TryGetValue(typeof(T), out IDependency value)) {
+                    dependency = (T)value;
+                    return true;
+                }
+            }
+            
+            dependency = default;
+            return false;
+        }
+        
+        public bool TryGetDependency(string contextKey, Type type, out IDependency dependency) {
+            if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = tempValue;
+                return true;
+            } 
+            
+            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container)) {
+                if (container.dependencies.TryGetValue(type, out IDependency value)) {
+                    dependency = value;
+                    return true;
+                }
+            }
+            
+            dependency = default;
+            return false;
+        }
+        
+        public bool TryGetDependency(Type type, out IDependency dependency) {
+            if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = tempValue;
+                return true;
+            }
+            
+            foreach (DependencyContainer container in _dependencies.Values) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = value;
                     return true;
@@ -68,10 +116,32 @@ namespace TinyMVC.Boot {
         
         public bool Get<T>(out T dependency) where T : IDependency {
             Type type = typeof(T);
-            ResolveGroupAttribute attribute = (ResolveGroupAttribute)Attribute.GetCustomAttribute(type, _resolveContainers);
-            string key = attribute != null ? attribute.group : MAIN;
             
-            if (_dependencies.TryGetValue(key, out DependencyContainer container) && container.dependencies.TryGetValue(type, out IDependency value)) {
+            if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            }
+            
+            foreach (DependencyContainer container in _dependencies.Values) {
+                if (container.dependencies.TryGetValue(type, out IDependency value)) {
+                    dependency = (T)value;
+                    return true;
+                }
+            }
+            
+            dependency = default;
+            return false;
+        }
+        
+        public bool Get<T>(string contextKey, out T dependency) where T : IDependency {
+            Type type = typeof(T);
+            
+            if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            } 
+            
+            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container) && container.dependencies.TryGetValue(type, out IDependency value)) {
                 dependency = (T)value;
                 return true;
             }
@@ -80,19 +150,9 @@ namespace TinyMVC.Boot {
             return false;
         }
         
-        internal void Remove(string[] groups) {
-            foreach (string group in groups) {
-                _dependencies.Remove(group);
-            }
-            
-        #if UNITY_EDITOR
-            UpdateEditor();
-        #endif
-        }
-        
-        internal void Add(List<IDependency> dependencies) {
+        internal void Add(string contextKey, List<IDependency> dependencies) {
             foreach (IDependency dependency in dependencies) {
-                AddDependency(dependency);
+                AddDependency(contextKey, dependency);
             }
             
         #if UNITY_EDITOR
@@ -100,8 +160,16 @@ namespace TinyMVC.Boot {
         #endif
         }
         
-        internal void Add(IDependency dependency) {
-            AddDependency(dependency);
+        internal void Add(string contextKey, IDependency dependency) {
+            AddDependency(contextKey, dependency);
+            
+        #if UNITY_EDITOR
+            UpdateEditor();
+        #endif
+        }
+        
+        internal void Remove(string contextKey) {
+            _dependencies.Remove(contextKey);
             
         #if UNITY_EDITOR
             UpdateEditor();
@@ -109,22 +177,18 @@ namespace TinyMVC.Boot {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddDependency(IDependency dependency) {
-            ResolveGroupAttribute attribute = (ResolveGroupAttribute)Attribute.GetCustomAttribute(dependency.GetType(), _resolveContainers);
-            
-            string key = attribute != null ? attribute.group : MAIN;
-            
-            if (_dependencies.TryGetValue(key, out DependencyContainer container)) {
+        private void AddDependency(string contextKey, IDependency dependency) {
+            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container)) {
                 container.Update(dependency);
             } else {
-                _dependencies.Add(key, new DependencyContainer(dependency));
+                _dependencies.Add(contextKey, new DependencyContainer(dependency));
             }
         }
         
     #if UNITY_EDITOR
         
         private void UpdateEditor() {
-            _dependenciesEditor = new List<DependencyLink>();
+            _dependenciesEditor.Clear();
             
             foreach (KeyValuePair<string, DependencyContainer> pair in _dependencies) {
                 _dependenciesEditor.Add(new DependencyLink(pair.Key, pair.Value));

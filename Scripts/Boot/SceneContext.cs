@@ -7,6 +7,7 @@ using TinyMVC.Loop;
 using TinyMVC.Views;
 using UnityEngine;
 using System;
+using System.Collections;
 using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
@@ -21,8 +22,6 @@ namespace TinyMVC.Boot {
         
         internal override void Create() {
             unload = new UnloadPool();
-            
-            Add(this);
             
             controllers = CreateControllers();
             models = CreateModels();
@@ -42,7 +41,7 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal override async Task InitAsync(int sceneId) {
+        internal override async Task InitAsync() {
             PreInitResolve();
             
             await controllers.InitAsync();
@@ -65,16 +64,15 @@ namespace TinyMVC.Boot {
             views.CheckAndAdd(ticks);
             views.CheckAndAdd(lateTicks);
             
-            ProjectContext.AddFixedTicks(sceneId, fixedTicks);
-            ProjectContext.AddTicks(sceneId, ticks);
-            ProjectContext.AddLateTicks(sceneId, lateTicks);
+            ProjectContext.AddFixedTicks(key, fixedTicks);
+            ProjectContext.AddTicks(key, ticks);
+            ProjectContext.AddLateTicks(key, lateTicks);
         }
         
         internal override void Unload() {
             controllers.Unload();
             views.Unload();
             models.Unload();
-            Remove(this);
         }
         
         protected abstract ControllersContext CreateControllers();
@@ -114,7 +112,7 @@ namespace TinyMVC.Boot {
             parameters.AddDependencies(dependenciesParameters);
             parameters.AddDependencies(dependenciesParametersAndViews);
             
-            ProjectContext.data.Add(dependenciesParameters);
+            ProjectContext.data.Add(key, dependenciesParameters);
             ResolveUtility.Resolve(models, new DependencyContainer(dependenciesParameters));
             
             models.CreateBinders();
@@ -129,7 +127,7 @@ namespace TinyMVC.Boot {
             
             List<IDependency> runtimeDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
-            models.ApplyBindDependencies();
+            models.ApplyBindDependencies(key);
             runtimeDependencies.AddRange(models.dependenciesBinded);
             
             ResolveUtility.Resolve(models, new DependencyContainer(runtimeDependencies));
@@ -140,7 +138,7 @@ namespace TinyMVC.Boot {
             
             models.Create();
             CreateModelsComponents(models.dependencies);
-            ProjectContext.data.Add(models.dependencies);
+            ProjectContext.data.Add(key, models.dependencies);
             
             models.initContainer = null;
             
@@ -204,16 +202,16 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal override void Connect(View view, int sceneId, Action<IResolving> resolve) => views.Connect(view, sceneId, resolve);
+        internal override void Connect(View view, Action<IResolving> resolve) => views.Connect(view, key, resolve);
         
-        internal override void Connect<T1, T2>(T2 system, T1 controller, int sceneId, Action<IResolving> resolve) {
-            controllers.Connect(system, controller, sceneId, resolve);
+        internal override void Connect<T1, T2>(T2 system, T1 controller, Action<IResolving> resolve) {
+            controllers.Connect(system, controller, key, resolve);
         }
         
-        internal override void Disconnect(View view, int sceneId) => views.Disconnect(view, sceneId);
+        internal override void Disconnect(View view) => views.Disconnect(view, key);
         
-        internal override void Disconnect<T1, T2>(T2 system, T1 controller, int sceneId) {
-            controllers.Disconnect(system, controller, sceneId);
+        internal override void Disconnect<T1, T2>(T2 system, T1 controller) {
+            controllers.Disconnect(system, controller, key);
         }
         
     #if UNITY_EDITOR
@@ -229,7 +227,9 @@ namespace TinyMVC.Boot {
     #endif
     }
     
-    public abstract class SceneContext : MonoBehaviour {
+    public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext> {
+        public string key { get; private set; }
+        
         [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
         internal ControllersContext controllers;
         
@@ -240,49 +240,63 @@ namespace TinyMVC.Boot {
         internal ParametersContext parameters;
         internal UnloadPool unload;
         
-        private static readonly Dictionary<int, SceneContext> _contexts;
+        private bool _isRemoved;
         
-        private const int _SCENES_COUNT = 16;
+        private void Awake() {
+            key = gameObject.name;
+            ProjectContext.AddContext(this, gameObject.scene.buildIndex);
+            
+        #if UNITY_EDITOR
+            Application.quitting += MarkRemoved;
+        #endif
+        }
         
-        static SceneContext() => _contexts = new Dictionary<int, SceneContext>(_SCENES_COUNT);
-        
-        internal static SceneContext GetContext(int buildIndex) => _contexts[buildIndex];
-        
-        internal abstract void Create();
-        
-        internal abstract Task InitAsync(int sceneId);
-        
-        internal abstract void Unload();
-        
-        protected static void Add(SceneContext context) => _contexts.Add(context.gameObject.scene.buildIndex, context);
-        
-        protected static void Remove(SceneContext context) => _contexts.Remove(context.gameObject.scene.buildIndex);
-        
-        internal abstract void Connect(View view, int sceneId, Action<IResolving> resolve);
-        
-        internal abstract void Connect<T1, T2>(T2 system, T1 controller, int sceneId, Action<IResolving> resolve) where T1 : IController where T2 : IController;
-        
-        internal abstract void Disconnect(View view, int sceneId);
-        
-        internal abstract void Disconnect<T1, T2>(T2 system, T1 controller, int sceneId) where T1 : IController where T2 : IController;
-        
-    #if UNITY_EDITOR
-        
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void RevertChanges() => UnityEditor.EditorApplication.playModeStateChanged += PlayModeChange;
-        
-        private static void PlayModeChange(UnityEditor.PlayModeStateChange state) {
-            if (state != UnityEditor.PlayModeStateChange.ExitingPlayMode) {
+        private void OnDestroy() {
+            if (_isRemoved) {
                 return;
             }
             
-            _contexts.Clear();
+            Remove();
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void Remove() {
+            _isRemoved = true;
+        #if UNITY_EDITOR
+            Application.quitting -= MarkRemoved;
+        #endif
+            ProjectContext.RemoveContext(this, gameObject.scene.buildIndex);
+        }
+        
+        internal abstract void Create();
+        
+        internal abstract Task InitAsync();
+        
+        internal abstract void Unload();
+        
+        internal abstract void Connect(View view, Action<IResolving> resolve);
+        
+        internal abstract void Connect<T1, T2>(T2 system, T1 controller, Action<IResolving> resolve) where T1 : IController where T2 : IController;
+        
+        internal abstract void Disconnect(View view);
+        
+        internal abstract void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;
+        
+    #if UNITY_EDITOR
         
         public virtual void Reset() {
             UnityEditor.EditorUtility.SetDirty(gameObject);
         }
         
+        private void MarkRemoved() => _isRemoved = true;
+        
     #endif
+        
+        public bool Equals(SceneContext other) => other != null && key.Equals(other.key);
+        
+        public override bool Equals(object obj) => obj is SceneContext other && key.Equals(other.key);
+        
+        // ReSharper disable once NonReadonlyMemberInGetHashCode
+        public override int GetHashCode() => key != null ? key.GetHashCode() : gameObject.GetInstanceID();
     }
 }
