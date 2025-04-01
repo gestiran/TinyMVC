@@ -136,6 +136,11 @@
                 }
             }
             
+            protected override void OnLoadSuccess() {
+                base.OnLoadSuccess();
+                onActiveStateChange?.Invoke(true);
+            }
+            
             protected override void SetRating(ADSRating rating) => _rewardId = rating.tagForChildDirectedTreatment ? _kidsId : _generalId;
             
             protected override void Remove() {
@@ -165,7 +170,7 @@
             #if DEBUG_ADS
                 Debug.LogError("GoogleRewardedProvider.OnRewardedLoaded: Success!");
             #endif
-                onActiveStateChange?.Invoke(true);
+                
                 _isLoadSuccess = true;
                 isLoading = false;
                 _rewardedAd = rewardedAd;

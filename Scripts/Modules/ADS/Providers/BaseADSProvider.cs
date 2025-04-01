@@ -35,6 +35,8 @@
             
             public abstract void Load();
             
+            protected virtual void OnLoadSuccess() { }
+            
             protected abstract void SetRating(ADSRating rating);
             
             protected abstract void Remove();
@@ -46,6 +48,7 @@
                 
                 if (_isLoadSuccess) {
                     _waitIteration = 0;
+                    OnLoadSuccess();
                 } else {
                     WaitingBeforeLoading();
                 }
