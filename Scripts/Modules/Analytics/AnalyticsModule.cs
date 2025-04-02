@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Firebase;
 using JetBrains.Annotations;
-using TinyMVC.Modules.Firebase;
 using UnityEngine;
 
 #if GOOGLE_FIREBASE_ANALYTICS
+using Firebase;
 using Firebase.Analytics;
+using TinyMVC.Modules.Firebase;
 #endif
 
 namespace TinyMVC.Modules.Analytics {
@@ -17,6 +17,7 @@ namespace TinyMVC.Modules.Analytics {
         public AnalyticsModule() => _log = new AnalyticsLog();
         
         public void ApplyConsent() {
+        #if GOOGLE_FIREBASE_ANALYTICS
             if (API<FirebaseModule>.module.status != DependencyStatus.Available) {
                 Debug.Log("AnalyticsModule: Apply consent success!");
                 return;
@@ -25,9 +26,13 @@ namespace TinyMVC.Modules.Analytics {
             FirebaseAnalytics.SetConsent(GeneratePermissions(ConsentStatus.Granted));
             FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
             Debug.Log("AnalyticsModule: Apply consent failed!");
+        #else
+            Debug.Log("AnalyticsModule: Apply consent module is inactive!");
+        #endif
         }
         
         public void RejectConsent() {
+        #if GOOGLE_FIREBASE_ANALYTICS
             if (API<FirebaseModule>.module.status != DependencyStatus.Available) {
                 Debug.Log("AnalyticsModule: Reject consent failed!");
                 return;
@@ -36,6 +41,9 @@ namespace TinyMVC.Modules.Analytics {
             FirebaseAnalytics.SetConsent(GeneratePermissions(ConsentStatus.Denied));
             FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
             Debug.Log("AnalyticsModule: Reject consent failed!");
+        #else
+            Debug.Log("AnalyticsModule: Reject consent module is inactive!");
+        #endif
         }
         
         [Obsolete("Can't send empty event!", true)]
@@ -88,6 +96,7 @@ namespace TinyMVC.Modules.Analytics {
             _log.LogEvent(data);
         }
         
+    #if GOOGLE_FIREBASE_ANALYTICS
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Dictionary<ConsentType, ConsentStatus> GeneratePermissions(ConsentStatus state) {
             Dictionary<ConsentType, ConsentStatus> consent = new Dictionary<ConsentType, ConsentStatus>();
@@ -98,5 +107,6 @@ namespace TinyMVC.Modules.Analytics {
             consent.Add(ConsentType.AdPersonalization, state);
             return consent;
         }
+    #endif
     }
 }
