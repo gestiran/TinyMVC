@@ -132,9 +132,7 @@ namespace TinyMVC.Boot.Contexts {
         
         protected abstract void Create();
         
-    #if UNITY_EDITOR
-        
-        protected bool TryGetGenerated_Editor<T>(out T view) where T : View, IGeneratedContext {
+        public bool TryGetGenerated<T>(out T view) where T : View, IGeneratedContext {
             for (int i = 0; i < _generated.Length; i++) {
                 if (_generated[i] is T result) {
                     view = result;
@@ -145,6 +143,8 @@ namespace TinyMVC.Boot.Contexts {
             view = null;
             return false;
         }
+        
+    #if UNITY_EDITOR
         
         public virtual void Reset() {
             View[] views = UnityObject.FindObjectsOfType<View>(true);

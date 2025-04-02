@@ -7,7 +7,6 @@ using TinyMVC.Loop;
 using TinyMVC.Views;
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
@@ -44,10 +43,9 @@ namespace TinyMVC.Boot {
         internal override async Task InitAsync() {
             PreInitResolve();
             
-            await controllers.InitAsync();
             await views.InitAsync();
             
-            Resolve();
+            await Resolve();
             
             await controllers.BeginPlay();
             await views.BeginPlay();
@@ -84,8 +82,6 @@ namespace TinyMVC.Boot {
         private void PreInitResolve() {
             List<IResolving> resolvers = new List<IResolving>();
             
-            controllers.CheckAndAdd(resolvers);
-            
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].CheckAndAdd(resolvers);
             }
@@ -95,7 +91,7 @@ namespace TinyMVC.Boot {
             ResolveUtility.Resolve(resolvers);
         }
         
-        private void Resolve() {
+        private async Task Resolve() {
             if (parameters is IResolving parametersResolving) {
                 ResolveUtility.Resolve(parametersResolving);
             }
@@ -113,7 +109,9 @@ namespace TinyMVC.Boot {
             parameters.AddDependencies(dependenciesParametersAndViews);
             
             ProjectContext.data.Add(key, dependenciesParameters);
-            ResolveUtility.Resolve(models, new DependencyContainer(dependenciesParameters));
+            DependencyContainer tempContainer = new DependencyContainer(dependenciesParameters);
+            ProjectContext.data.tempContainer = tempContainer;
+            ResolveUtility.Resolve(models, tempContainer);
             
             models.CreateBinders();
             CreateBindersComponents(models.binders, models.initContainer);
@@ -122,15 +120,18 @@ namespace TinyMVC.Boot {
             views.GetDependencies(dependenciesParametersAndViews);
             
             List<IResolving> resolvers = models.GetBindResolving();
-            
-            ResolveUtility.Resolve(resolvers, new DependencyContainer(dependenciesViews));
+            tempContainer = new DependencyContainer(dependenciesViews);
+            ProjectContext.data.tempContainer = tempContainer;
+            ResolveUtility.Resolve(resolvers, tempContainer);
             
             List<IDependency> runtimeDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
             models.ApplyBindDependencies(key);
             runtimeDependencies.AddRange(models.dependenciesBinded);
             
-            ResolveUtility.Resolve(models, new DependencyContainer(runtimeDependencies));
+            tempContainer = new DependencyContainer(runtimeDependencies);
+            ProjectContext.data.tempContainer = tempContainer;
+            ResolveUtility.Resolve(models, tempContainer);
             ResolveUtility.TryApply(models);
             
             dependenciesParametersAndViews.AddRange(runtimeDependencies);
@@ -143,6 +144,10 @@ namespace TinyMVC.Boot {
             models.initContainer = null;
             
             resolvers.Clear();
+            
+            controllers.Init();
+            
+            await controllers.InitAsync();
             
             controllers.CheckAndAdd(resolvers);
             views.CheckAndAdd(resolvers);

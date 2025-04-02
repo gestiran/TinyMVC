@@ -15,6 +15,8 @@ namespace TinyMVC.Boot.Contexts {
         [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout, KeyLabel = "Group", ValueLabel = "Controllers")] 
         private readonly Dictionary<string, List<IController>> _controllers;
         
+        private Action _lazyInit;
+        
         public sealed class EmptyContext : ControllersContext {
             internal EmptyContext() { }
             
@@ -29,6 +31,11 @@ namespace TinyMVC.Boot.Contexts {
         public static EmptyContext Empty() => new EmptyContext();
         
         internal void CreateControllers() => Create();
+        
+        internal void Init() {
+            _lazyInit?.Invoke();
+            _lazyInit = null;
+        }
         
         internal async Task InitAsync() => await systems.TryInitAsync();
         
@@ -94,7 +101,7 @@ namespace TinyMVC.Boot.Contexts {
             systems.TryUnload();
         }
         
-        protected void Add<T>() where T : IController, new() => systems.Add(new T());
+        protected void Add<T>() where T : IController, new() => _lazyInit += () => systems.Add(new T());
         
         protected abstract void Create();
     }

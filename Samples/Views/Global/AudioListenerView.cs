@@ -1,7 +1,7 @@
 ﻿using Sirenix.OdinInspector;
+using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
-using TinyMVC.ReactiveFields;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
@@ -21,9 +21,11 @@ namespace TinyMVC.Samples.Views.Global {
         [field: SerializeField, FoldoutGroup("Generated"), Required]
         public Transform thisTransform { get; private set; }
         
-        [Inject] protected AudioListenerModel _model;
+        protected AudioListenerModel _model;
         
         public virtual void ApplyResolving() {
+            ProjectContext.data.Get(out _model);
+            
             ChangePosition(_model.position.value);
             ChangeActiveState(_model.isActive.value);
             ChangeVelocityUpdateMode(_model.velocityUpdateMode.value);

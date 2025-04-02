@@ -1,4 +1,5 @@
 ﻿using Sirenix.OdinInspector;
+using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
@@ -17,17 +18,19 @@ namespace TinyMVC.Samples.Views.Global {
         [field: SerializeField, FoldoutGroup("Generated", 1000), Required, ReadOnly]
         public Transform thisTransform { get; private set; }
         
-    [field: SerializeField, FoldoutGroup("Generated", 1000), Required, ReadOnly]
+        [field: SerializeField, FoldoutGroup("Generated", 1000), Required, ReadOnly]
         public Camera thisCamera { get; private set; }
-
-        [Inject] private MainCameraModel _mainCamera;
-
+        
+        private MainCameraModel _mainCamera;
+        
         public void ApplyResolving() {
+            ProjectContext.data.Get(out _mainCamera);
+            
         #if URP_RENDER_PIPELINE
             _mainCamera.addToStack.Send(inputCamera, thisCamera);
         #endif
         }
-
+        
     #if UNITY_EDITOR
         
         [ContextMenu("Soft reset")]
