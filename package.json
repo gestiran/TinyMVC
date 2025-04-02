@@ -21,7 +21,8 @@
   "category": "MVC",
   "dependencies": {
     "com.unity.modules.uielements": "1.0.0",
-    "com.unity.nuget.newtonsoft-json": "3.2.1"
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.cysharp.unitask": "2.5.10"
   },
   "publishConfig": {
     "registry": "https://package.openupm.com"
