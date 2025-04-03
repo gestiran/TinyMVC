@@ -89,6 +89,12 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (_controllers.TryGetValue(system.GetType().Name, out List<IController> controllers)) {
+                if (_controllers.TryGetValue(controller.GetType().Name, out List<IController> subControllers)) {
+                    for (int controllerId = 0; controllerId < subControllers.Count; controllerId++) {
+                        DisconnectNR(controller, subControllers[controllerId], contextKey);
+                    }
+                }
+                
                 controllers.Remove(controller);
             }
         }
@@ -102,6 +108,10 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         protected void Add<T>() where T : IController, new() => _lazyInit += () => systems.Add(new T());
+        
+        private void DisconnectNR<T1, T2>(T2 system, T1 controller, string contextKey) where T1 : IController where T2 : IController {
+            Disconnect(system, controller, contextKey);
+        }
         
         protected abstract void Create();
     }
