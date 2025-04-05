@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace TinyMVC.Loop.Extensions {
@@ -14,7 +14,7 @@ namespace TinyMVC.Loop.Extensions {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task TryBeginPlayAsync<T>(this ICollection<T> collection) {
+        public static async UniTask TryBeginPlayAsync<T>(this ICollection<T> collection) {
             foreach (T obj in collection) {
                 await obj.TryBeginPlayAsyncSingle();
             }
@@ -32,7 +32,7 @@ namespace TinyMVC.Loop.Extensions {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task BeginPlayAsync<T>(this ICollection<T> collection) where T : IBeginPlayAsync {
+        public static async UniTask BeginPlayAsync<T>(this ICollection<T> collection) where T : IBeginPlayAsync {
             foreach (T obj in collection) {
                 try {
                     await obj.BeginPlay();
@@ -60,7 +60,7 @@ namespace TinyMVC.Loop.Extensions {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task TryBeginPlayAsyncSingle<T>(this T obj)  {
+        public static async UniTask TryBeginPlayAsyncSingle<T>(this T obj)  {
             if (obj is IBeginPlayAsync otherAsync) {
                 try {
                     await otherAsync.BeginPlay();

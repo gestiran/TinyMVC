@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
@@ -61,7 +61,7 @@ namespace TinyMVC.Boot.Contexts {
             mainViews.AddRange(_generated);
         }
         
-        internal async Task InitAsync() {
+        internal async UniTask InitAsync() {
             for (int viewId = 0; viewId < mainViews.Count; viewId++) {
                 mainViews[viewId].connectState = View.ConnectState.Connected;
             }
@@ -69,7 +69,7 @@ namespace TinyMVC.Boot.Contexts {
             await mainViews.TryInitAsync();
         }
         
-        internal async Task BeginPlay() => await mainViews.TryBeginPlayAsync();
+        internal async UniTask BeginPlay() => await mainViews.TryBeginPlayAsync();
         
         internal void CheckAndAdd<T>(List<T> list) {
             for (int viewId = 0; viewId < mainViews.Count; viewId++) {

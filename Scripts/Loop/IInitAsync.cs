@@ -1,7 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 
 namespace TinyMVC.Loop {
     public interface IInitAsync {
-        public Task Init();
+        public UniTask Init();
     }
 }

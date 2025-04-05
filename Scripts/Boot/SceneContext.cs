@@ -8,6 +8,7 @@ using TinyMVC.Views;
 using UnityEngine;
 using System;
 using System.Runtime.CompilerServices;
+using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
 
@@ -40,7 +41,7 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal override async Task InitAsync() {
+        internal override async UniTask InitAsync() {
             PreInitResolve();
             
             await views.InitAsync();
@@ -91,7 +92,7 @@ namespace TinyMVC.Boot {
             ResolveUtility.Resolve(resolvers);
         }
         
-        private async Task Resolve() {
+        private async UniTask Resolve() {
             if (parameters is IResolving parametersResolving) {
                 ResolveUtility.Resolve(parametersResolving);
             }
@@ -318,7 +319,7 @@ namespace TinyMVC.Boot {
         
         internal abstract void Create();
         
-        internal abstract Task InitAsync();
+        internal abstract UniTask InitAsync();
         
         internal abstract void Unload();
         

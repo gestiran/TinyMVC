@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
@@ -37,9 +37,9 @@ namespace TinyMVC.Boot.Contexts {
             _lazyInit = null;
         }
         
-        internal async Task InitAsync() => await systems.TryInitAsync();
+        internal async UniTask InitAsync() => await systems.TryInitAsync();
         
-        internal async Task BeginPlay() => await systems.TryBeginPlayAsync();
+        internal async UniTask BeginPlay() => await systems.TryBeginPlayAsync();
         
         internal void CheckAndAdd<T>(List<T> list) {
             for (int systemId = 0; systemId < systems.Count; systemId++) {
