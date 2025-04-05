@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
@@ -38,6 +37,7 @@ namespace TinyMVC.Boot {
             
             if (this is IGlobalContext) {
                 views.ApplyDontDestroyOnLoad();
+                DontDestroyOnLoad(this);
             }
         }
         
@@ -51,10 +51,6 @@ namespace TinyMVC.Boot {
             await controllers.BeginPlay();
             await views.BeginPlay();
             
-            List<IFixedTick> fixedTicks = new List<IFixedTick>();
-            List<ITick> ticks = new List<ITick>();
-            List<ILateTick> lateTicks = new List<ILateTick>();
-            
             controllers.CheckAndAdd(fixedTicks);
             controllers.CheckAndAdd(ticks);
             controllers.CheckAndAdd(lateTicks);
@@ -62,10 +58,6 @@ namespace TinyMVC.Boot {
             views.CheckAndAdd(fixedTicks);
             views.CheckAndAdd(ticks);
             views.CheckAndAdd(lateTicks);
-            
-            ProjectContext.AddFixedTicks(key, fixedTicks);
-            ProjectContext.AddTicks(key, ticks);
-            ProjectContext.AddLateTicks(key, lateTicks);
         }
         
         internal override void Unload() {
@@ -208,17 +200,13 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal override void Connect(View view, Action<IResolving> resolve) => views.Connect(view, key, resolve);
+        internal override void Connect(View view, Action<IResolving> resolve) => views.Connect(view, ConnectLoop, resolve);
         
-        internal override void Connect<T1, T2>(T2 system, T1 controller, Action<IResolving> resolve) {
-            controllers.Connect(system, controller, key, resolve);
-        }
+        internal override void Connect<T1, T2>(T2 system, T1 controller, Action<IResolving> resolve) => controllers.Connect(system, controller, ConnectLoop, resolve);
         
-        internal override void Disconnect(View view) => views.Disconnect(view, key);
+        internal override void Disconnect(View view) => views.Disconnect(view, DisconnectLoop);
         
-        internal override void Disconnect<T1, T2>(T2 system, T1 controller) {
-            controllers.Disconnect(system, controller, key);
-        }
+        internal override void Disconnect<T1, T2>(T2 system, T1 controller) => controllers.Disconnect(system, controller, DisconnectLoop);
         
     #if UNITY_EDITOR
         [Button("Generate"), PropertyOrder(20), ShowIn(PrefabKind.InstanceInScene), HideInPlayMode]
@@ -236,6 +224,10 @@ namespace TinyMVC.Boot {
     public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext> {
         public string key { get; private set; }
         
+        internal List<IFixedTick> fixedTicks { get; private set; }
+        internal List<ITick> ticks { get; private set; }
+        internal List<ILateTick> lateTicks { get; private set; }
+        
         [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
         internal ControllersContext controllers;
         
@@ -245,10 +237,6 @@ namespace TinyMVC.Boot {
         internal ModelsContext models;
         internal ParametersContext parameters;
         internal UnloadPool unload;
-        
-        internal List<IFixedTick> fixedTicks;
-        internal List<ITick> ticks;
-        internal List<ILateTick> lateTicks;
         
         private bool _isRemoved;
         
@@ -264,10 +252,6 @@ namespace TinyMVC.Boot {
         #if UNITY_EDITOR
             Application.quitting += MarkRemoved;
         #endif
-            
-            if (this is IGlobalContext) {
-                DontDestroyOnLoad(this);
-            }
         }
         
         private void FixedUpdate() {
@@ -310,6 +294,10 @@ namespace TinyMVC.Boot {
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Remove() {
+            fixedTicks.Clear();
+            ticks.Clear();
+            lateTicks.Clear();
+            
             _isRemoved = true;
         #if UNITY_EDITOR
             Application.quitting -= MarkRemoved;

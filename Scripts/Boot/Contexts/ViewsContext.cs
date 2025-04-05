@@ -87,7 +87,7 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Connect(View view, string contextKey, Action<IResolving> resolve) {
+        internal void Connect(View view, Action<ILoop> connectLoop, Action<IResolving> resolve) {
             if (view is IInit init) {
                 init.Init();
             }
@@ -105,15 +105,15 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (view is ILoop loop) {
-                ProjectContext.ConnectLoop(contextKey, loop);
+                connectLoop(loop);
             }
             
             subViews.Add(view);
         }
         
-        internal void Disconnect(View view, string contextKey) {
+        internal void Disconnect(View view, Action<ILoop> disconnectLoop) {
             if (view is ILoop loop) {
-                ProjectContext.DisconnectLoop(contextKey, loop);
+                disconnectLoop(loop);
             }
             
             if (view is IUnload unload) {

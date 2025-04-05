@@ -107,36 +107,6 @@ namespace TinyMVC.Boot {
             _sceneContexts = new Dictionary<int, List<SceneContext>>();
         }
         
-        internal static void AddFixedTicks(string contextKey, List<IFixedTick> ticks) {
-            if (_contexts.TryGetValue(contextKey, out SceneContext context)) {
-                context.fixedTicks.AddRange(ticks);
-            }
-        }
-        
-        internal static void AddTicks(string contextKey, List<ITick> ticks) {
-            if (_contexts.TryGetValue(contextKey, out SceneContext context)) {
-                context.ticks.AddRange(ticks);
-            }
-        }
-        
-        internal static void AddLateTicks(string contextKey, List<ILateTick> ticks) {
-            if (_contexts.TryGetValue(contextKey, out SceneContext context)) {
-                context.lateTicks.AddRange(ticks);
-            }
-        }
-        
-        internal static void ConnectLoop(string contextKey, ILoop loop) {
-            if (_contexts.TryGetValue(contextKey, out SceneContext context)) {
-                context.ConnectLoop(loop);
-            }
-        }
-        
-        internal static void DisconnectLoop(string contextKey, ILoop loop) {
-            if (_contexts.TryGetValue(contextKey, out SceneContext context)) {
-                context.DisconnectLoop(loop);
-            }
-        }
-        
         internal static async void AddContext<T>(T context, int sceneId) where T : SceneContext {
             if (_contexts.TryAdd(context.key, context) == false) {
                 return;

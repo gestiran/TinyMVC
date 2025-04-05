@@ -49,7 +49,7 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Connect<T1, T2>(T2 system, T1 controller, string contextKey, Action<IResolving> resolve) where T1 : IController where T2 : IController {
+        internal void Connect<T1, T2>(T2 system, T1 controller, Action<ILoop> connectLoop, Action<IResolving> resolve) where T1 : IController where T2 : IController {
             if (controller is IInit init) {
                 init.Init();
             }
@@ -67,7 +67,7 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (controller is ILoop loop) {
-                ProjectContext.ConnectLoop(contextKey, loop);
+                connectLoop(loop);
             }
             
             Type systemType = system.GetType();
@@ -79,9 +79,9 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Disconnect<T1, T2>(T2 system, T1 controller, string contextKey) where T1 : IController where T2 : IController {
+        internal void Disconnect<T1, T2>(T2 system, T1 controller, Action<ILoop> disconnectLoop) where T1 : IController where T2 : IController {
             if (controller is ILoop loop) {
-                ProjectContext.DisconnectLoop(contextKey, loop);
+                disconnectLoop(loop);
             }
             
             if (controller is IUnload unload) {
@@ -91,7 +91,7 @@ namespace TinyMVC.Boot.Contexts {
             if (_controllers.TryGetValue(system.GetType().Name, out List<IController> controllers)) {
                 if (_controllers.TryGetValue(controller.GetType().Name, out List<IController> subControllers)) {
                     for (int controllerId = 0; controllerId < subControllers.Count; controllerId++) {
-                        DisconnectNR(controller, subControllers[controllerId], contextKey);
+                        DisconnectNR(controller, subControllers[controllerId], disconnectLoop);
                     }
                 }
                 
@@ -109,8 +109,8 @@ namespace TinyMVC.Boot.Contexts {
         
         protected void Add<T>() where T : IController, new() => _lazyInit += () => systems.Add(new T());
         
-        private void DisconnectNR<T1, T2>(T2 system, T1 controller, string contextKey) where T1 : IController where T2 : IController {
-            Disconnect(system, controller, contextKey);
+        private void DisconnectNR<T1, T2>(T2 system, T1 controller, Action<ILoop> disconnectLoop) where T1 : IController where T2 : IController {
+            Disconnect(system, controller, disconnectLoop);
         }
         
         protected abstract void Create();
