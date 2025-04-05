@@ -245,15 +245,58 @@ namespace TinyMVC.Boot {
         internal ParametersContext parameters;
         internal UnloadPool unload;
         
+        internal List<IFixedTick> fixedTicks;
+        internal List<ITick> ticks;
+        internal List<ILateTick> lateTicks;
+        
         private bool _isRemoved;
         
         private void Awake() {
             key = gameObject.name;
+            
+            fixedTicks = new List<IFixedTick>();
+            ticks = new List<ITick>();
+            lateTicks = new List<ILateTick>();
+            
             ProjectContext.AddContext(this, gameObject.scene.buildIndex);
             
         #if UNITY_EDITOR
             Application.quitting += MarkRemoved;
         #endif
+            
+            if (this is IGlobalContext) {
+                DontDestroyOnLoad(this);
+            }
+        }
+        
+        private void FixedUpdate() {
+            for (int tickId = 0; tickId < fixedTicks.Count; tickId++) {
+                try {
+                    fixedTicks[tickId].FixedTick();
+                } catch (Exception exception) {
+                    Debug.LogError(exception);
+                }
+            }
+        }
+        
+        private void Update() {
+            for (int tickId = 0; tickId < ticks.Count; tickId++) {
+                try {
+                    ticks[tickId].Tick();
+                } catch (Exception exception) {
+                    Debug.LogError(exception);
+                }
+            }
+        }
+        
+        private void LateUpdate() {
+            for (int tickId = 0; tickId < lateTicks.Count; tickId++) {
+                try {
+                    lateTicks[tickId].LateTick();
+                } catch (Exception exception) {
+                    Debug.LogError(exception);
+                }
+            }
         }
         
         private void OnDestroy() {
@@ -286,6 +329,34 @@ namespace TinyMVC.Boot {
         internal abstract void Disconnect(View view);
         
         internal abstract void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;
+        
+        internal void ConnectLoop(ILoop loop) {
+            if (loop is IFixedTick fixedTick) {
+                fixedTicks.Add(fixedTick);
+            }
+            
+            if (loop is ITick tick) {
+                ticks.Add(tick);
+            }
+            
+            if (loop is ILateTick lateTick) {
+                lateTicks.Add(lateTick);
+            }
+        }
+        
+        internal void DisconnectLoop(ILoop loop) {
+            if (loop is IFixedTick fixedTick) {
+                fixedTicks.Remove(fixedTick);
+            }
+            
+            if (loop is ITick tick) {
+                ticks.Remove(tick);
+            }
+            
+            if (loop is ILateTick lateTick) {
+                lateTicks.Remove(lateTick);
+            }
+        }
         
     #if UNITY_EDITOR
         

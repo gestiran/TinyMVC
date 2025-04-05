@@ -27,17 +27,17 @@ namespace TinyMVC.Loop {
             
             PlayerLoopSystem[] systems = current.subSystemList;
             
-            for (int i = 0; i < systems.Length; i++) {
-                string name = systems[i].type.Name;
-                
-                if (name == _FIXED_TICK) {
-                    systems[i].subSystemList = AddSystem(systems[i].subSystemList, CreateSystem(fixedTick, typeof(LoopContext.FixedTickContext)));
-                } else if (name == _TICK) {
-                    systems[i].subSystemList = AddSystem(systems[i].subSystemList, CreateSystem(tick, typeof(LoopContext.TickContext)));
-                } else if (name == _LATE_TICK) {
-                    systems[i].subSystemList = AddSystem(systems[i].subSystemList, CreateSystem(lateTick, typeof(LoopContext.LateTickContext)));
-                }
-            }
+            // for (int i = 0; i < systems.Length; i++) {
+            //     string name = systems[i].type.Name;
+            //     
+            //     if (name == _FIXED_TICK) {
+            //         systems[i].subSystemList = AddSystem(systems[i].subSystemList, CreateSystem(fixedTick, typeof(LoopContext.FixedTickContext)));
+            //     } else if (name == _TICK) {
+            //         systems[i].subSystemList = AddSystem(systems[i].subSystemList, CreateSystem(tick, typeof(LoopContext.TickContext)));
+            //     } else if (name == _LATE_TICK) {
+            //         systems[i].subSystemList = AddSystem(systems[i].subSystemList, CreateSystem(lateTick, typeof(LoopContext.LateTickContext)));
+            //     }
+            // }
             
             PlayerLoop.SetPlayerLoop(current);
         }
