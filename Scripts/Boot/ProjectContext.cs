@@ -23,10 +23,10 @@ namespace TinyMVC.Boot {
         
         public static bool TryGetContext(string contextKey, out SceneContext context) => _contexts.TryGetValue(contextKey, out context);
         
-        public static async UniTask LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single) {
+        public static async UniTask LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single, bool clearAssets = false) {
             if (mode == LoadSceneMode.Single) {
                 RemoveContexts(SceneManager.GetActiveScene().buildIndex);
-                await UniTask.Yield();
+                await UniTask.Delay(32, true);
             }
             
             AsyncOperation loading = SceneManager.LoadSceneAsync(sceneBuildIndex, mode);
@@ -37,22 +37,26 @@ namespace TinyMVC.Boot {
             }
             
             while (loading.isDone == false) {
-                await UniTask.Yield();
+                await UniTask.Delay(32, true);
             }
             
-            await UniTask.Delay(100, DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update);
+            await UniTask.Delay(32, true, PlayerLoopTiming.Update);
+            
+            if (clearAssets == false) {
+                return;
+            }
             
             AsyncOperation clean = Resources.UnloadUnusedAssets();
             
             while (clean.isDone == false) {
-                await UniTask.Yield();
+                await UniTask.Delay(32, true);
             }
         }
         
-        public static async UniTask LoadScene(int sceneBuildIndex, Action<float> progress, LoadSceneMode mode = LoadSceneMode.Single) {
+        public static async UniTask LoadScene(int sceneBuildIndex, Action<float> progress, LoadSceneMode mode = LoadSceneMode.Single, bool clearAssets = false) {
             if (mode == LoadSceneMode.Single) {
                 RemoveContexts(SceneManager.GetActiveScene().buildIndex);
-                await UniTask.Yield();
+                await UniTask.Delay(32, true);
             }
             
             AsyncOperation loading = SceneManager.LoadSceneAsync(sceneBuildIndex, mode);
@@ -62,18 +66,24 @@ namespace TinyMVC.Boot {
                 return;
             }
             
+            float progressOffset =  clearAssets ? 0.5f : 0f;
+            
             while (loading.isDone == false) {
-                progress.Invoke(loading.progress - 0.5f);
-                await UniTask.Yield();
+                progress.Invoke(loading.progress - progressOffset);
+                await UniTask.Delay(32, true);
             }
             
-            await UniTask.Delay(100, DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update);
+            await UniTask.Delay(32, true, PlayerLoopTiming.Update);
+            
+            if (clearAssets == false) {
+                return;
+            }
             
             AsyncOperation clean = Resources.UnloadUnusedAssets();
             
             while (clean.isDone == false) {
                 progress.Invoke(0.5f + (clean.progress - 0.5f));
-                await UniTask.Yield();
+                await UniTask.Delay(32, true);
             }
         }
         
