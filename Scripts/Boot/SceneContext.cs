@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
+using TinyMVC.Utilities;
 
 namespace TinyMVC.Boot {
     [DisallowMultipleComponent]
@@ -221,6 +222,7 @@ namespace TinyMVC.Boot {
     #endif
     }
     
+    [DefaultExecutionOrder(-50)]
     public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext> {
         public string key { get; private set; }
         
@@ -297,6 +299,7 @@ namespace TinyMVC.Boot {
             fixedTicks.Clear();
             ticks.Clear();
             lateTicks.Clear();
+            StopAllCoroutines();
             
             _isRemoved = true;
         #if UNITY_EDITOR
