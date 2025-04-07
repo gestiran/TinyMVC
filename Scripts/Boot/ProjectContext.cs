@@ -15,6 +15,9 @@ namespace TinyMVC.Boot {
         private static Dictionary<string, SceneContext> _contexts;
         private static Dictionary<int, List<SceneContext>> _sceneContexts;
         
+        private const int _NULL_SCENE_ID = 1;
+        private const int _LOAD_ITERATION = 250;
+        
         public static IEnumerable<SceneContext> Contexts() {
             foreach (SceneContext context in _contexts.Values) {
                 yield return context;
@@ -23,13 +26,14 @@ namespace TinyMVC.Boot {
         
         public static bool TryGetContext(string contextKey, out SceneContext context) => _contexts.TryGetValue(contextKey, out context);
         
-        public static async UniTask LoadScene(int sceneBuildIndex, LoadSceneMode mode = LoadSceneMode.Single, bool clearAssets = false) {
-            if (mode == LoadSceneMode.Single) {
-                RemoveContexts(SceneManager.GetActiveScene().buildIndex);
-                await UniTask.Delay(32, true);
-            }
+        public static async UniTask LoadScene(int sceneBuildIndex, bool clearAssets = false) {
+            int currentSceneId = SceneManager.GetActiveScene().buildIndex;
             
-            AsyncOperation loading = SceneManager.LoadSceneAsync(sceneBuildIndex, mode);
+            RemoveContexts(currentSceneId);
+            
+            await UniTask.Delay(_LOAD_ITERATION, true);
+            
+            AsyncOperation loading = SceneManager.LoadSceneAsync(_NULL_SCENE_ID, LoadSceneMode.Additive);
             
             if (loading == null) {
                 Debug.LogError("Unity internal load scene error!");
@@ -37,53 +41,55 @@ namespace TinyMVC.Boot {
             }
             
             while (loading.isDone == false) {
-                await UniTask.Delay(32, true);
+                await UniTask.Delay(_LOAD_ITERATION, true);
             }
             
-            await UniTask.Delay(32, true, PlayerLoopTiming.Update);
+            loading = SceneManager.UnloadSceneAsync(currentSceneId);
             
-            if (clearAssets == false) {
+            if (loading == null) {
+                Debug.LogError("Unity internal unload scene error!");
                 return;
             }
             
-            AsyncOperation clean = Resources.UnloadUnusedAssets();
-            
-            while (clean.isDone == false) {
-                await UniTask.Delay(32, true);
+            while (loading.isDone == false) {
+                await UniTask.Delay(_LOAD_ITERATION, true);
             }
+            
+            if (clearAssets) {
+                loading = Resources.UnloadUnusedAssets();
+                
+                while (loading.isDone == false) {
+                    await UniTask.Delay(_LOAD_ITERATION, true);
+                }
+            }
+            
+            loading = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Single);
+            
+            if (loading == null) {
+                Debug.LogError("Unity internal load scene error!");
+                return;
+            }
+            
+            loading.allowSceneActivation = false;
+            
+            while (loading.isDone == false) {
+                await UniTask.Delay(_LOAD_ITERATION, true);
+            }
+            
+            await UniTask.Delay(_LOAD_ITERATION, true);
+            loading.allowSceneActivation = true;
         }
         
-        public static async UniTask LoadScene(int sceneBuildIndex, Action<float> progress, LoadSceneMode mode = LoadSceneMode.Single, bool clearAssets = false) {
-            if (mode == LoadSceneMode.Single) {
-                RemoveContexts(SceneManager.GetActiveScene().buildIndex);
-                await UniTask.Delay(32, true);
-            }
-            
-            AsyncOperation loading = SceneManager.LoadSceneAsync(sceneBuildIndex, mode);
+        public static async UniTask AddScene(int sceneBuildIndex) {
+            AsyncOperation loading = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Additive);
             
             if (loading == null) {
                 Debug.LogError("Unity internal load scene error!");
                 return;
             }
             
-            float progressOffset =  clearAssets ? 0.5f : 0f;
-            
             while (loading.isDone == false) {
-                progress.Invoke(loading.progress - progressOffset);
-                await UniTask.Delay(32, true);
-            }
-            
-            await UniTask.Delay(32, true, PlayerLoopTiming.Update);
-            
-            if (clearAssets == false) {
-                return;
-            }
-            
-            AsyncOperation clean = Resources.UnloadUnusedAssets();
-            
-            while (clean.isDone == false) {
-                progress.Invoke(0.5f + (clean.progress - 0.5f));
-                await UniTask.Delay(32, true);
+                await UniTask.Delay(_LOAD_ITERATION, true);
             }
         }
         
@@ -166,6 +172,8 @@ namespace TinyMVC.Boot {
             }
             
             contexts.Clear();
+            
+            _sceneContexts.Remove(sceneBuildIndex);
         }
     }
 }
