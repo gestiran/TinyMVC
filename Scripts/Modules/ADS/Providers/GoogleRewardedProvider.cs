@@ -1,6 +1,7 @@
 #if GOOGLE_ADS_MOBILE
     using System;
-    using System.Threading.Tasks;
+    using System.Threading;
+    using Cysharp.Threading.Tasks;
     using GoogleMobileAds.Api;
     using UnityEngine;
     
@@ -13,6 +14,7 @@
             
             private Action _onRewardedCallback;
             private bool _isRewarded;
+            private CancellationTokenSource _cancellation;
             
             private readonly string _kidsId;
             private readonly string _generalId;
@@ -49,9 +51,9 @@
                 #endif
                     
                     return result;
-                } catch (Exception e) {
+                } catch (Exception exception) {
                 #if DEBUG_ADS
-                    Debug.LogError($"GoogleRewardedProvider.IsLoaded: {e}");
+                    Debug.LogError($"GoogleRewardedProvider.IsLoaded: {exception}");
                 #endif
                     _isLoadSuccess = false;
                     
@@ -68,13 +70,13 @@
                 }
                 
                 if (Application.internetReachability == NetworkReachability.NotReachable) {
-                    WaitingNetwork();
+                    WaitingNetwork().Forget();
                 #if DEBUG_ADS
                     Debug.LogError("GoogleRewardedProvider.Load: Network not reachable!");
                 #endif
                 } else {
                     isLoading = true;
-                    WaitLoading();
+                    WaitLoading().Forget();
                     
                     try {
                         RewardedAd.Load(_rewardId, _getGoogleRequest(), OnRewardedLoaded);
@@ -112,8 +114,15 @@
                     _onRewardedCallback = onRewarded;
                     _onCloseCallback = onClose;
                     
-                    WaitingRewarded();
-                    WaitingClosed(Load);
+                    if (_cancellation != null) {
+                        _cancellation.Cancel();
+                        _cancellation.Dispose();
+                    }
+                    
+                    _cancellation = new CancellationTokenSource();
+                    
+                    WaitingRewarded(_cancellation.Token).Forget();
+                    WaitingClosed(CancelRewardAndLoad).Forget();
                     
                     _rewardedAd.OnAdFullScreenContentClosed += OnAdClosed;
                     _rewardedAd.Show(OnUserEarnedReward);
@@ -158,6 +167,16 @@
             
             protected override bool IsNeedCloseCallback() => _isRewarded == false;
             
+            private void CancelRewardAndLoad() {
+                if (_cancellation != null) {
+                    _cancellation.Cancel();
+                    _cancellation.Dispose();
+                    _cancellation = null;
+                }
+                
+                Load();
+            }
+            
             private void OnRewardedLoaded(RewardedAd rewardedAd, LoadAdError error) {
                 if (error != null || rewardedAd == null) {
                 #if DEBUG_ADS
@@ -187,11 +206,11 @@
             
             private void OnUserEarnedReward(Reward reward) => _isRewarded = true;
             
-            private async void WaitingRewarded() {
+            private async UniTask WaitingRewarded(CancellationToken cancellation) {
                 _isRewarded = false;
                 
                 while (!IsNeedRewardCallback()) {
-                    await Task.Delay(_WAIT_LOADING_REFRESH_MILLISECOND);
+                    await UniTask.Delay(_WAIT_LOADING_REFRESH_MILLISECOND, DelayType.Realtime, PlayerLoopTiming.Update, cancellation);
                 }
                 
             #if DEBUG_ADS

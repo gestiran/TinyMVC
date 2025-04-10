@@ -1,6 +1,6 @@
 #if GOOGLE_ADS_MOBILE
     using System;
-    using System.Threading.Tasks;
+    using Cysharp.Threading.Tasks;
     using GoogleMobileAds.Api;
     
     namespace TinyMVC.Modules.ADS.Providers {
@@ -43,24 +43,24 @@
             
             protected abstract bool IsNeedCloseCallback();
             
-            protected async void WaitLoading() {
+            protected async UniTask WaitLoading() {
                 while (isLoading) {
-                    await Task.Delay(_WAIT_LOADING_REFRESH_MILLISECOND);
+                    await UniTask.Delay(_WAIT_LOADING_REFRESH_MILLISECOND, DelayType.Realtime, PlayerLoopTiming.Update);
                 }
                 
                 if (_isLoadSuccess) {
                     _waitIteration = 0;
                     OnLoadSuccess();
                 } else {
-                    WaitingBeforeLoading();
+                    WaitingBeforeLoading().Forget();
                 }
             }
             
-            protected async void WaitingClosed(Action onClose) {
+            protected async UniTask WaitingClosed(Action onClose) {
                 _isClose = false;
                 
                 while (!_isClose) {
-                    await Task.Delay(_WAIT_LOADING_REFRESH_MILLISECOND);
+                    await UniTask.Delay(_WAIT_LOADING_REFRESH_MILLISECOND, DelayType.Realtime, PlayerLoopTiming.Update);
                 }
                 
                 Remove();
@@ -74,13 +74,13 @@
                 }
             }
             
-            protected async void WaitingNetwork() {
-                await Task.Delay(_WAIT_NETWORK_CHECK_MILLISECOND);
+            protected async UniTask WaitingNetwork() {
+                await UniTask.Delay(_WAIT_NETWORK_CHECK_MILLISECOND, DelayType.Realtime, PlayerLoopTiming.Update);
                 Load();
             }
             
-            private async void WaitingBeforeLoading() {
-                await Task.Delay(_WAIT_AFTER_ERROR_MILLISECOND * ++_waitIteration);
+            private async UniTask WaitingBeforeLoading() {
+                await UniTask.Delay(_WAIT_AFTER_ERROR_MILLISECOND * ++_waitIteration, DelayType.Realtime, PlayerLoopTiming.Update);
                 
                 if (!IsLoaded()) {
                     Load();

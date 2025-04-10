@@ -1,5 +1,6 @@
 #if GOOGLE_ADS_MOBILE
     using System;
+    using Cysharp.Threading.Tasks;
     using GoogleMobileAds.Api;
     using UnityEngine;
     
@@ -65,13 +66,13 @@
                 }
                 
                 if (Application.internetReachability == NetworkReachability.NotReachable) {
-                    WaitingNetwork();
+                    WaitingNetwork().Forget();
                 #if DEBUG_ADS
                     Debug.LogError("GoogleInterstitialProvider.Load: Network not reachable!");
                 #endif
                 } else {
                     isLoading = true;
-                    WaitLoading();
+                    WaitLoading().Forget();
                     
                     try {
                         InterstitialAd.Load(_interstitialId, _getGoogleRequest(), OnInterstitialLoaded);
@@ -101,7 +102,7 @@
                     }
                     
                     _onCloseCallback = onClose;
-                    WaitingClosed(() => { });
+                    WaitingClosed(() => { }).Forget();
                     _interstitial.OnAdFullScreenContentClosed += OnAdClosed;
                     _interstitial.Show();
                 #if DEBUG_ADS
