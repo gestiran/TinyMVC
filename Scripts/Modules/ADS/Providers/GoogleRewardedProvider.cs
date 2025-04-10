@@ -122,7 +122,7 @@
                     _cancellation = new CancellationTokenSource();
                     
                     WaitingRewarded(_cancellation.Token).Forget();
-                    WaitingClosed(CancelRewardAndLoad).Forget();
+                    WaitingClosed(Load).Forget();
                     
                     _rewardedAd.OnAdFullScreenContentClosed += OnAdClosed;
                     _rewardedAd.Show(OnUserEarnedReward);
@@ -166,16 +166,6 @@
             }
             
             protected override bool IsNeedCloseCallback() => _isRewarded == false;
-            
-            private void CancelRewardAndLoad() {
-                if (_cancellation != null) {
-                    _cancellation.Cancel();
-                    _cancellation.Dispose();
-                    _cancellation = null;
-                }
-                
-                Load();
-            }
             
             private void OnRewardedLoaded(RewardedAd rewardedAd, LoadAdError error) {
                 if (error != null || rewardedAd == null) {
