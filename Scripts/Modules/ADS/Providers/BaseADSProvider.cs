@@ -41,6 +41,8 @@
             
             protected abstract void Remove();
             
+            protected abstract bool IsNeedCloseCallback();
+            
             protected async void WaitLoading() {
                 while (isLoading) {
                     await Task.Delay(_WAIT_LOADING_REFRESH_MILLISECOND);
@@ -63,7 +65,13 @@
                 
                 Remove();
                 onClose();
-                _onCloseCallback();
+                
+                if (IsNeedCloseCallback()) {
+                #if DEBUG_ADS
+                    UnityEngine.Debug.LogError($"{GetType().Name}.WaitingClosed: Closed!");
+                #endif
+                    _onCloseCallback();
+                }
             }
             
             protected async void WaitingNetwork() {

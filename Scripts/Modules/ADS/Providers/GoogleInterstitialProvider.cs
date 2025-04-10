@@ -130,6 +130,8 @@
                 _isLoadSuccess = false;
             }
             
+            protected override bool IsNeedCloseCallback() => true;
+            
             private void OnInterstitialLoaded(InterstitialAd interstitial, LoadAdError error) {
                 if (error != null || interstitial == null) {
                 #if DEBUG_ADS

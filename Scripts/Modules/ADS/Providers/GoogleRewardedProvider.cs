@@ -156,6 +156,8 @@
                 _isLoadSuccess = false;
             }
             
+            protected override bool IsNeedCloseCallback() => _isRewarded == false;
+            
             private void OnRewardedLoaded(RewardedAd rewardedAd, LoadAdError error) {
                 if (error != null || rewardedAd == null) {
                 #if DEBUG_ADS
@@ -191,6 +193,10 @@
                 while (!IsNeedRewardCallback()) {
                     await Task.Delay(_WAIT_LOADING_REFRESH_MILLISECOND);
                 }
+                
+            #if DEBUG_ADS
+                UnityEngine.Debug.LogError($"GoogleRewardedProvider.WaitingRewarded: Rewarded!");
+            #endif
                 
                 _onRewardedCallback();
             }
