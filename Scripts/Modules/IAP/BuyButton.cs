@@ -1,11 +1,11 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
 
 #if UNITY_PURCHASING
-using System.Threading.Tasks;
 using UnityEngine.Purchasing;
 #endif
 
@@ -32,20 +32,31 @@ namespace TinyMVC.Modules.IAP {
         private bool _isActive;
         
         private BuyHandler _handler;
+
+    #if UNITY_PURCHASING_FAKE && !UNITY_PURCHASING 
+        private Button button;
+    #endif
         
         private void Awake() {
         #if UNITY_PURCHASING
             if (string.IsNullOrEmpty(productId)) {
                 productId = "com.inkosgames.holein.packboosters1";
             }
+        #elif UNITY_PURCHASING_FAKE
+            button = GetComponent<Button>();
         #endif
         }
         
         public void Init(BuyHandler handler) {
             _handler = handler;
+            
+        #if UNITY_PURCHASING_FAKE
+            if (button != null) {
+                button.onClick.AddListener(SendToHandler);
+            }
+        #else
             handler.onBuySuccess += _onBuySuccess.Invoke;
             handler.onRestoreSuccess += _onBuySuccess.Invoke;
-            
         #if UNITY_PURCHASING
             productId = handler.productId;
             
@@ -53,17 +64,23 @@ namespace TinyMVC.Modules.IAP {
                 CodelessIAPStoreListener.Instance.AddButton(this);
                 _isActive = true;
             }
-            
+        #endif
         #endif
         }
         
         public void Dispose() {
+        #if UNITY_PURCHASING_FAKE
+            if (button != null && _handler != null) {
+                button.onClick.RemoveListener(SendToHandler);
+            }
+        #else
             _handler.onBuySuccess -= _onBuySuccess.Invoke;
             _handler.onRestoreSuccess -= _onBuySuccess.Invoke;
-            
         #if UNITY_PURCHASING
             CodelessIAPStoreListener.Instance.RemoveButton(this);
         #endif
+        #endif
+        
             _isActive = false;
         }
         
@@ -93,11 +110,6 @@ namespace TinyMVC.Modules.IAP {
             // Do nothing
         }
         
-        private async void SendToHandler() {
-            await Task.Yield();
-            _handler.Purchase();
-        }
-        
         private bool TryUpdatePrice() {
             try {
                 Product product = CodelessIAPStoreListener.Instance.GetProduct(productId);
@@ -122,6 +134,12 @@ namespace TinyMVC.Modules.IAP {
         
     #endif
     #endif
+        
+        private async void SendToHandler() {
+            await Task.Yield();
+            _handler.Purchase();
+        }
+        
         public void Validate(SelfValidationResult result) {
         #if UNITY_EDITOR
             

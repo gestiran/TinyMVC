@@ -35,7 +35,6 @@ namespace TinyMVC.Modules.IAP {
             } while (Application.isPlaying);
             
         #if UNITY_EDITOR
-            
             IAPParameters parameters = IAPParameters.LoadFromResources();
             
             if (parameters.isUsingLastPurchases) {
@@ -44,8 +43,7 @@ namespace TinyMVC.Modules.IAP {
                     await Task.Yield();
                 }
             }
-            
-        #elif UNITY_PURCHASING
+        #elif UNITY_PURCHASING && !UNITY_PURCHASING_FAKE
             CodelessIAPStoreListener store = CodelessIAPStoreListener.Instance;
             
             for (int handlerId = 0; handlerId < handlers.Length; handlerId++) {
