@@ -66,9 +66,13 @@ namespace TinyMVC.Modules.Remotes {
             
             if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
-                    return _instance.GetValue(key).StringValue;
+                    string stringValue = _instance.GetValue(key).StringValue;
+                    
+                    if (string.IsNullOrEmpty(stringValue) == false) {
+                        return _instance.GetValue(key).StringValue;    
+                    }
                 } catch (Exception exception) {
-                    Debug.LogException(exception);
+                    Debug.LogWarning(exception);
                 }
             }
             
@@ -89,15 +93,16 @@ namespace TinyMVC.Modules.Remotes {
             if (_isAlwaysDefault == false && lastFetchStatus == LastFetchStatus.Success) {
                 try {
                 #if UNITY_NUGET_NEWTONSOFT_JSON
-                    return JsonConvert.DeserializeObject<T>(_instance.GetValue(key).StringValue);
+                    string stringValue = _instance.GetValue(key).StringValue;
+                    
+                    if (string.IsNullOrEmpty(stringValue) == false) {
+                        return JsonConvert.DeserializeObject<T>(stringValue);    
+                    }
                 #else
                     Debug.LogError($"Can't convert remote data with key {key}, please use unity newtonsoft JSON!");
-                    
-                    return default;
-                    
                 #endif
                 } catch (Exception exception) {
-                    Debug.LogException(exception);
+                    Debug.LogWarning(exception);
                 }
             }
         #endif
@@ -129,7 +134,7 @@ namespace TinyMVC.Modules.Remotes {
                         return remoteValue;
                     }
                 } catch (Exception exception) {
-                    Debug.LogException(exception);
+                    Debug.LogWarning(exception);
                 }
             }
         #endif
@@ -151,7 +156,7 @@ namespace TinyMVC.Modules.Remotes {
                         return remoteValue;
                     }
                 } catch (Exception exception) {
-                    Debug.LogException(exception);
+                    Debug.LogWarning(exception);
                 }
             }
         #endif
@@ -171,7 +176,7 @@ namespace TinyMVC.Modules.Remotes {
                 try {
                     return _instance.GetValue(key).BooleanValue;
                 } catch (Exception exception) {
-                    Debug.LogException(exception);
+                    Debug.LogWarning(exception);
                 }
             }
         #endif
