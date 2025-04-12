@@ -37,6 +37,18 @@ namespace TinyMVC.Modules.IAP {
             await restoreHandler.RestoreProcess(CreateNonConsumableHandlers());
         }
         
+    #if UNITY_PURCHASING_FAKE
+        public void ConfiscateAllPurchased() {
+            BuyHandler[] handlers = CreateNonConsumableHandlers();
+            
+            for (int handlerId = 0; handlerId < handlers.Length; handlerId++) {
+                if (handlers[handlerId].IsPurchased()) {
+                    handlers[handlerId].Confiscate();   
+                }
+            }
+        }
+    #endif
+        
         protected abstract BuyHandler[] CreateNonConsumableHandlers();
     }
 }
