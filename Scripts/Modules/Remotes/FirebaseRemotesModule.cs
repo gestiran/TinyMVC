@@ -21,7 +21,7 @@ namespace TinyMVC.Modules.Remotes {
         private static FirebaseRemoteConfig _instance;
     #endif
         
-        private readonly Dictionary<string, object> _defaultValues;
+        protected readonly Dictionary<string, object> _defaultValues;
         
         protected FirebaseRemotesModule() => _defaultValues = new Dictionary<string, object>();
         
