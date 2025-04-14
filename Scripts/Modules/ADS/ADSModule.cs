@@ -43,6 +43,8 @@ namespace TinyMVC.Modules.ADS {
         }
         
         protected override void ActivateADS() {
+            base.ActivateADS();
+            
             _withoutInterstitialTime = Mathf.Max(ADSSaveUtility.LoadWithoutInterstitialTime(data.remoteConfig.beforeFirstInterstitial),
                                                  data.remoteConfig.beforeAppStartInterstitial);
         #if GOOGLE_ADS_MOBILE
@@ -64,7 +66,6 @@ namespace TinyMVC.Modules.ADS {
                 UpdateInterstitialProcess();
             }
         #endif
-            base.ActivateADS();
         }
         
         public bool HasSavedAge() => ADSSaveUtility.HasSavedAge();

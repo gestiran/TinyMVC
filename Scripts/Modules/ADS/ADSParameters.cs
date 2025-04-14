@@ -13,7 +13,7 @@ namespace TinyMVC.Modules.ADS {
         public bool fullNoADSMode { get; private set; }
         
         [field: SerializeField, BoxGroup("Remote")]
-        public RemoteConfig remoteConfig { get; private set; }
+        public RemoteConfig remoteConfig { get; private set; } = RemoteConfig.Empty();
         
         [field: SerializeField, BoxGroup("Tokens")]
         public int initialRewardTokensCount { get; private set; } = 0;
@@ -72,6 +72,10 @@ namespace TinyMVC.Modules.ADS {
                     // ignored
                 }
             }
+            
+            private RemoteConfig(int _) { }
+            
+            public static RemoteConfig Empty() => new RemoteConfig(0); 
             
         #if UNITY_EDITOR
             [OnInspectorInit]
