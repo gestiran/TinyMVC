@@ -35,6 +35,7 @@ namespace TinyMVC.Modules.IAP {
         
     #if UNITY_PURCHASING_FAKE && !UNITY_PURCHASING
         private Button button;
+        private string productId;
     #endif
         
         private void Awake() {
@@ -44,6 +45,8 @@ namespace TinyMVC.Modules.IAP {
             if (_price != null) {
                 _price.text = "Fake";
             }
+            
+            productId = "Fake";
         #elif UNITY_PURCHASING
             if (string.IsNullOrEmpty(productId)) {
                 productId = "com.inkosgames.holein.packboosters1";
@@ -58,6 +61,10 @@ namespace TinyMVC.Modules.IAP {
             handler.onRestoreSuccess += _onBuySuccess.Invoke;
             
         #if UNITY_PURCHASING_FAKE
+            if (button == null) {
+                button = GetComponent<Button>();
+            }
+            
             if (button != null) {
                 button.onClick.AddListener(SendToHandler);
             }
