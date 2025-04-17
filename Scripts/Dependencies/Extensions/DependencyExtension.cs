@@ -4,6 +4,9 @@ using JetBrains.Annotations;
 
 namespace TinyMVC.Dependencies.Extensions {
     public static class DependencyExtension {
+        [Obsolete("Can't use without parameters!", true)]
+        public static Dependency AsDependency<T>(this T _) where T : IDependency => null;
+        
         public static Dependency AsDependency<T>(this T dependency, [NotNull] params Type[] types) where T : IDependency => new Dependency(dependency, types);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
