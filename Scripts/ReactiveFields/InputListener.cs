@@ -127,7 +127,7 @@ namespace TinyMVC.ReactiveFields {
         
         // Resharper disable Unity.ExpensiveCode
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveListener(ActionListener<T> listener) => _listenersValue.Add(listener);
+        public void RemoveListener(ActionListener<T> listener) => _listenersValue.Remove(listener);
         
     #endregion Remove
         
