@@ -1,22 +1,15 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEditor;
-using UnityEngine;
 
 namespace TinyMVC.Editor.Modules.IAP {
     [InitializeOnLoad]
     public static class IAPFakeSettings {
         public static bool isEnable { get; private set; }
         
-        private static readonly IAPFakePrefs _prefs;
-        
         private const string _DEFINE = "UNITY_PURCHASING_FAKE";
         
-        static IAPFakeSettings() {
-            _prefs = new IAPFakePrefs(Path.GetFileName(Path.GetDirectoryName(Application.dataPath)));
-            LoadStartState();
-        }
+        static IAPFakeSettings() => LoadStartState();
         
         [SettingsProvider]
         public static SettingsProvider CreateMyCustomSettingsProvider() {
@@ -37,7 +30,6 @@ namespace TinyMVC.Editor.Modules.IAP {
             }
             
             isEnable = true;
-            _prefs.SaveActiveState(isEnable);
             EnableDefine(_DEFINE, BuildTargetGroup.Android);
         }
         
@@ -47,11 +39,10 @@ namespace TinyMVC.Editor.Modules.IAP {
             }
             
             isEnable = false;
-            _prefs.SaveActiveState(isEnable);
             DisableDefine(_DEFINE, BuildTargetGroup.Android);
         }
         
-        private static void LoadStartState() => isEnable = _prefs.LoadActiveState();
+        private static void LoadStartState() => isEnable = CalculateEnable(_DEFINE, BuildTargetGroup.Android);
         
         private static void OnDrawSettings(string _) {
             bool value = EditorGUILayout.Toggle("Is Enable", isEnable);
@@ -91,6 +82,10 @@ namespace TinyMVC.Editor.Modules.IAP {
             defines = defines.Replace(define, "").Replace(";;", ";");
             
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, defines);
+        }
+        
+        private static bool CalculateEnable(string define, BuildTargetGroup targetGroup) {
+            return PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup).Contains(define);
         }
     }
 }
