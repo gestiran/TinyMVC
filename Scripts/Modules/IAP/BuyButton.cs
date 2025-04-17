@@ -14,7 +14,7 @@ namespace TinyMVC.Modules.IAP {
     [DisallowMultipleComponent]
 #if UNITY_PURCHASING
     public sealed class BuyButton : CodelessIAPButton, IDisposable, ISelfValidator {
-    #else
+#else
     public sealed class BuyButton : MonoBehaviour, IDisposable {
     #endif
         [SerializeField]
@@ -32,32 +32,36 @@ namespace TinyMVC.Modules.IAP {
         private bool _isActive;
         
         private BuyHandler _handler;
-
-    #if UNITY_PURCHASING_FAKE && !UNITY_PURCHASING 
+        
+    #if UNITY_PURCHASING_FAKE && !UNITY_PURCHASING
         private Button button;
     #endif
         
         private void Awake() {
-        #if UNITY_PURCHASING
+        #if UNITY_PURCHASING_FAKE
+            button = GetComponent<Button>();
+            
+            if (_price != null) {
+                _price.text = "Fake";
+            }
+        #elif UNITY_PURCHASING
             if (string.IsNullOrEmpty(productId)) {
                 productId = "com.inkosgames.holein.packboosters1";
             }
-        #elif UNITY_PURCHASING_FAKE
-            button = GetComponent<Button>();
         #endif
         }
         
         public void Init(BuyHandler handler) {
             _handler = handler;
             
+            handler.onBuySuccess += _onBuySuccess.Invoke;
+            handler.onRestoreSuccess += _onBuySuccess.Invoke;
+            
         #if UNITY_PURCHASING_FAKE
             if (button != null) {
                 button.onClick.AddListener(SendToHandler);
             }
-        #else
-            handler.onBuySuccess += _onBuySuccess.Invoke;
-            handler.onRestoreSuccess += _onBuySuccess.Invoke;
-        #if UNITY_PURCHASING
+        #elif UNITY_PURCHASING
             productId = handler.productId;
             
             if (TryUpdatePrice()) {
@@ -65,22 +69,20 @@ namespace TinyMVC.Modules.IAP {
                 _isActive = true;
             }
         #endif
-        #endif
         }
         
         public void Dispose() {
+            _handler.onBuySuccess -= _onBuySuccess.Invoke;
+            _handler.onRestoreSuccess -= _onBuySuccess.Invoke;
+            
         #if UNITY_PURCHASING_FAKE
             if (button != null && _handler != null) {
                 button.onClick.RemoveListener(SendToHandler);
             }
-        #else
-            _handler.onBuySuccess -= _onBuySuccess.Invoke;
-            _handler.onRestoreSuccess -= _onBuySuccess.Invoke;
-        #if UNITY_PURCHASING
+        #elif UNITY_PURCHASING
             CodelessIAPStoreListener.Instance.RemoveButton(this);
         #endif
-        #endif
-        
+            
             _isActive = false;
         }
         
