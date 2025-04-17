@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <fullNoADSMode>k__BackingField: 0
   <remoteConfig>k__BackingField:
-    _beforeFirstInterstitial: 0
-    _beforeAppStartInterstitial: 0
-    _rewardInterstitialDisable: 0
-    _tokensPurchaseInterstitialDisable: 0
-    _bannerUpdateTime: 0
-    _bannerRewardsLimit: 0
+    _beforeFirstInterstitial: 20
+    _beforeAppStartInterstitial: 2
+    _rewardInterstitialDisable: 4
+    _tokensPurchaseInterstitialDisable: 20
+    _bannerUpdateTime: 30
+    _bannerRewardsLimit: 4
   <initialRewardTokensCount>k__BackingField: 0
   <android>k__BackingField:
     <kids>k__BackingField:
