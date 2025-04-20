@@ -42,12 +42,12 @@ namespace TinyMVC.Modules.IAP {
         #if UNITY_PURCHASING_FAKE
             button = GetComponent<Button>();
             
-            if (_price != null) {
+            if (_price != null && string.IsNullOrEmpty(_price.text)) {
                 _price.text = "Fake";
             }
+        #endif
             
-            productId = "Fake";
-        #elif UNITY_PURCHASING
+        #if UNITY_PURCHASING || UNITY_PURCHASING_FAKE
             if (string.IsNullOrEmpty(productId)) {
                 productId = "com.inkosgames.holein.packboosters1";
             }
@@ -94,6 +94,8 @@ namespace TinyMVC.Modules.IAP {
         }
         
     #if UNITY_PURCHASING
+    #if !UNITY_PURCHASING_FAKE
+      
         protected override void OnPurchaseComplete(Product product) {
             if (!_isActive) {
                 return;
@@ -110,7 +112,8 @@ namespace TinyMVC.Modules.IAP {
             
             return button;
         }
-        
+
+    #endif
         protected override void AddButtonToCodelessListener() {
             // Do nothing
         }
