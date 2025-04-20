@@ -10,13 +10,13 @@ using UnityEngine.Purchasing;
 #endif
 
 namespace TinyMVC.Modules.IAP {
-    [RequireComponent(typeof(Button))]
     [DisallowMultipleComponent]
-#if UNITY_PURCHASING
+    [RequireComponent(typeof(Button))]
+#if UNITY_PURCHASING && !UNITY_PURCHASING_FAKE
     public sealed class BuyButton : CodelessIAPButton, IDisposable, ISelfValidator {
 #else
-    public sealed class BuyButton : MonoBehaviour, IDisposable {
-    #endif
+    public sealed class BuyButton : MonoBehaviour, IDisposable, ISelfValidator {
+#endif
         [SerializeField]
         private Text _price;
         
@@ -33,9 +33,19 @@ namespace TinyMVC.Modules.IAP {
         
         private BuyHandler _handler;
         
-    #if UNITY_PURCHASING_FAKE && !UNITY_PURCHASING
-        private Button button;
-        private string productId;
+    #if UNITY_PURCHASING_FAKE
+        [Serializable] public class OnProductFetchedEvent : UnityEvent<Product> { }
+        [Serializable] public class OnPurchaseCompletedEvent : UnityEvent<Product> { }
+        [Serializable] public class OnPurchaseFailedEvent : UnityEvent<Product, UnityEngine.Purchasing.Extension.PurchaseFailureDescription> { }
+        [Serializable] public class OnTransactionsRestoredEvent : UnityEvent<bool, string> { }
+        [HideInInspector, HideInEditorMode, ReadOnly] public string productId;
+        public CodelessButtonType buttonType = CodelessButtonType.Purchase;
+        public bool consumePurchase = true;
+        public OnTransactionsRestoredEvent onTransactionsRestored;
+        public OnPurchaseCompletedEvent onPurchaseComplete;
+        public OnPurchaseFailedEvent onPurchaseFailed;
+        public OnProductFetchedEvent onProductFetched;
+        public Button button;
     #endif
         
         private void Awake() {
@@ -47,7 +57,7 @@ namespace TinyMVC.Modules.IAP {
             }
         #endif
             
-        #if UNITY_PURCHASING || UNITY_PURCHASING_FAKE
+        #if UNITY_PURCHASING && !UNITY_PURCHASING_FAKE
             if (string.IsNullOrEmpty(productId)) {
                 productId = "com.inkosgames.holein.packboosters1";
             }
@@ -95,9 +105,7 @@ namespace TinyMVC.Modules.IAP {
             _isActive = false;
         }
         
-    #if UNITY_PURCHASING
-    #if !UNITY_PURCHASING_FAKE
-      
+    #if UNITY_PURCHASING && !UNITY_PURCHASING_FAKE
         protected override void OnPurchaseComplete(Product product) {
             if (!_isActive) {
                 return;
@@ -115,7 +123,6 @@ namespace TinyMVC.Modules.IAP {
             return button;
         }
 
-    #endif
         protected override void AddButtonToCodelessListener() {
             // Do nothing
         }
@@ -141,11 +148,8 @@ namespace TinyMVC.Modules.IAP {
                 return false;
             }
         }
-        
     #if UNITY_EDITOR
-        
         private void Update() => _productIdEditor = productId;
-        
     #endif
     #endif
         
