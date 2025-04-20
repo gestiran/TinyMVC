@@ -42,7 +42,7 @@ namespace TinyMVC.Modules.IAP {
         #if UNITY_PURCHASING_FAKE
             button = GetComponent<Button>();
             
-            if (_price != null && string.IsNullOrEmpty(_price.text)) {
+            if (_price != null) {
                 _price.text = "Fake";
             }
         #endif
@@ -61,6 +61,8 @@ namespace TinyMVC.Modules.IAP {
             handler.onRestoreSuccess += _onBuySuccess.Invoke;
             
         #if UNITY_PURCHASING_FAKE
+            productId = handler.productId;
+
             if (button == null) {
                 button = GetComponent<Button>();
             }
