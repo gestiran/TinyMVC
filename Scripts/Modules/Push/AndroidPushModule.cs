@@ -4,20 +4,14 @@ using System;
 using System.Collections.Generic;
 using Unity.Notifications.Android;
 
-#if I2_LOCALIZE
-using I2.Loc;
-#endif
-
 namespace TinyMVC.Modules.Push {
     public sealed class AndroidPushModule : MobilePushModule {
         public AndroidNotification Create(string key, string text, DateTime date, string smallIconName, string largeIconName) {
             AndroidNotification notification = new AndroidNotification();
-            
-            #if I2_LOCALIZE
-            if (API<AndroidPushModule>.module.TryGetNotification(key, out PushParameters.NotificationData data)) {
-                text = LocalizationManager.GetTranslation(data.term);
+        
+            if (TryGetNotification(key, out PushParameters.NotificationData data)) {
+                text = data.GetText();
             }
-            #endif
             
             notification.Title = _parameters.appTitle;
             notification.Text = text;

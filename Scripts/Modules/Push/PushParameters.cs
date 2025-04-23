@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
 using I2.Loc;
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
 #endif
 
 namespace TinyMVC.Modules.Push {
@@ -13,20 +13,21 @@ namespace TinyMVC.Modules.Push {
         [field: SerializeField]
         public string appTitle { get; private set; } = "UnityApplication";
         
-        [SerializeField]
+        [SerializeReference]
         private NotificationData[] _notifications;
         
         [Serializable]
-        public sealed class NotificationData {
+        public abstract class NotificationData {
             [field: SerializeField]
             internal string key { get; private set; }
             
-            [field: SerializeField
-            #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
-                  , ValueDropdown(nameof(GetAllTerms))
-            #endif
-            ]
+        #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
+            [field: ValueDropdown("GetAllTerms")]
+        #endif
+            [field: SerializeField]
             public string term { get; private set; }
+            
+            public abstract string GetText();
             
         #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
             private List<string> GetAllTerms() {
@@ -58,6 +59,21 @@ namespace TinyMVC.Modules.Push {
         #endif
         }
         
+        [Serializable]
+        public sealed class NotificationTextData : NotificationData {
+            public override string GetText() => term;
+        }
+        
+        [Serializable]
+        public sealed class NotificationTermData : NotificationData {
+            public override string GetText() {
+            #if I2_LOCALIZE
+                return LocalizationManager.GetTranslation(term);
+            #endif
+                return term;
+            }
+        }
+        
         private const string _PATH = "Application/" + nameof(PushParameters);
         
         public static PushParameters LoadFromResources() => Resources.Load<PushParameters>(_PATH);
@@ -66,13 +82,11 @@ namespace TinyMVC.Modules.Push {
             for (int id = 0; id < _notifications.Length; id++) {
                 if (key.Equals(_notifications[id].key)) {
                     notification = _notifications[id];
-                    
                     return true;
                 }
             }
             
             notification = null;
-            
             return false;
         }
     }
