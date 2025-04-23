@@ -21,13 +21,31 @@ namespace TinyMVC.Modules.Push {
             [field: SerializeField]
             internal string key { get; private set; }
             
+            public abstract string GetText();
+        }
+        
+        [Serializable]
+        public sealed class NotificationTextData : NotificationData {
+            [field: SerializeField]
+            public string term { get; private set; }
+            
+            public override string GetText() => term;
+        }
+        
+        [Serializable]
+        public sealed class NotificationTermData : NotificationData {
         #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
             [field: ValueDropdown("GetAllTerms")]
         #endif
             [field: SerializeField]
             public string term { get; private set; }
             
-            public abstract string GetText();
+            public override string GetText() {
+            #if I2_LOCALIZE
+                return LocalizationManager.GetTranslation(term);
+            #endif
+                return term;
+            }
             
         #if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
             private List<string> GetAllTerms() {
@@ -55,23 +73,7 @@ namespace TinyMVC.Modules.Push {
                 
                 return new List<string>();
             }
-            
         #endif
-        }
-        
-        [Serializable]
-        public sealed class NotificationTextData : NotificationData {
-            public override string GetText() => term;
-        }
-        
-        [Serializable]
-        public sealed class NotificationTermData : NotificationData {
-            public override string GetText() {
-            #if I2_LOCALIZE
-                return LocalizationManager.GetTranslation(term);
-            #endif
-                return term;
-            }
         }
         
         private const string _PATH = "Application/" + nameof(PushParameters);

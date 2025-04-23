@@ -7,11 +7,15 @@ using Unity.Notifications.Android;
 namespace TinyMVC.Modules.Push {
     public sealed class AndroidPushModule : MobilePushModule {
         public AndroidNotification Create(string key, string text, DateTime date, string smallIconName, string largeIconName) {
-            AndroidNotification notification = new AndroidNotification();
-        
             if (TryGetNotification(key, out PushParameters.NotificationData data)) {
                 text = data.GetText();
             }
+            
+            return Create(text, date, smallIconName, largeIconName);
+        }
+        
+        public AndroidNotification Create(string text, DateTime date, string smallIconName, string largeIconName) {
+            AndroidNotification notification = new AndroidNotification();
             
             notification.Title = _parameters.appTitle;
             notification.Text = text;
