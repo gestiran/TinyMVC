@@ -152,14 +152,16 @@ namespace TinyMVC.Modules.ADS {
             Debug.LogError($"ADSModule.BuyNoADS");
         #endif
             
-            isNoADS = true;
-            ADSSaveUtility.SaveIsNoADS(isNoADS);
+            if (isNoADS == false) {
+                isNoADS = true;
+                ADSSaveUtility.SaveIsNoADS(isNoADS);
+                noAdsStateChange?.Invoke(true);
+            }
             
         #if GOOGLE_ADS_MOBILE
             if (_banner != null) {
                 _banner.Hide();
             }
-
             
             if (_bannerProcessCancellation != null) {
                 _bannerProcessCancellation.Cancel();
@@ -170,7 +172,6 @@ namespace TinyMVC.Modules.ADS {
             ADSSaveUtility.SaveBannerRewardsCount(_bannerRewardsCount);
             ADSSaveUtility.SaveRemainingBannerTime(data.remoteConfig.bannerUpdateTime);
         #endif
-            noAdsStateChange?.Invoke(true);
         }
         
         public void RemoveNoADS() {
@@ -178,8 +179,11 @@ namespace TinyMVC.Modules.ADS {
             Debug.LogError($"ADSModule.RemoveNoADS");
         #endif
             
-            isNoADS = false;
-            ADSSaveUtility.SaveIsNoADS(isNoADS);
+            if (isNoADS) {
+                isNoADS = false;
+                ADSSaveUtility.SaveIsNoADS(isNoADS);
+                noAdsStateChange?.Invoke(false);
+            }
             
         #if GOOGLE_ADS_MOBILE
             if (_bannerProcessCancellation != null) {
@@ -191,7 +195,6 @@ namespace TinyMVC.Modules.ADS {
             UpdateBannerProcess(ADSSaveUtility.LoadRemainingBannerTime(data.remoteConfig.bannerUpdateTime), cancellation);
             _bannerProcessCancellation = cancellation;
         #endif
-            noAdsStateChange?.Invoke(false);
         }
         
         public void OnPurchaseTokens() {
