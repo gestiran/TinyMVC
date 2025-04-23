@@ -1,8 +1,11 @@
 using System;
 using UnityEngine;
 
-#if ODIN_INSPECTOR && I2_LOCALIZE && UNITY_EDITOR
+#if I2_LOCALIZE
 using I2.Loc;
+#endif
+
+#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
 #endif
