@@ -148,6 +148,8 @@ namespace TinyMVC.Editor {
             ProjectData.onAdd += AddContext;
             ProjectData.onRemove += RemoveContext;
             EditorApplication.playModeStateChanged += StateChange;
+            
+            _save.Start();
         }
         
         [OnInspectorDispose]
@@ -155,6 +157,8 @@ namespace TinyMVC.Editor {
             ProjectData.onAdd -= AddContext;
             ProjectData.onRemove -= RemoveContext;
             EditorApplication.playModeStateChanged -= StateChange;
+            
+            _save.Stop();
         }
         
         private void AddContext(string contextKey, DependencyContainer container) {

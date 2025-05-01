@@ -1,4 +1,6 @@
-﻿namespace TinyMVC.Modules.Saving {
+﻿using UnityEngine;
+
+namespace TinyMVC.Modules.Saving {
     public static partial class SaveService {
         private static readonly SaveHandler _handler;
         
@@ -43,5 +45,8 @@
         public static void Delete(string key, params string[] group) => _handler.Delete(key, group);
         
         public static void Delete(string key) => _handler.Delete(key);
+        
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void StartSaving() => _handler.Start();
     }
 }

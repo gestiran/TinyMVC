@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Sirenix.Serialization;
 using TinyMVC.Modules.Saving.Extensions;
 using TinyMVC.Modules.Saving.VirtualFiles;
@@ -12,7 +12,7 @@ using UnityEngine;
 namespace TinyMVC.Modules.Saving {
     internal sealed class SaveHandler {
         private Dictionary<string, VDirectory> _directories;
-        private bool _isSaving;
+        private CancellationTokenSource _cancellation;
         
         private readonly string _rootDirectory;
         private readonly string _versionLabel;
@@ -35,7 +35,6 @@ namespace TinyMVC.Modules.Saving {
             _versionLabel = versionLabel;
             
             Recreate();
-            SaveProcess();
         }
         
         public bool HasGroup(params string[] group) {
@@ -355,6 +354,20 @@ namespace TinyMVC.Modules.Saving {
             _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
         }
         
+        internal void Stop() {
+            if (_cancellation != null) {
+                _cancellation.Cancel();
+                _cancellation.Dispose();
+                _cancellation = null;
+            }
+        }
+        
+        internal void Start() {
+            Stop();
+            _cancellation = new CancellationTokenSource();
+            SaveProcess(_cancellation.Token);
+        }
+        
         private T LoadData<T>(string key) {
             _directories[_MAIN_FILE_NAME].semaphore.Wait();
             
@@ -392,44 +405,6 @@ namespace TinyMVC.Modules.Saving {
             }
             
             return default;
-        }
-        
-        private async void SaveProcess() {
-            await Task.Delay(_DELAY_BETWEEN_SAVES);
-            
-            if (_isSaving) {
-                return;
-            }
-            
-            _isSaving = true;
-            
-            while (Application.isPlaying) {
-                try {
-                    List<Task> saveTasks = new List<Task>(_directories.Count);
-                    
-                    foreach (VDirectory directory in _directories.Values) {
-                        if (directory.isDirty == false) {
-                            continue;
-                        }
-                        
-                        saveTasks.Add(Task.Run(() => SaveDirectory(directory)));
-                        
-                    #if UNITY_EDITOR
-                        SaveService.UpdateEditor(directory.name);
-                    #endif
-                    }
-                    
-                    if (saveTasks.Count > 0) {
-                        await Task.WhenAll(saveTasks);
-                    }
-                } catch (Exception exception) {
-                    Debug.LogWarning(new Exception("SaveService.SaveProcess", exception));
-                }
-                
-                await Task.Delay(_DELAY_BETWEEN_SAVES);
-            }
-            
-            _isSaving = false;
         }
         
         internal void SaveDirectory(VDirectory directory) {
@@ -539,5 +514,34 @@ namespace TinyMVC.Modules.Saving {
         }
         
         private bool IsNull(string key) => key == null;
+        
+        // ReSharper disable once FunctionNeverReturns
+        private async void SaveProcess(CancellationToken cancellation) {
+            while (true) {
+                try {
+                    List<UniTask> saveTasks = new List<UniTask>(_directories.Count);
+                    
+                    foreach (VDirectory directory in _directories.Values) {
+                        if (directory.isDirty == false) {
+                            continue;
+                        }
+                        
+                        saveTasks.Add(UniTask.RunOnThreadPool(() => SaveDirectory(directory), true, cancellation));
+                        
+                    #if UNITY_EDITOR
+                        SaveService.UpdateEditor(directory.name);
+                    #endif
+                    }
+                    
+                    if (saveTasks.Count > 0) {
+                        await UniTask.WhenAll(saveTasks);
+                    }
+                } catch (Exception exception) {
+                    Debug.LogWarning(new Exception("SaveService.SaveProcess", exception));
+                }
+                
+                await UniTask.Delay(_DELAY_BETWEEN_SAVES, true, PlayerLoopTiming.LastTimeUpdate, cancellation);
+            }
+        }
     }
 }
