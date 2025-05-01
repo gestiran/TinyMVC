@@ -1,36 +1,188 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using TinyMVC.Boot;
+using TinyMVC.Dependencies;
+using TinyMVC.Modules.Saving;
 using UnityEditor;
+using UnityEngine;
 
 namespace TinyMVC.Editor {
-    internal class ProjectContextWindow : OdinEditorWindow {
-        [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowIf("@_data != null && EditorApplication.isPlaying")]
-        private static ProjectData _data;
+    internal sealed class ProjectContextWindow : OdinEditorWindow {
+        private bool _isVisibleContexts => _contexts != null && EditorApplication.isPlaying;
+        private bool _isVisibleFavorites => _favorites != null && _favorites.Count > 0 && EditorApplication.isPlaying;
         
-        [ShowInInspector, ReadOnly, HideLabel, HideInPlayMode]
-        private string _label = "Active only in PlayMode";
+        [Searchable(FuzzySearch = true, Recursive = false, FilterOptions = SearchFilterOptions.TypeOfValue | SearchFilterOptions.ValueToString)]
+        [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowIf("_isVisibleFavorites"), Title("Favorites:")]
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+        private static List<DependencyLink> _favorites;
         
-        public ProjectContextWindow() => EditorApplication.playModeStateChanged += StateChange;
+        [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowIf("_isVisibleContexts"), Title("All:")]
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false)]
+        private static List<ContextLink> _contexts;
         
-        [MenuItem("Window/TinyMVC/ProjectContext", priority = 0)]
-        private static void OpenWindow() {
-            ProjectContextWindow window = GetWindow<ProjectContextWindow>("ProjectContext");
-            window.Show();
+        [ShowInInspector, ReadOnly, HideLabel, HideInPlayMode, HideIf("_isVisibleContexts")]
+        private static string _label = "Active only in PlayMode";
+        
+        private static SaveHandler _save;
+        
+        [HideReferenceObjectPicker, HideDuplicateReferenceBox]
+        private sealed class ContextLink : IEquatable<ContextLink>, IDisposable {
+            [Searchable(FuzzySearch = true, Recursive = false, FilterOptions = SearchFilterOptions.TypeOfValue | SearchFilterOptions.ValueToString)]
+            [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+            [ShowInInspector, HideInEditorMode, LabelText("@ToString()"), HideReferenceObjectPicker, HideDuplicateReferenceBox]
+            private List<DependencyLink> _dependencies;
+            
+            // ReSharper disable once Unity.RedundantHideInInspectorAttribute
+            [HideInInspector] public readonly string key;
+            
+            public ContextLink(string key, DependencyContainer container) {
+                this.key = key;
+                _dependencies = ConvertToLinks(container.dependencies);
+                
+                container.onUpdate.AddListener(Update);
+            }
+            
+            private void Update(Type dependencyType, IDependency dependency) {
+                string dependencyKey = dependencyType.Name;
+                
+                for (int dependencyId = 0; dependencyId < _dependencies.Count; dependencyId++) {
+                    if (_dependencies[dependencyId].key != dependencyKey) {
+                        continue;
+                    }
+                    
+                    _dependencies[dependencyId].value = dependency;
+                    return;
+                }
+                
+                _dependencies.Add(new DependencyLink(dependencyKey, dependency));
+            }
+            
+            private List<DependencyLink> ConvertToLinks(Dictionary<Type, IDependency> dependencies) {
+                List<DependencyLink> result = new List<DependencyLink>(dependencies.Count);
+                
+                foreach (KeyValuePair<Type, IDependency> pair in dependencies) {
+                    result.Add(new DependencyLink(pair.Key.Name, pair.Value));
+                }
+                
+                return result;
+            }
+            
+            public void Dispose() {
+                for (int dependencyId = 0; dependencyId < _dependencies.Count; dependencyId++) {
+                    _dependencies[dependencyId].Dispose();
+                }
+            }
+            
+            public override string ToString() => key;
+            
+            public bool Equals(ContextLink other) => other != null && key == other.key;
+            
+            public override bool Equals(object obj) => obj is ContextLink other && key == other.key;
+            
+            public override int GetHashCode() => key.GetHashCode();
         }
         
-        private async void StateChange(PlayModeStateChange state) {
-            if (state != PlayModeStateChange.EnteredPlayMode) {
+        [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideLabel]
+        private sealed class DependencyLink : IDisposable {
+            [CustomContextMenu("Add to Favorites", "AddFavorites")]
+            [CustomContextMenu("Remove from Favorites", "RemoveFavorites")]
+            [ShowInInspector, LabelText("@key")]
+            public IDependency value;
+            
+            private bool _isFavorite;
+            
+            // ReSharper disable once Unity.RedundantHideInInspectorAttribute
+            [HideInInspector] public readonly string key;
+            
+            public DependencyLink(string key, IDependency dependency) {
+                value = dependency;
+                this.key = key;
+                
+                _isFavorite = _save.Has(key);
+                
+                if (_isFavorite) {
+                    _favorites.Add(this);
+                }
+            }
+            
+            private void AddFavorites() {
+                if (_isFavorite) {
+                    return;
+                }
+                
+                _favorites.Add(this);
+                _save.Save(true, key);
+                _isFavorite = true;
+            }
+            
+            private void RemoveFavorites() {
+                if (_isFavorite == false) {
+                    return;
+                }
+                
+                _favorites.Remove(this);
+                _save.Delete(key);
+                _isFavorite = false;
+            }
+            
+            public void Dispose() {
+                if (_isFavorite) {
+                    _favorites.Remove(this);   
+                }
+            }
+            
+            public override string ToString() => key;
+        }
+        
+        [MenuItem("Window/TinyMVC/ProjectContext", priority = 0)]
+        private static void OpenWindow() => GetWindow<ProjectContextWindow>("ProjectContext").Show();
+        
+        [OnInspectorInit]
+        public void Init() {
+            _favorites = new List<DependencyLink>();
+            _contexts = new List<ContextLink>();
+            _save = new SaveHandler("Editor", "V1");
+            
+            ProjectData.onAdd += AddContext;
+            ProjectData.onRemove += RemoveContext;
+            EditorApplication.playModeStateChanged += StateChange;
+        }
+        
+        [OnInspectorDispose]
+        public void Dispose() {
+            ProjectData.onAdd -= AddContext;
+            ProjectData.onRemove -= RemoveContext;
+            EditorApplication.playModeStateChanged -= StateChange;
+        }
+        
+        private void AddContext(string contextKey, DependencyContainer container) {
+            _contexts.Add(new ContextLink(contextKey, container));
+        }
+        
+        private void RemoveContext(string contextKey) {
+            for (int contextId = 0; contextId < _contexts.Count; contextId++) {
+                if (_contexts[contextId].key != contextKey) {
+                    continue;
+                }
+                
+                _contexts[contextId].Dispose();
+                _contexts.RemoveAt(contextId);
+                return;
+            }
+        }
+        
+        private void StateChange(PlayModeStateChange state) {
+            if (state != PlayModeStateChange.ExitingPlayMode) {
                 return;
             }
             
-            await Task.Yield();
+            for (int contextId = 0; contextId < _contexts.Count; contextId++) {
+                _contexts[contextId].Dispose();
+            }
             
-            _data = ProjectContext.data;
+            _contexts.Clear();
         }
-        
-        [Button("Reset"), HideInEditorMode, ShowIf("@_data == null && EditorApplication.isPlaying")]
-        private void Reset() => _data = ProjectContext.data;
     }
 }

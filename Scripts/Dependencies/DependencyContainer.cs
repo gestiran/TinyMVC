@@ -1,30 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 #if UNITY_EDITOR
-using Sirenix.OdinInspector;
+using TinyMVC.ReactiveFields;
 using UnityEngine;
 #endif
 
 namespace TinyMVC.Dependencies {
-#if UNITY_EDITOR
-    [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-#endif
-    public sealed class DependencyContainer {
-    #if UNITY_EDITOR
-        [Searchable(FuzzySearch = true, Recursive = false, FilterOptions = SearchFilterOptions.TypeOfValue | SearchFilterOptions.ValueToString)]
-        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false, ListElementLabelName = "@GetType().Name")]
-        [ShowInInspector, HideInEditorMode, LabelText("Dependencies"), HideReferenceObjectPicker, HideDuplicateReferenceBox]
-        internal List<IDependency> display;
-    #endif
+    public sealed class DependencyContainer : IDisposable {
         internal readonly Dictionary<Type, IDependency> dependencies;
         
         internal static DependencyContainer empty { get; }
         
-        static DependencyContainer() => empty = new DependencyContainer(0);
+    #if UNITY_EDITOR
+        internal readonly InputListener<Type, IDependency> onUpdate;
+    #endif
         
-        internal DependencyContainer(int capacity) => dependencies = new Dictionary<Type, IDependency>(capacity);
+        static DependencyContainer() {
+            empty = new DependencyContainer(0);
+        }
+        
+        private DependencyContainer(int capacity) {
+            dependencies = new Dictionary<Type, IDependency>(capacity);
+            
+        #if UNITY_EDITOR
+            onUpdate = new InputListener<Type, IDependency>();
+        #endif
+        }
         
         internal DependencyContainer(ICollection<IDependency> dependencies) : this(dependencies.Count) {
             foreach (IDependency dependency in dependencies) {
@@ -47,11 +49,6 @@ namespace TinyMVC.Dependencies {
                     this.dependencies.Add(dependency.GetType(), dependency);
                 }
             }
-            
-        #if UNITY_EDITOR
-            display = new List<IDependency>();
-            display.AddRange(dependencies);
-        #endif
         }
         
         internal DependencyContainer(params IDependency[] dependencies) : this(dependencies.Length) {
@@ -66,10 +63,6 @@ namespace TinyMVC.Dependencies {
                     this.dependencies.Add(dependencies[i].GetType(), dependencies[i]);
                 }
             }
-            
-        #if UNITY_EDITOR
-            display = dependencies.ToList();
-        #endif
         }
         
         internal DependencyContainer(IDependency dependency) : this(1) {
@@ -82,9 +75,11 @@ namespace TinyMVC.Dependencies {
             } else {
                 dependencies.Add(dependency.GetType(), dependency);
             }
-            
+        }
+        
+        public void Dispose() {
         #if UNITY_EDITOR
-            display = new List<IDependency>() { dependency };
+            onUpdate.Unload();
         #endif
         }
         
@@ -94,15 +89,19 @@ namespace TinyMVC.Dependencies {
                 
                 for (int typeId = 0; typeId < types.Length; typeId++) {
                     dependencies[types[typeId]] = link.link;
+                    
+                #if UNITY_EDITOR
+                    onUpdate.Send(types[typeId], dependency);
+                #endif
                 }
             } else {
-                dependencies[dependency.GetType()] = dependency;
+                Type type = dependency.GetType();
+                dependencies[type] = dependency;
+                
+            #if UNITY_EDITOR
+                onUpdate.Send(type, dependency);
+            #endif
             }
-            
-        #if UNITY_EDITOR
-            display = new List<IDependency>();
-            display.AddRange(dependencies.Values);
-        #endif
         }
     }
 }

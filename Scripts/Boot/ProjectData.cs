@@ -1,45 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using TinyMVC.Dependencies;
-using UnityEngine;
-using Sirenix.OdinInspector;
 
 namespace TinyMVC.Boot {
-    [ShowInInspector, InlineProperty, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
     public sealed class ProjectData {
-    #if UNITY_EDITOR
-        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ShowFoldout = false, ListElementLabelName = "@label")]
-        private List<DependencyLink> _dependenciesEditor;
-        
-        [HideReferenceObjectPicker, HideDuplicateReferenceBox]
-        private sealed class DependencyLink {
-            [HideLabel, ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
-            private DependencyContainer _container;
-            
-            [HideInInspector] public readonly string label;
-            
-            public DependencyLink(string label, DependencyContainer container) {
-                this.label = label;
-                _container = container;
-            }
-        }
-        
-    #endif
-        
         internal DependencyContainer tempContainer;
-        private readonly Dictionary<string, DependencyContainer> _dependencies;
+        
+        private readonly Dictionary<string, DependencyContainer> _contexts;
         
         public const string MAIN = "Project";
         
         private const int _CAPACITY = 16;
         
+    #if UNITY_EDITOR
+        internal static event Action<string, DependencyContainer> onAdd;
+        internal static event Action<string> onRemove;
+    #endif
+        
         internal ProjectData() {
-            _dependencies = new Dictionary<string, DependencyContainer>(_CAPACITY);
-        #if UNITY_EDITOR
-            _dependenciesEditor = new List<DependencyLink>(_CAPACITY);
-        #endif
+            _contexts = new Dictionary<string, DependencyContainer>(_CAPACITY);
         }
         
         public bool TryGetDependency<T>(out T dependency) where T : IDependency {
@@ -50,8 +29,8 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            foreach (DependencyContainer container in _dependencies.Values) {
-                if (container.dependencies.TryGetValue(typeof(T), out IDependency value)) {
+            foreach (DependencyContainer container in _contexts.Values) {
+                if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
                     return true;
                 }
@@ -67,10 +46,10 @@ namespace TinyMVC.Boot {
             if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
                 dependency = (T)tempValue;
                 return true;
-            } 
+            }
             
-            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container)) {
-                if (container.dependencies.TryGetValue(typeof(T), out IDependency value)) {
+            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
                     return true;
                 }
@@ -84,9 +63,9 @@ namespace TinyMVC.Boot {
             if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
                 dependency = tempValue;
                 return true;
-            } 
+            }
             
-            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container)) {
+            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = value;
                     return true;
@@ -103,7 +82,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            foreach (DependencyContainer container in _dependencies.Values) {
+            foreach (DependencyContainer container in _contexts.Values) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = value;
                     return true;
@@ -122,7 +101,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            foreach (DependencyContainer container in _dependencies.Values) {
+            foreach (DependencyContainer container in _contexts.Values) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
                     return true;
@@ -139,9 +118,9 @@ namespace TinyMVC.Boot {
             if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
                 dependency = (T)tempValue;
                 return true;
-            } 
+            }
             
-            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container) && container.dependencies.TryGetValue(type, out IDependency value)) {
+            if (_contexts.TryGetValue(contextKey, out DependencyContainer container) && container.dependencies.TryGetValue(type, out IDependency value)) {
                 dependency = (T)value;
                 return true;
             }
@@ -151,50 +130,44 @@ namespace TinyMVC.Boot {
         }
         
         internal void Add(string contextKey, List<IDependency> dependencies) {
-            foreach (IDependency dependency in dependencies) {
-                AddDependency(contextKey, dependency);
+            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                foreach (IDependency dependency in dependencies) {
+                    container.Update(dependency);
+                }
+            } else {
+                container = new DependencyContainer(dependencies);
+                _contexts.Add(contextKey, container);
+                
+            #if UNITY_EDITOR
+                onAdd?.Invoke(contextKey, container);
+            #endif
             }
-            
-        #if UNITY_EDITOR
-            UpdateEditor();
-        #endif
         }
         
         internal void Add(string contextKey, IDependency dependency) {
-            AddDependency(contextKey, dependency);
-            
-        #if UNITY_EDITOR
-            UpdateEditor();
-        #endif
+            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                container.Update(dependency);
+            } else {
+                container = new DependencyContainer(dependency);
+                _contexts.Add(contextKey, container);
+                
+            #if UNITY_EDITOR
+                onAdd?.Invoke(contextKey, container);
+            #endif
+            }
         }
         
         internal void Remove(string contextKey) {
-            _dependencies.Remove(contextKey);
+            if (_contexts.TryGetValue(contextKey, out DependencyContainer container) == false) {
+                return;
+            }
+            
+            container.Dispose();
+            _contexts.Remove(contextKey);
             
         #if UNITY_EDITOR
-            UpdateEditor();
+            onRemove?.Invoke(contextKey);
         #endif
         }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddDependency(string contextKey, IDependency dependency) {
-            if (_dependencies.TryGetValue(contextKey, out DependencyContainer container)) {
-                container.Update(dependency);
-            } else {
-                _dependencies.Add(contextKey, new DependencyContainer(dependency));
-            }
-        }
-        
-    #if UNITY_EDITOR
-        
-        private void UpdateEditor() {
-            _dependenciesEditor.Clear();
-            
-            foreach (KeyValuePair<string, DependencyContainer> pair in _dependencies) {
-                _dependenciesEditor.Add(new DependencyLink(pair.Key, pair.Value));
-            }
-        }
-        
-    #endif
     }
 }

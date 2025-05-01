@@ -2,7 +2,8 @@
     "name": "TinyMVC.Editor",
     "rootNamespace": "TinyMVC",
     "references": [
-        "GUID:1d8cf7cb5006f57428fd819399459569"
+        "GUID:1d8cf7cb5006f57428fd819399459569",
+        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f"
     ],
     "includePlatforms": [
         "Editor"
