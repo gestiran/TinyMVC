@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TinyMVC.Modules.Saving.VirtualFiles;
 using UnityEngine;
@@ -43,8 +42,7 @@ namespace TinyMVC.Modules.Saving {
             
             await Task.Delay(250);
             
-            _directories = new Dictionary<string, VDirectory>(_CAPACITY);
-            _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
+            _handler.Recreate();
         }
         
         public static void GetHierarchy_Editor(UnityEngine.UIElements.VisualElement element) {
@@ -74,7 +72,7 @@ namespace TinyMVC.Modules.Saving {
             VDirectory[] directories = new VDirectory[files.Length];
             
             for (int fileId = 0; fileId < files.Length; fileId++) {
-                directories[fileId] = LoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]));
+                directories[fileId] = _handler.LoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]));
             }
             
             foreach (VDirectory directory in directories) {
@@ -83,7 +81,7 @@ namespace TinyMVC.Modules.Saving {
                 }
                 
                 UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
-                foldout.text = $"<b>{directory.name}.{_BASE_EXTENSION}</b>";
+                foldout.text = $"<b>{directory.name}.{SaveHandler.BASE_EXTENSION}</b>";
                 foldout.value = true;
                 
                 ConnectFiles_Editor(directory, foldout.contentContainer);
@@ -95,6 +93,19 @@ namespace TinyMVC.Modules.Saving {
                 }
                 
                 element.Add(foldout);
+            }
+        }
+        
+        internal static void UpdateEditor(string directoryName) => onDataSaveEditor?.Invoke(directoryName);
+        
+        internal static void SaveDirectories(Dictionary<string, VDirectory> directories) {
+            foreach (VDirectory directory in directories.Values) {
+                if (directory.isDirty == false) {
+                    continue;
+                }
+                
+                _handler.SaveDirectory(directory);
+                directory.isDirty = false;
             }
         }
         
@@ -124,18 +135,6 @@ namespace TinyMVC.Modules.Saving {
         
         private static void ConnectDirectoriesNR_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
             ConnectDirectories_Editor(root, element);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SaveDirectories(Dictionary<string, VDirectory> directories) {
-            foreach (VDirectory directory in directories.Values) {
-                if (directory.isDirty == false) {
-                    continue;
-                }
-                
-                SaveDirectory(directory);
-                directory.isDirty = false;
-            }
         }
     }
     
