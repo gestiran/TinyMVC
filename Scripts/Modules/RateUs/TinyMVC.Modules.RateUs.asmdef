@@ -2,7 +2,6 @@
     "name": "TinyMVC.Modules.RateUs",
     "rootNamespace": "TinyMVC",
     "references": [
-        "GUID:58c74cb7d7df1a17dba51822087c325e",
         "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f",
         "GUID:b4318b6f3695442c4983c360248781db",
         "GUID:4139e191aa32f459e9eb2e331225ad7e"

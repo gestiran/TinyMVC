@@ -9,15 +9,15 @@ using Google.Play.Review;
 #endif
 
 namespace TinyMVC.Modules.RateUs {
-    public sealed class RateUsModule : IApplicationModule {
-        public event Action showRateUs;
-        public RateUsParameters data { get; private set; }
-        public bool isNeedShow { get; private set; }
+    public static class RateUsService {
+        public static event Action onShow;
+        public static RateUsParameters data { get; private set; }
+        public static bool isNeedShow { get; private set; }
         
-        private bool _isFirstShow;
-        private int _toShowTimer;
+        private static bool _isFirstShow;
+        private static int _timer;
         
-        public RateUsModule() {
+        static RateUsService() {
             data = RateUsParameters.LoadFromResources();
             isNeedShow = RateUsSaveUtility.LoadIsNeedShow(data.isEnableRateUs);
             
@@ -28,17 +28,17 @@ namespace TinyMVC.Modules.RateUs {
             _isFirstShow = RateUsSaveUtility.LoadIsFirstShow();
             
             if (_isFirstShow) {
-                _toShowTimer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.remoteConfig.firstShowDelay), data.remoteConfig.afterAppStartDelay);
+                _timer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.remoteConfig.firstShowDelay), data.remoteConfig.afterAppStartDelay);
             } else {
-                _toShowTimer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.remoteConfig.otherShowDelay), data.remoteConfig.afterAppStartDelay);
+                _timer = Mathf.Max(RateUsSaveUtility.LoadToRateUsTime(data.remoteConfig.otherShowDelay), data.remoteConfig.afterAppStartDelay);
             }
             
             TimerProcess();
         }
         
-        public void AddTime(int minutes) => _toShowTimer += minutes;
+        public static void AddTime(int minutes) => _timer += minutes;
         
-        public bool TryOpenWindow() {
+        public static bool TryOpenWindow() {
             if (IsNeedShow()) {
                 OpenWindow();
                 return true;
@@ -47,14 +47,20 @@ namespace TinyMVC.Modules.RateUs {
             return false;
         }
         
-        public bool IsNeedShow() => isNeedShow && _toShowTimer <= 0;
+        public static bool IsNeedShow() => isNeedShow && _timer <= 0;
         
-        public async void RateUs() {
+        public static bool TryRateUs() {
             if (isNeedShow) {
                 isNeedShow = false;
                 RateUsSaveUtility.SaveIsNeedShow(false);
+                return false;
             }
             
+            RateUs();
+            return true;
+        }
+        
+        public static async void RateUs() {
         #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
             
             if (await TryShowForm()) {
@@ -70,17 +76,17 @@ namespace TinyMVC.Modules.RateUs {
         #endif
         }
         
-        public void SendToMail(string email, string title) => Application.OpenURL($"mailto:{email}?subject={title}&body={MyEscapeURL("")}");
+        public static void SendToMail(string email, string title) => Application.OpenURL($"mailto:{email}?subject={title}&body={MyEscapeURL("")}");
         
-        public void OnClose() {
+        public static void OnClose() {
             _isFirstShow = false;
             RateUsSaveUtility.SaveIsFirstShow(_isFirstShow);
-            _toShowTimer = data.remoteConfig.otherShowDelay;
+            _timer = data.remoteConfig.otherShowDelay;
         }
         
     #if GOOGLE_PLAY_REVIEW && GOOGLE_PLAY_COMMON
         
-        private async Task<bool> TryShowForm() {
+        private static async Task<bool> TryShowForm() {
             try {
                 ReviewManager manager = new ReviewManager();
                 PlayAsyncOperation<PlayReviewInfo, ReviewErrorCode> request = manager.RequestReviewFlow();
@@ -109,17 +115,17 @@ namespace TinyMVC.Modules.RateUs {
         
     #endif
         
-        private string MyEscapeURL(string url) => UnityWebRequest.EscapeURL(url).Replace("+", "%20");
+        private static string MyEscapeURL(string url) => UnityWebRequest.EscapeURL(url).Replace("+", "%20");
         
-        private void OpenWindow() => showRateUs?.Invoke();
+        private static void OpenWindow() => onShow?.Invoke();
         
-        private async void TimerProcess() {
+        private static async void TimerProcess() {
             while (Application.isPlaying) {
                 await Task.Delay(60000);
                 
-                if (_toShowTimer > 0) {
-                    _toShowTimer--;
-                    RateUsSaveUtility.SaveToRateUsTime(_toShowTimer);
+                if (_timer > 0) {
+                    _timer--;
+                    RateUsSaveUtility.SaveToRateUsTime(_timer);
                 }
             }
         }

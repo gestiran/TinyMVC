@@ -13,7 +13,7 @@ namespace TinyMVC.Modules.RateUs {
         public bool isEnableRateUs { get; private set; } = true;
         
         [field: SerializeField, BoxGroup("Remote")]
-        public RemoteConfig remoteConfig { get; private set; }
+        public RemoteConfig remoteConfig { get; private set; } = RemoteConfig.Empty();
         
         private const string _PATH = "Application/" + nameof(RateUsParameters);
         
@@ -64,13 +64,25 @@ namespace TinyMVC.Modules.RateUs {
                 }
             }
             
+            private RemoteConfig(int _) { }
+            
+            public static RemoteConfig Empty() => new RemoteConfig(0);
+            
         #if UNITY_EDITOR
             [OnInspectorInit]
             private void UpdateRemote() => _remote = JsonConvert.SerializeObject(this);
         #endif
         }
         
-        public static RateUsParameters LoadFromResources() => Resources.Load<RateUsParameters>(_PATH);
+        public static RateUsParameters LoadFromResources() { 
+            RateUsParameters parameters = Resources.Load<RateUsParameters>(_PATH);
+            
+            if (parameters != null) {
+                return parameters;
+            }
+            
+            return Resources.Load<RateUsParameters>($"{_PATH}Default");
+        }
         
         public void SetRemoteData(RemoteConfig config) => remoteConfig = config;
     }
