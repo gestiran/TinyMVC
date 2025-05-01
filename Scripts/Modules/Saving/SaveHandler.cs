@@ -365,7 +365,7 @@ namespace TinyMVC.Modules.Saving {
         internal void Start() {
             Stop();
             _cancellation = new CancellationTokenSource();
-            SaveProcess(_cancellation.Token);
+            SaveProcess(_cancellation.Token).Forget();
         }
         
         private T LoadData<T>(string key) {
@@ -516,7 +516,7 @@ namespace TinyMVC.Modules.Saving {
         private bool IsNull(string key) => key == null;
         
         // ReSharper disable once FunctionNeverReturns
-        private async void SaveProcess(CancellationToken cancellation) {
+        private async UniTask SaveProcess(CancellationToken cancellation) {
             while (true) {
                 try {
                     List<UniTask> saveTasks = new List<UniTask>(_directories.Count);

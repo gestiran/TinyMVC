@@ -6,7 +6,7 @@ namespace TinyMVC.Boot {
     public sealed class ProjectData {
         internal DependencyContainer tempContainer;
         
-        private readonly Dictionary<string, DependencyContainer> _contexts;
+        internal readonly Dictionary<string, DependencyContainer> contexts;
         
         public const string MAIN = "Project";
         
@@ -18,7 +18,7 @@ namespace TinyMVC.Boot {
     #endif
         
         internal ProjectData() {
-            _contexts = new Dictionary<string, DependencyContainer>(_CAPACITY);
+            contexts = new Dictionary<string, DependencyContainer>(_CAPACITY);
         }
         
         public bool TryGetDependency<T>(out T dependency) where T : IDependency {
@@ -29,7 +29,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            foreach (DependencyContainer container in _contexts.Values) {
+            foreach (DependencyContainer container in contexts.Values) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
                     return true;
@@ -48,7 +48,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
                     return true;
@@ -65,7 +65,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = value;
                     return true;
@@ -82,7 +82,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            foreach (DependencyContainer container in _contexts.Values) {
+            foreach (DependencyContainer container in contexts.Values) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = value;
                     return true;
@@ -101,7 +101,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            foreach (DependencyContainer container in _contexts.Values) {
+            foreach (DependencyContainer container in contexts.Values) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
                     return true;
@@ -120,7 +120,7 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
-            if (_contexts.TryGetValue(contextKey, out DependencyContainer container) && container.dependencies.TryGetValue(type, out IDependency value)) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container) && container.dependencies.TryGetValue(type, out IDependency value)) {
                 dependency = (T)value;
                 return true;
             }
@@ -130,13 +130,13 @@ namespace TinyMVC.Boot {
         }
         
         internal void Add(string contextKey, List<IDependency> dependencies) {
-            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 foreach (IDependency dependency in dependencies) {
                     container.Update(dependency);
                 }
             } else {
                 container = new DependencyContainer(dependencies);
-                _contexts.Add(contextKey, container);
+                contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR
                 onAdd?.Invoke(contextKey, container);
@@ -145,11 +145,11 @@ namespace TinyMVC.Boot {
         }
         
         internal void Add(string contextKey, IDependency dependency) {
-            if (_contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 container.Update(dependency);
             } else {
                 container = new DependencyContainer(dependency);
-                _contexts.Add(contextKey, container);
+                contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR
                 onAdd?.Invoke(contextKey, container);
@@ -158,12 +158,12 @@ namespace TinyMVC.Boot {
         }
         
         internal void Remove(string contextKey) {
-            if (_contexts.TryGetValue(contextKey, out DependencyContainer container) == false) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container) == false) {
                 return;
             }
             
             container.Dispose();
-            _contexts.Remove(contextKey);
+            contexts.Remove(contextKey);
             
         #if UNITY_EDITOR
             onRemove?.Invoke(contextKey);

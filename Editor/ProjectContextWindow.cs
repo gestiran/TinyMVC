@@ -145,6 +145,10 @@ namespace TinyMVC.Editor {
             _contexts = new List<ContextLink>();
             _save = new SaveHandler("Editor", "V1");
             
+            if (EditorApplication.isPlaying) {
+                FillContexts();   
+            }
+            
             ProjectData.onAdd += AddContext;
             ProjectData.onRemove += RemoveContext;
             EditorApplication.playModeStateChanged += StateChange;
@@ -154,11 +158,25 @@ namespace TinyMVC.Editor {
         
         [OnInspectorDispose]
         public void Dispose() {
+            _save.Stop();
+            
             ProjectData.onAdd -= AddContext;
             ProjectData.onRemove -= RemoveContext;
             EditorApplication.playModeStateChanged -= StateChange;
             
-            _save.Stop();
+            _favorites = null;
+            _contexts = null;
+            _save = null;
+        }
+        
+        private void FillContexts() {
+            if (ProjectContext.data == null) {
+                return;
+            }
+            
+            foreach (KeyValuePair<string, DependencyContainer> pair in ProjectContext.data.contexts) {
+                AddContext(pair.Key, pair.Value);
+            }
         }
         
         private void AddContext(string contextKey, DependencyContainer container) {
