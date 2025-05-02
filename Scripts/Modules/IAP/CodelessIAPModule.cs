@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ using UnityEngine.Purchasing;
 namespace TinyMVC.Modules.IAP {
     public abstract class CodelessIAPModule : IApplicationModule {
         public IAPParameters data { get; }
+        public static event Action<string> onBuySuccess;
         
         private const int _INIT_RETRY_DELAY = 1000;
         
@@ -19,6 +21,7 @@ namespace TinyMVC.Modules.IAP {
             }
             
         #if UNITY_PURCHASING
+            
             // Start initialization
             CodelessIAPStoreListener _ = CodelessIAPStoreListener.Instance;
             
@@ -50,5 +53,7 @@ namespace TinyMVC.Modules.IAP {
     #endif
         
         protected abstract BuyHandler[] CreateNonConsumableHandlers();
+        
+        internal static void OnBuySuccess(string productId) => onBuySuccess?.Invoke(productId);
     }
 }

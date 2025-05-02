@@ -25,6 +25,14 @@ namespace TinyMVC.Modules.IAP {
         
         private const string _PATH = "Application/" + nameof(IAPParameters);
         
-        public static IAPParameters LoadFromResources() => Resources.Load<IAPParameters>(_PATH);
+        public static IAPParameters LoadFromResources() {
+            IAPParameters parameters = Resources.Load<IAPParameters>(_PATH);
+            
+            if (parameters != null) {
+                return parameters;
+            }
+            
+            return Resources.Load<IAPParameters>($"{_PATH}Default");
+        }
     }
 }

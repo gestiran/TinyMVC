@@ -24,7 +24,10 @@ namespace TinyMVC.Modules.IAP {
             _productId = productId;
         }
         
-        protected void OnBuySuccess() => onBuySuccess?.Invoke();
+        protected void OnBuySuccess() {
+            onBuySuccess?.Invoke();
+            CodelessIAPModule.OnBuySuccess(_productId);
+        }
         
         protected void OnRestoreSuccess() => onRestoreSuccess?.Invoke();
         
@@ -101,6 +104,10 @@ namespace TinyMVC.Modules.IAP {
         public static string[] LoadPurchasesValues() {
             IAPParameters parameters = IAPParameters.LoadFromResources();
             TextAsset iapProducts = Resources.Load<TextAsset>(parameters.pathToProductCatalog);
+            
+            if (iapProducts == null) {
+                return Array.Empty<string>();
+            }
             
             string[] data = iapProducts.text.Split(parameters.productSeparatorId);
             
