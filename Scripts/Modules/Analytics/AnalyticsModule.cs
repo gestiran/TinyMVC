@@ -19,30 +19,30 @@ namespace TinyMVC.Modules.Analytics {
         public void ApplyConsent() {
         #if GOOGLE_FIREBASE_ANALYTICS
             if (API<FirebaseModule>.module.status != DependencyStatus.Available) {
-                Debug.Log("AnalyticsModule: Apply consent success!");
+                Debug.Log("AnalyticsModule: Apply consent failed, firebase not available!");
                 return;
             }
             
             FirebaseAnalytics.SetConsent(GeneratePermissions(ConsentStatus.Granted));
             FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
-            Debug.Log("AnalyticsModule: Apply consent failed!");
+            Debug.Log("AnalyticsModule: Apply consent success!");
         #else
-            Debug.Log("AnalyticsModule: Apply consent module is inactive!");
+            Debug.Log("AnalyticsModule: Apply consent failed, module is inactive!");
         #endif
         }
         
         public void RejectConsent() {
         #if GOOGLE_FIREBASE_ANALYTICS
             if (API<FirebaseModule>.module.status != DependencyStatus.Available) {
-                Debug.Log("AnalyticsModule: Reject consent failed!");
+                Debug.Log("AnalyticsModule: Reject consent failed, firebase not available!");
                 return;
             }
             
             FirebaseAnalytics.SetConsent(GeneratePermissions(ConsentStatus.Denied));
             FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
-            Debug.Log("AnalyticsModule: Reject consent failed!");
+            Debug.Log("AnalyticsModule: Reject consent success!");
         #else
-            Debug.Log("AnalyticsModule: Reject consent module is inactive!");
+            Debug.Log("AnalyticsModule: Reject consent failed, module is inactive!");
         #endif
         }
         
