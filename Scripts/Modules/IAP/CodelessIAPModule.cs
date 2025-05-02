@@ -16,20 +16,14 @@ namespace TinyMVC.Modules.IAP {
         protected CodelessIAPModule() => data = IAPParameters.LoadFromResources();
         
         public async Task Initialize() {
-            if (Application.internetReachability == NetworkReachability.NotReachable) {
-                return;
+        #if UNITY_PURCHASING
+            while (Application.internetReachability == NetworkReachability.NotReachable) {
+                await Task.Delay(_INIT_RETRY_DELAY);
             }
             
-        #if UNITY_PURCHASING
-            
-            // Start initialization
             CodelessIAPStoreListener _ = CodelessIAPStoreListener.Instance;
             
-            while (Application.isPlaying) {
-                if (CodelessIAPStoreListener.initializationComplete) {
-                    break;
-                }
-                
+            while (CodelessIAPStoreListener.initializationComplete == false) {
                 await Task.Delay(_INIT_RETRY_DELAY);
             }
         #endif
