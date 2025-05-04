@@ -32,34 +32,36 @@ namespace TinyMVC.Boot {
             
             await UniTask.Delay(_LOAD_ITERATION, true);
             
-            AsyncOperation loadNull = SceneManager.LoadSceneAsync(_NULL_SCENE_ID, LoadSceneMode.Additive);
-            
-            if (loadNull == null) {
-                Debug.LogError("Unity internal load scene error!");
-                return;
-            }
-            
-            do {
-                await UniTask.Delay(_LOAD_ITERATION, true);
-            } while (loadNull.isDone == false);
-            
-            AsyncOperation unloadCurrent = SceneManager.UnloadSceneAsync(currentSceneId);
-            
-            if (unloadCurrent == null) {
-                Debug.LogError("Unity internal unload scene error!");
-                return;
-            }
-            
-            do {
-                await UniTask.Delay(_LOAD_ITERATION, true);
-            } while (unloadCurrent.isDone == false);
-            
-            if (clearAssets) {
-                AsyncOperation unloadAssets = Resources.UnloadUnusedAssets();
+            if (currentSceneId == sceneBuildIndex || clearAssets) {
+                AsyncOperation loadNull = SceneManager.LoadSceneAsync(_NULL_SCENE_ID, LoadSceneMode.Additive);
+                
+                if (loadNull == null) {
+                    Debug.LogError("Unity internal load scene error!");
+                    return;
+                }
                 
                 do {
                     await UniTask.Delay(_LOAD_ITERATION, true);
-                } while (unloadAssets.isDone == false);
+                } while (loadNull.isDone == false);
+                
+                AsyncOperation unloadCurrent = SceneManager.UnloadSceneAsync(currentSceneId);
+                
+                if (unloadCurrent == null) {
+                    Debug.LogError("Unity internal unload scene error!");
+                    return;
+                }
+                
+                do {
+                    await UniTask.Delay(_LOAD_ITERATION, true);
+                } while (unloadCurrent.isDone == false);
+                
+                if (clearAssets) {
+                    AsyncOperation unloadAssets = Resources.UnloadUnusedAssets();
+                    
+                    do {
+                        await UniTask.Delay(_LOAD_ITERATION, true);
+                    } while (unloadAssets.isDone == false);
+                }
             }
             
             AsyncOperation loadScene = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Single);

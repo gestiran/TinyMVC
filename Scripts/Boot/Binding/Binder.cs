@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using TinyMVC.Dependencies;
 
 namespace TinyMVC.Boot.Binding {
-    public abstract class Binder : IBinder, IResolving {
+    public abstract class Binder : IBinder, IApplyResolving {
         public abstract IDependency GetDependency();
         
         protected string _key { get; private set; }
@@ -17,6 +17,8 @@ namespace TinyMVC.Boot.Binding {
         public Binder current => this;
         
         protected Binder(string key = null) => _key = key;
+        
+        public virtual void ApplyResolving() { }
         
         internal abstract Type GetBindType();
         
