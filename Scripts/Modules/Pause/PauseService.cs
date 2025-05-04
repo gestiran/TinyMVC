@@ -3,38 +3,38 @@ using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
 namespace TinyMVC.Modules.Pause {
-    public sealed class PauseModule : IApplicationModule {
-        public bool isEnable { get; private set; }
+    public static class PauseService {
+        public static bool isEnable { get; private set; }
         
-        public event Action<bool> onApplicationPause;
-        public event Action<bool> onChange;
+        public static event Action<bool> onApplicationPause;
+        public static event Action<bool> onChange;
         
-        public void Initialize() {
+        public static void Initialize() {
             GameObject test = new GameObject("Pause Events");
             test.AddComponent<PauseEvents>().Init(OnApplicationPause);
             UnityObject.DontDestroyOnLoad(test);
         }
         
-        public void Enable() {
+        public static void Enable(float timeScale = 0) {
             if (isEnable) {
                 return;
             }
             
-            Time.timeScale = 0;
+            Time.timeScale = timeScale;
             isEnable = true;
             onChange?.Invoke(isEnable);
         }
         
-        public void Disable() {
+        public static void Disable(float timeScale = 1) {
             if (isEnable == false) {
                 return;
             }
             
-            Time.timeScale = 1;
+            Time.timeScale = timeScale;
             isEnable = false;
             onChange?.Invoke(isEnable);
         }
         
-        private void OnApplicationPause(bool isPause) => onApplicationPause?.Invoke(isPause);
+        private static void OnApplicationPause(bool isPause) => onApplicationPause?.Invoke(isPause);
     }
 }
