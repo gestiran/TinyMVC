@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -32,6 +34,7 @@ namespace TinyMVC.Modules.IAP {
         private bool _isActive;
         
         private BuyHandler _handler;
+        private CancellationTokenSource _cancellation;
         
     #if UNITY_PURCHASING_FAKE
         [Serializable] public class OnProductFetchedEvent : UnityEvent<Product> { }
@@ -83,10 +86,14 @@ namespace TinyMVC.Modules.IAP {
         #elif UNITY_PURCHASING
             productId = handler.productId;
             
-            if (TryUpdatePrice()) {
-                CodelessIAPStoreListener.Instance.AddButton(this);
-                _isActive = true;
+            if (_cancellation != null) {
+                _cancellation.Cancel();
+                _cancellation.Dispose();
             }
+            
+            _cancellation = new CancellationTokenSource();
+            UpdatePriceProcess(Activate, _cancellation.Token).Forget();
+            
         #endif
         }
         
@@ -99,7 +106,15 @@ namespace TinyMVC.Modules.IAP {
                 button.onClick.RemoveListener(SendToHandler);
             }
         #elif UNITY_PURCHASING
-            CodelessIAPStoreListener.Instance.RemoveButton(this);
+            if (_cancellation != null) {
+                _cancellation.Cancel();
+                _cancellation.Dispose();
+                _cancellation = null;
+            }
+            
+            if (_isActive) {
+                CodelessIAPStoreListener.Instance.RemoveButton(this);   
+            }
         #endif
             
             _isActive = false;
@@ -131,21 +146,32 @@ namespace TinyMVC.Modules.IAP {
             // Do nothing
         }
         
-        private bool TryUpdatePrice() {
+        private async UniTask UpdatePriceProcess(Action onSuccess, CancellationToken cancellation) {
+            if (_price == null) {
+                return;
+            }
+            
             try {
-                Product product = CodelessIAPStoreListener.Instance.GetProduct(productId);
-                
-                if (_price == null) {
-                    return false;
+                while (CodelessIAPStoreListener.initializationComplete == false) {
+                    await UniTask.Delay(1000, DelayType.Realtime, PlayerLoopTiming.Update, cancellation);
                 }
                 
+                Product product = CodelessIAPStoreListener.Instance.GetProduct(productId);
                 _price.text = product.metadata.localizedPriceString;
-                
-                return true;
+                onSuccess.Invoke();
             } catch (Exception exception) {
                 Debug.LogWarning(exception);
-                
-                return false;
+            }
+        }
+        
+        private void Activate() {
+            CodelessIAPStoreListener.Instance.AddButton(this);
+            _isActive = true;
+            
+            if (_cancellation != null) {
+                _cancellation.Cancel();
+                _cancellation.Dispose();
+                _cancellation = null;
             }
         }
     #if UNITY_EDITOR
