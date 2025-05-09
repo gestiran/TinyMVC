@@ -17,6 +17,7 @@ namespace TinyMVC.Modules.ADS {
         public bool isVisibleBanner => false;
     #endif
         
+        public event Action onInitializationSuccess;
         public event Action onInterstitialShow;
         public event Action onInterstitialShowFailed;
         public event Action onRewardShow;
@@ -66,6 +67,8 @@ namespace TinyMVC.Modules.ADS {
                 UpdateInterstitialProcess();
             }
         #endif
+            
+            onInitializationSuccess?.Invoke();
         }
         
         public bool HasSavedAge() => ADSSaveUtility.HasSavedAge();

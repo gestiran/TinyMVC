@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 #if GOOGLE_FIREBASE_ANALYTICS
-using Firebase;
 using Firebase.Analytics;
 using TinyMVC.Modules.Firebase;
 #endif
@@ -17,7 +16,7 @@ namespace TinyMVC.Modules.Analytics {
         
         public static void ApplyConsent() {
         #if GOOGLE_FIREBASE_ANALYTICS
-            if (FirebaseService.status != DependencyStatus.Available) {
+            if (FirebaseService.status != FirebaseStatus.Available) {
                 Debug.Log("AnalyticsService: Apply consent failed, firebase not available!");
                 return;
             }
@@ -32,7 +31,7 @@ namespace TinyMVC.Modules.Analytics {
         
         public static void RejectConsent() {
         #if GOOGLE_FIREBASE_ANALYTICS
-            if (FirebaseService.status != DependencyStatus.Available) {
+            if (FirebaseService.status != FirebaseStatus.Available) {
                 Debug.Log("AnalyticsService: Reject consent failed, firebase not available!");
                 return;
             }

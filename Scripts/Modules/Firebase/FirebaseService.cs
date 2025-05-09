@@ -2,20 +2,24 @@
 using UnityEngine;
 
 #if GOOGLE_FIREBASE_APP
+using System;
 using Firebase;
 #endif
 
 namespace TinyMVC.Modules.Firebase {
     public static class FirebaseService {
     #if GOOGLE_FIREBASE_APP
-        public static DependencyStatus status { get; private set; }
+        public static FirebaseStatus status { get; private set; }
         
-        static FirebaseService() => status = DependencyStatus.UnavailableDisabled;
+        static FirebaseService() => status = FirebaseStatus.UnavailableDisabled;
         
-        public static async Task Initialize() {
-            status = await FirebaseApp.CheckAndFixDependenciesAsync();
+        public static Task Initialize() => Initialize(_ => { });
+        
+        public static async Task Initialize(Action<FirebaseStatus> onComplete) {
+            DependencyStatus dependencyStatus = await FirebaseApp.CheckAndFixDependenciesAsync();
+            status = (FirebaseStatus)(int)dependencyStatus;
             
-            if (status == DependencyStatus.Available) {
+            if (status == FirebaseStatus.Available) {
                 FirebaseApp _ = FirebaseApp.DefaultInstance;
                 Debug.Log($"FirebaseService: {status}");
             } else {
@@ -23,6 +27,8 @@ namespace TinyMVC.Modules.Firebase {
             }
             
             await Task.Yield();
+            
+            onComplete.Invoke(status);
         }
     #endif
     }

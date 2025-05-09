@@ -11,20 +11,34 @@ namespace TinyMVC.Modules.IAP {
         public IAPParameters data { get; }
         public static event Action<string> onBuySuccess;
         
+        private bool _isTimeout;
+        
         private const int _INIT_RETRY_DELAY = 1000;
+        private const int _INIT_WAIT_DELAY = 60000;
         
         protected CodelessIAPModule() => data = IAPParameters.LoadFromResources();
         
-        public async Task Initialize() {
+        public Task Initialize() => Initialize(_ => { });
+        
+        public async Task Initialize(Action<IAPStatus> onComplete) {
         #if UNITY_PURCHASING
-            while (Application.internetReachability == NetworkReachability.NotReachable) {
-                await Task.Delay(_INIT_RETRY_DELAY);
+            
+            if (Application.internetReachability == NetworkReachability.NotReachable) {
+                onComplete.Invoke(IAPStatus.FailedNetworkNotReachable);
+                
+                do {
+                    await Task.Delay(_INIT_RETRY_DELAY);
+                } while (Application.internetReachability == NetworkReachability.NotReachable);
             }
             
-            CodelessIAPStoreListener _ = CodelessIAPStoreListener.Instance;
+            await Task.WhenAny(InitializeCodeless(), WaitLimit());
             
-            while (CodelessIAPStoreListener.initializationComplete == false) {
-                await Task.Delay(_INIT_RETRY_DELAY);
+            if (CodelessIAPStoreListener.initializationComplete) {
+                onComplete.Invoke(IAPStatus.Success);
+            } else if (_isTimeout) {
+                onComplete.Invoke(IAPStatus.FailedTimeout);
+            } else {
+                onComplete.Invoke(IAPStatus.FailedInternal);
             }
         #endif
         }
@@ -49,5 +63,18 @@ namespace TinyMVC.Modules.IAP {
         protected abstract BuyHandler[] CreateNonConsumableHandlers();
         
         internal static void OnBuySuccess(string productId) => onBuySuccess?.Invoke(productId);
+        
+        private async Task InitializeCodeless() {
+            CodelessIAPStoreListener _ = CodelessIAPStoreListener.Instance;
+            
+            do {
+                await Task.Delay(_INIT_RETRY_DELAY);
+            } while (CodelessIAPStoreListener.initializationComplete == false);
+        }
+        
+        private async Task WaitLimit() {
+            await Task.Delay(_INIT_WAIT_DELAY);
+            _isTimeout = true;
+        }
     }
 }
