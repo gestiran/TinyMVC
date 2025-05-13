@@ -25,7 +25,7 @@ namespace TinyMVC.Boot.Binding {
         
         protected void AddCount(ObservedDependencyList<T> models, int count, Action<T, int> bind) {
             for (int i = 0; i < count; i++) {
-                T model = New();
+                T model = New(i);
                 bind(model, i);
                 models.Add(model);
             }
@@ -33,6 +33,6 @@ namespace TinyMVC.Boot.Binding {
         
         protected abstract void Bind(ObservedDependencyList<T> model);
         
-        protected abstract T New();
+        protected virtual T New(int index) => default;
     }
 }
