@@ -10,7 +10,7 @@ namespace TinyMVC.Views {
     public abstract class View : MonoBehaviour, ISelfValidator {
         public ConnectState connectState { get; internal set; }
         
-        [field: SerializeField, FoldoutGroup("Generated", 1000), ReadOnly]
+        [field: SerializeField, FoldoutGroup("Generated", 1000), ShowIn(PrefabKind.InstanceInScene | PrefabKind.InstanceInPrefab), ReadOnly]
         public View parent { get; private set; }
         
         public enum ConnectState : byte {
