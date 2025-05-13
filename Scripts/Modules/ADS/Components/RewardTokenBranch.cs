@@ -4,7 +4,6 @@ using Sirenix.OdinInspector;
 #if GOOGLE_ADS_MOBILE
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 #endif
 
 namespace TinyMVC.Modules.ADS.Components {
@@ -58,7 +57,6 @@ namespace TinyMVC.Modules.ADS.Components {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateState(bool isLoadedReward, int tokensCount) {
             if (tokensCount >= tokensPrice) {
                 ToToken();
@@ -67,26 +65,22 @@ namespace TinyMVC.Modules.ADS.Components {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ToActive() {
             base.ToActive();
             token.SetActive(false);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ToInactive() {
             base.ToInactive();
             token.SetActive(false);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ToToken() {
             active.SetActive(false);
             inactive.SetActive(false);
             token.SetActive(true);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool IsValidState() {
             if (base.IsValidState() == false) {
                 return false;

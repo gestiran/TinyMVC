@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
@@ -42,22 +41,18 @@ namespace TinyMVC.ReactiveFields {
     #region Add
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListener(ActionListener listener) => _listeners.Add(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListener(ActionListener listener, UnloadPool unload) {
             AddListener(listener);
             unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListener(ActionListener<T> listener) => _listenersValue.Add(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListener(ActionListener<T> listener, UnloadPool unload) {
             AddListener(listener);
             unload.Add(new UnloadAction(() => _listenersValue.Remove(listener)));
@@ -68,7 +63,6 @@ namespace TinyMVC.ReactiveFields {
     #region ByPriority
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerFirst(ActionListener listener) {
             if (_listeners.Count > 0) {
                 _listeners.Insert(0, listener);
@@ -78,14 +72,12 @@ namespace TinyMVC.ReactiveFields {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerFirst(ActionListener listener, UnloadPool unload) {
             AddListenerFirst(listener);
             unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerFirst(ActionListener<T> listener) {
             if (_listenersValue.Count > 0) {
                 _listenersValue.Insert(0, listener);
@@ -95,14 +87,12 @@ namespace TinyMVC.ReactiveFields {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerFirst(ActionListener<T> listener, UnloadPool unload) {
             AddListenerFirst(listener);
             unload.Add(new UnloadAction(() => _listenersValue.Remove(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerLast(ActionListener listener) {
             if (_listeners.Count > 0) {
                 _listeners.Insert(_listeners.Count - 1, listener);
@@ -112,14 +102,12 @@ namespace TinyMVC.ReactiveFields {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerLast(ActionListener listener, UnloadPool unload) {
             AddListenerLast(listener);
             unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerLast(ActionListener<T> listener) {
             if (_listenersValue.Count > 0) {
                 _listenersValue.Insert(_listenersValue.Count - 1, listener);
@@ -129,7 +117,6 @@ namespace TinyMVC.ReactiveFields {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddListenerLast(ActionListener<T> listener, UnloadPool unload) {
             AddListenerLast(listener);
             unload.Add(new UnloadAction(() => _listenersValue.Remove(listener)));
@@ -140,11 +127,9 @@ namespace TinyMVC.ReactiveFields {
     #region Remove
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveListener(ActionListener listener) => _listeners.Remove(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveListener(ActionListener<T> listener) => _listenersValue.Remove(listener);
         
     #endregion

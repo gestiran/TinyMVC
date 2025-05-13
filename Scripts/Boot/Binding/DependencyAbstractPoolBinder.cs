@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 
@@ -24,14 +23,12 @@ namespace TinyMVC.Boot.Binding {
             return models;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillModels(DependencyPool<T> models) {
             for (int modelId = 0; modelId < models.length; modelId++) {
                 models[modelId] = New(modelId);
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void Bind(DependencyPool<T> models) {
             for (int modelId = 0; modelId < models.length; modelId++) {
                 Bind(models[modelId], modelId);
@@ -40,7 +37,6 @@ namespace TinyMVC.Boot.Binding {
         
         protected virtual void Bind(T model, int index) { }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract T New(int index);
     }
 }

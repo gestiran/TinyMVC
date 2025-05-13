@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace TinyMVC.Modules.ADS {
@@ -12,7 +11,6 @@ namespace TinyMVC.Modules.ADS {
             tokenCount = ADSSaveUtility.LoadTokensCount(ADSParameters.LoadFromResources().initialRewardTokensCount);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsHaveTokens(int count = 1) => tokenCount >= count;
         
         public void AddTokens(int count) {

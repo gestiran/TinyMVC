@@ -6,11 +6,9 @@ using TinyMVC.Loop;
 using TinyMVC.Views;
 using UnityEngine;
 using System;
-using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
-using TinyMVC.Utilities;
 
 namespace TinyMVC.Boot {
     [DisallowMultipleComponent]
@@ -150,28 +148,24 @@ namespace TinyMVC.Boot {
             ResolveUtility.TryApply(resolvers);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InstantiateComponents() {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].Instantiate();
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CreateComponentsControllers(List<IController> systems) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].CreateControllersInternal(systems);
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddComponentsViews(List<View> mainViews) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].AddComponentsViews(mainViews);
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void TryResolveComponents() {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 if (components[componentId] is IResolving resolving) {
@@ -180,21 +174,18 @@ namespace TinyMVC.Boot {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CreateParametersComponents(List<IDependency> dependencies) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].CreateParametersInternal(dependencies);
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CreateBindersComponents(List<IBinder> binders, DependencyContainer initContainer) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].CreateBindersInternal(binders, initContainer);
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CreateModelsComponents(List<IDependency> dependencies) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].CreateModelsInternal(dependencies);
@@ -294,7 +285,6 @@ namespace TinyMVC.Boot {
             Remove();
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Remove() {
             fixedTicks.Clear();
             ticks.Clear();

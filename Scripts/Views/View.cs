@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot;
@@ -47,10 +46,8 @@ namespace TinyMVC.Views {
             // Do nothing!
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Connect<T>([NotNull] T view) where T : View => Connect(view, ProjectContext.activeContext.key);
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Connect<T>([NotNull] T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 view.connectState = ConnectState.Connected;
@@ -60,17 +57,14 @@ namespace TinyMVC.Views {
             return view;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T>([NotNull] params T[] views) where T : View {
             Connect(ProjectContext.activeContext.key, views);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T>([NotNull] T[] views, [NotNull] params IDependency[] dependencies) where T : View {
             Connect(views, ProjectContext.activeContext.key, dependencies);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T>([NotNull] T[] views, string contextKey, [NotNull] params IDependency[] dependencies) where T : View {
             DependencyContainer container = new DependencyContainer(dependencies);
             ProjectContext.data.tempContainer = container;
@@ -83,7 +77,6 @@ namespace TinyMVC.Views {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Connect<T>(string contextKey, [NotNull] params T[] views) where T : View {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -93,22 +86,18 @@ namespace TinyMVC.Views {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Connect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
             return Connect(view, new DependencyContainer(dependency));
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Connect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
             return Connect(view, new DependencyContainer(dependencies));
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View, IResolving {
             return Connect(view, ProjectContext.activeContext.key, container);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View, IResolving {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 ProjectContext.data.tempContainer = container;
@@ -119,10 +108,8 @@ namespace TinyMVC.Views {
             return view;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Disconnect<T>(T view) where T : View => Disconnect(view, ProjectContext.activeContext.key);
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Disconnect<T>(T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 context.Disconnect(view);
@@ -132,12 +119,10 @@ namespace TinyMVC.Views {
             return view;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Disconnect<T>([NotNull] params T[] views) where T : View {
             Disconnect(ProjectContext.activeContext.key, views);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Disconnect<T>(string contextKey, [NotNull] params T[] views) where T : View {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -147,7 +132,6 @@ namespace TinyMVC.Views {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Reconnect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
             if (view.connectState == ConnectState.Connected) {
                 Disconnect(view);
@@ -156,7 +140,6 @@ namespace TinyMVC.Views {
             return Connect(view, dependency);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Reconnect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
             if (view.connectState == ConnectState.Connected) {
                 Disconnect(view);

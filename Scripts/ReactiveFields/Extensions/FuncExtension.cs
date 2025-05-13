@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class FuncExtension {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke(this List<Func<bool>> actions, bool target = true) {
             if (actions.Count <= 0) {
                 return;

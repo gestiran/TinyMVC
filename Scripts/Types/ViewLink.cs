@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using TinyMVC.Dependencies;
 using TinyMVC.Views;
 
@@ -6,7 +7,7 @@ namespace TinyMVC.Types {
     public sealed class ViewLink : IEquatable<View> {
         internal readonly View link;
         
-        private ViewLink(View link) => this.link = link;
+        private ViewLink([NotNull] View link) => this.link = link;
         
         public static implicit operator ViewLink(View view) => new ViewLink(view);
         

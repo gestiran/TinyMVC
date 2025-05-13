@@ -25,10 +25,10 @@ namespace TinyMVC.ReactiveFields {
         
     #region Add
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] // Resharper disable Unity.ExpensiveCode
+        // Resharper disable Unity.ExpensiveCode
         public void AddListener(Func<bool> listener) => _listeners.Add(listener);
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] // Resharper disable Unity.ExpensiveCode
+        // Resharper disable Unity.ExpensiveCode
         public void AddListener(Func<bool> listener, UnloadPool unload) {
             AddListener(listener);
             unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
@@ -38,7 +38,7 @@ namespace TinyMVC.ReactiveFields {
         
     #region Remove
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] // Resharper disable Unity.ExpensiveCode
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(Func<bool> listener) => _listeners.Remove(listener);
         
     #endregion

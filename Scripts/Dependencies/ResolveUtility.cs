@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using TinyMVC.Boot;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -70,7 +69,6 @@ namespace TinyMVC.Dependencies {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Resolve(IResolving[] resolving, DependencyContainer container, Type injectType) {
             for (int resolvingId = 0; resolvingId < resolving.Length; resolvingId++) {
                 Resolve(resolving[resolvingId], container, injectType);
@@ -120,7 +118,6 @@ namespace TinyMVC.Dependencies {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static FieldInfo[] GetFields(Type resolving) {
             return resolving.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
         }

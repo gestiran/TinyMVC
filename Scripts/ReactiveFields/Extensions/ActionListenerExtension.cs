@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class ActionListenerExtension {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke(this List<ActionListener> actions) {
             if (actions.Count <= 0) {
                 return;
@@ -23,7 +21,6 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke<T>(this List<ActionListener<T>> actions, T[] value) {
             if (actions.Count <= 0) {
                 return;
@@ -43,7 +40,6 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke<T>(this List<ActionListener<T>> actions, T value) {
             if (actions.Count <= 0) {
                 return;
@@ -61,7 +57,6 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke<T1, T2>(this List<ActionListener<T1, T2>> actions, T1 value1, T2 value2) {
             if (actions.Count <= 0) {
                 return;
@@ -79,7 +74,6 @@ namespace TinyMVC.ReactiveFields.Extensions {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke<T1, T2, T3>(this List<ActionListener<T1, T2, T3>> actions, T1 value1, T2 value2, T3 value3) {
             if (actions.Count <= 0) {
                 return;

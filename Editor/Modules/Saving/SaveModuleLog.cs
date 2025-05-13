@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using TinyMVC.Modules.Saving;
 using UnityEditor;
 using UnityEngine;
@@ -61,7 +60,6 @@ namespace TinyMVC.Editor.Modules.Saving {
             Save(stats);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string CalculateSize(string name) {
             string path = GetPath(name);
             
@@ -86,7 +84,6 @@ namespace TinyMVC.Editor.Modules.Saving {
             return "0";
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetPath(string name) {
             string path = Path.Combine(_persistentDataPath, $"{_rootDirectory}_{_versionLabel}");
             
@@ -97,13 +94,11 @@ namespace TinyMVC.Editor.Modules.Saving {
             return Path.Combine(path, $"{name}.{_BASE_EXTENSION}");
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Save(Dictionary<string, StatsData> data) {
             using FileStream fileStream = new FileStream(GetPath(_SAVE_STATS_FILE_NAME), FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write, 16384, FileOptions.None);
             SerializationUtility.SerializeValue(data, fileStream, DataFormat.Binary);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Dictionary<string, StatsData> Load() {
             string path = GetPath(_SAVE_STATS_FILE_NAME);
             

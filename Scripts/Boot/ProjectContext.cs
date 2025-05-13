@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Loop;
@@ -168,7 +167,6 @@ namespace TinyMVC.Boot {
             data.Remove(context.key);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void RemoveContexts(int sceneBuildIndex) {
             if (_sceneContexts.TryGetValue(sceneBuildIndex, out List<SceneContext> contexts) == false) {
                 return;

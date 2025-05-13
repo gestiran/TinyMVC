@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using TinyMVC.Dependencies;
 using TinyMVC.Dependencies.Extensions;
 
@@ -89,7 +88,6 @@ namespace TinyMVC.Boot.Binding {
         
         internal static void Remove<T>(T binder) where T : Binder => _binders.Remove(binder.GetBindType());
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryFindBinder<T>(IDependency[] dependencies, out Binder<T> binder) where T : IDependency, new() {
             Type[] references = dependencies.AsRequirements();
             
@@ -106,7 +104,6 @@ namespace TinyMVC.Boot.Binding {
             return false;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool CheckRequirements(Type[] requirements, Type[] dependencies) {
             for (int requirementId = 0; requirementId < requirements.Length; requirementId++) {
                 if (IsContain(dependencies, requirements[requirementId])) {
@@ -119,7 +116,6 @@ namespace TinyMVC.Boot.Binding {
             return true;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsContain(Type[] types, Type type) {
             for (int typeId = 0; typeId < types.Length; typeId++) {
                 if (types[typeId] == type) {

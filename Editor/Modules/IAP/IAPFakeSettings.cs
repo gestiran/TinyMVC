@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEditor;
 
 namespace TinyMVC.Editor.Modules.IAP {
@@ -58,7 +57,6 @@ namespace TinyMVC.Editor.Modules.IAP {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void EnableDefine(string define, BuildTargetGroup targetGroup) {
             string defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
             
@@ -71,7 +69,6 @@ namespace TinyMVC.Editor.Modules.IAP {
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, defines);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void DisableDefine(string define, BuildTargetGroup targetGroup) {
             string defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
             

@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace TinyMVC.Modules.ADS.Components {
@@ -42,7 +41,6 @@ namespace TinyMVC.Modules.ADS.Components {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateState(bool isVisibleBanner) => gameObject.SetActive(isVisibleBanner == visibleWithBanner);
         
         private bool IsValidState() {

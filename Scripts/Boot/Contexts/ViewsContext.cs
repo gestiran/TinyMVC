@@ -126,6 +126,9 @@ namespace TinyMVC.Boot.Contexts {
         internal void Unload() {
             subViews.TryUnload();
             mainViews.TryUnload();
+            
+            subViews.Clear();
+            mainViews.Clear();
         }
         
         protected void Add<T>(T view) where T : View => mainViews.Add(view);

@@ -4,7 +4,6 @@ using Sirenix.OdinInspector;
 #if GOOGLE_ADS_MOBILE
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 #endif
 
 namespace TinyMVC.Modules.ADS.Components {
@@ -45,7 +44,6 @@ namespace TinyMVC.Modules.ADS.Components {
             }
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void StopUpdateProcess() {
             if (_updateProcess != null) {
                 StopCoroutine(_updateProcess);
@@ -54,7 +52,6 @@ namespace TinyMVC.Modules.ADS.Components {
             _updateProcess = null;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void UpdateState(bool isLoaded) {
             if (isLoaded) {
                 ToActive();
@@ -78,13 +75,11 @@ namespace TinyMVC.Modules.ADS.Components {
             return true;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void ToActive() {
             active.SetActive(true);
             inactive.SetActive(false);
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void ToInactive() {
             active.SetActive(false);
             inactive.SetActive(true);
