@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using TinyMVC.Boot;
@@ -15,7 +16,7 @@ namespace TinyMVC.Editor {
         
         [Searchable(FuzzySearch = true, Recursive = false, FilterOptions = SearchFilterOptions.TypeOfValue | SearchFilterOptions.ValueToString)]
         [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowIf("_isVisibleFavorites"), Title("Favorites:")]
-        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@ToString()")]
         private static List<DependencyLink> _favorites;
         
         [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowIf("_isVisibleContexts"), Title("All:")]
@@ -45,7 +46,7 @@ namespace TinyMVC.Editor {
             }
             
             private void Update(Type dependencyType, IDependency dependency) {
-                string dependencyKey = dependencyType.Name;
+                string dependencyKey = ConvertToKey(dependencyType);
                 
                 for (int dependencyId = 0; dependencyId < _dependencies.Count; dependencyId++) {
                     if (_dependencies[dependencyId].key != dependencyKey) {
@@ -63,7 +64,7 @@ namespace TinyMVC.Editor {
                 List<DependencyLink> result = new List<DependencyLink>(dependencies.Count);
                 
                 foreach (KeyValuePair<Type, IDependency> pair in dependencies) {
-                    result.Add(new DependencyLink(pair.Key.Name, pair.Value));
+                    result.Add(new DependencyLink(ConvertToKey(pair.Key), pair.Value));
                 }
                 
                 return result;
@@ -73,6 +74,25 @@ namespace TinyMVC.Editor {
                 for (int dependencyId = 0; dependencyId < _dependencies.Count; dependencyId++) {
                     _dependencies[dependencyId].Dispose();
                 }
+            }
+            
+            private string ConvertToKey(Type type) {
+                StringBuilder result = new StringBuilder();
+                
+                result.Append(type.Namespace);
+                
+                string name = type.Name;
+                
+                Type[] arguments = type.GenericTypeArguments;
+                
+                for (int i = 0; i < arguments.Length; i++) {
+                    name = name.Replace($"`{i + 1}", $"<{arguments[i].Name}>");
+                }
+                
+                result.Append(".");
+                result.Append(name);
+                
+                return result.ToString();
             }
             
             public override string ToString() => key;
@@ -88,7 +108,7 @@ namespace TinyMVC.Editor {
         private sealed class DependencyLink : IDisposable {
             [CustomContextMenu("Add to Favorites", "AddFavorites")]
             [CustomContextMenu("Remove from Favorites", "RemoveFavorites")]
-            [ShowInInspector, LabelText("@key")]
+            [ShowInInspector, LabelText("@ToString()")]
             public IDependency value;
             
             private bool _isFavorite;
@@ -133,7 +153,15 @@ namespace TinyMVC.Editor {
                 }
             }
             
-            public override string ToString() => key;
+            public override string ToString() {
+                string title = value.ToString();
+                
+                if (title.Contains('.')) {
+                    title = title.Split('.')[^1].Replace("(", "").Replace(")", "");
+                }
+                
+                return title;
+            }
         }
         
         [MenuItem("Window/TinyMVC/ProjectContext", priority = 0)]
