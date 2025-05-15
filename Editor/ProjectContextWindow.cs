@@ -86,7 +86,7 @@ namespace TinyMVC.Editor {
                 Type[] arguments = type.GenericTypeArguments;
                 
                 for (int i = 0; i < arguments.Length; i++) {
-                    name = name.Replace($"`{i + 1}", $"<{arguments[i].Name}>");
+                    name = name.Replace($"`{i + 1}", $".{arguments[i].Name}");
                 }
                 
                 result.Append(".");
@@ -157,7 +157,7 @@ namespace TinyMVC.Editor {
                 string title = value.ToString();
                 
                 if (title.Contains('.')) {
-                    title = title.Split('.')[^1].Replace("(", "").Replace(")", "");
+                    title = title.Split('.')[^1].Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "");
                 }
                 
                 return title;
