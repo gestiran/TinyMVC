@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot;
@@ -11,6 +12,8 @@ namespace TinyMVC.Views {
         
         [field: SerializeField, FoldoutGroup("Generated", 1000), ShowIn(PrefabKind.InstanceInScene | PrefabKind.InstanceInPrefab), ReadOnly]
         public View parent { get; private set; }
+        
+        private readonly List<View> _connections = new List<View>();
         
         public enum ConnectState : byte {
             Disconnected,
@@ -27,112 +30,163 @@ namespace TinyMVC.Views {
         }
         
         [Obsolete("Can't connect nothing!", true)]
-        public static void Connect() {
+        public void Connect() {
             // Do nothing!
         }
         
         [Obsolete("Can't connect nothing!", true)]
-        public static void Connect(int sceneId) {
+        public void Connect(int sceneId) {
             // Do nothing!
         }
         
         [Obsolete("Can't disconnect nothing!", true)]
-        public static void Disconnect() {
+        public void Disconnect() {
             // Do nothing!
         }
         
         [Obsolete("Can't disconnect nothing!", true)]
-        public static void Disconnect(int sceneId) {
+        public void Disconnect(int sceneId) {
             // Do nothing!
         }
         
-        public static T Connect<T>([NotNull] T view) where T : View => Connect(view, ProjectContext.activeContext.key);
+        public T Connect<T>([NotNull] T view) where T : View => Connect(view, ProjectContext.activeContext.key);
         
-        public static T Connect<T>([NotNull] T view, string contextKey) where T : View {
+        public T Connect<T>([NotNull] T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 view.connectState = ConnectState.Connected;
+                _connections.Add(view);
                 context.Connect(view, ResolveUtility.Resolve);
             }
             
             return view;
         }
         
-        public static void Connect<T>([NotNull] params T[] views) where T : View {
+        public void Connect<T>([NotNull] params T[] views) where T : View {
             Connect(ProjectContext.activeContext.key, views);
         }
         
-        public static void Connect<T>([NotNull] T[] views, [NotNull] params IDependency[] dependencies) where T : View {
+        public void Connect<T>([NotNull] T[] views, [NotNull] params IDependency[] dependencies) where T : View {
             Connect(views, ProjectContext.activeContext.key, dependencies);
         }
         
-        public static void Connect<T>([NotNull] T[] views, string contextKey, [NotNull] params IDependency[] dependencies) where T : View {
+        public void Connect<T>([NotNull] T[] views, string contextKey, [NotNull] params IDependency[] dependencies) where T : View {
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context) == false) {
+                return;
+            }
+            
             DependencyContainer container = new DependencyContainer(dependencies);
             ProjectContext.data.tempContainer = container;
             
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                    context.Connect(views[viewId], resolving => ResolveUtility.Resolve(resolving, container));
-                    views[viewId].connectState = ConnectState.Connected;
-                }
+                views[viewId].connectState = ConnectState.Connected;
+                _connections.Add(views[viewId]);
+                context.Connect(views[viewId], resolving => ResolveUtility.Resolve(resolving, container));
             }
         }
         
-        public static void Connect<T>(string contextKey, [NotNull] params T[] views) where T : View {
+        public void Connect<T>(string contextKey, [NotNull] params T[] views) where T : View {
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context) == false) {
+                return;
+            }
+            
             for (int viewId = 0; viewId < views.Length; viewId++) {
-                if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                    context.Connect(views[viewId], ResolveUtility.Resolve);
-                    views[viewId].connectState = ConnectState.Connected;
-                }
+                views[viewId].connectState = ConnectState.Connected;
+                _connections.Add(views[viewId]);
+                context.Connect(views[viewId], ResolveUtility.Resolve);
             }
         }
         
-        public static T Connect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
-            return Connect(view, new DependencyContainer(dependency));
+        public T Connect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
+            return Connect(view, ProjectContext.activeContext.key, new DependencyContainer(dependency));
         }
         
-        public static T Connect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
-            return Connect(view, new DependencyContainer(dependencies));
+        public T Connect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
+            return Connect(view, ProjectContext.activeContext.key, new DependencyContainer(dependencies));
         }
         
-        public static T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View, IResolving {
+        public T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View, IResolving {
             return Connect(view, ProjectContext.activeContext.key, container);
         }
         
-        public static T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View, IResolving {
+        public T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View, IResolving {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 ProjectContext.data.tempContainer = container;
-                context.Connect(view, resolving => ResolveUtility.Resolve(resolving, container));
                 view.connectState = ConnectState.Connected;
+                _connections.Add(view);
+                context.Connect(view, resolving => ResolveUtility.Resolve(resolving, container));
             }
             
             return view;
         }
         
-        public static T Disconnect<T>(T view) where T : View => Disconnect(view, ProjectContext.activeContext.key);
+        public T Disconnect<T>(T view) where T : View => Disconnect(view, ProjectContext.activeContext.key);
         
-        public static T Disconnect<T>(T view, string contextKey) where T : View {
+        public T Disconnect<T>(T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                context.Disconnect(view);
                 view.connectState = ConnectState.Disconnected;
+                _connections.Remove(view);
+                context.Disconnect(view);
             }
             
             return view;
         }
         
-        public static void Disconnect<T>([NotNull] params T[] views) where T : View {
-            Disconnect(ProjectContext.activeContext.key, views);
-        }
+        public void Disconnect<T>([NotNull] params T[] views) where T : View => Disconnect(ProjectContext.activeContext.key, views);
         
-        public static void Disconnect<T>(string contextKey, [NotNull] params T[] views) where T : View {
-            for (int viewId = 0; viewId < views.Length; viewId++) {
-                if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                    context.Disconnect(views[viewId]);
+        public void Disconnect<T>(string contextKey, [NotNull] params T[] views) where T : View {
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                for (int viewId = 0; viewId < views.Length; viewId++) {
                     views[viewId].connectState = ConnectState.Disconnected;
+                    _connections.Remove(views[viewId]);
+                    context.Disconnect(views[viewId]);
                 }
             }
         }
         
-        public static T Reconnect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
+        public void DisconnectAll<T>() where T : View {
+            if (_connections.Count == 0) {
+                return;
+            }
+            
+            if (ProjectContext.TryGetContext(ProjectContext.activeContext.key, out SceneContext context)) {
+                List<View> pool = new List<View>();
+                
+                for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
+                    View view = _connections[connectionId];
+                    
+                    if (view is not T) {
+                        continue;
+                    }
+                    
+                    pool.Add(view);
+                }
+                
+                for (int connectionId = 0; connectionId < pool.Count; connectionId++) {
+                    pool[connectionId].connectState = ConnectState.Disconnected;
+                    _connections.Remove(pool[connectionId]);
+                    context.Disconnect(pool[connectionId]);
+                }
+            }
+        }
+        
+        public void DisconnectAll() {
+            if (_connections.Count == 0) {
+                return;
+            }
+            
+            if (ProjectContext.TryGetContext(ProjectContext.activeContext.key, out SceneContext context)) {
+                for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
+                    View view = _connections[connectionId];
+                    
+                    view.connectState = ConnectState.Disconnected;
+                    context.Disconnect(view);
+                }
+                
+                _connections.Clear();
+            }
+        }
+        
+        public T Reconnect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
             if (view.connectState == ConnectState.Connected) {
                 Disconnect(view);
             }
@@ -140,12 +194,34 @@ namespace TinyMVC.Views {
             return Connect(view, dependency);
         }
         
-        public static T Reconnect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
+        public T Reconnect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
             if (view.connectState == ConnectState.Connected) {
                 Disconnect(view);
             }
             
             return Connect(view, dependencies);
+        }
+        
+        public void UpdateConnections<T>() where T : View {
+            for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
+                View view = _connections[connectionId];
+                
+                if (view is not T) {
+                    continue;
+                }
+                
+                if (view is IUpdateConnection update) {
+                    update.UpdateConnection();
+                }
+            }
+        }
+        
+        public void UpdateConnections() {
+            for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
+                if (_connections[connectionId] is IUpdateConnection update) {
+                    update.UpdateConnection();
+                }
+            }
         }
         
         public virtual void Validate(SelfValidationResult result) {
