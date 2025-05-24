@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
@@ -12,7 +11,7 @@ namespace TinyMVC.ReactiveFields {
     public sealed class InputSingleListener : IUnload {
         private readonly List<Func<bool>> _listeners;
         
-        public InputSingleListener() => _listeners = new List<Func<bool>>(16);
+        public InputSingleListener() => _listeners = new List<Func<bool>>(Observed.CAPACITY);
         
         public InputSingleListener(Func<bool> action) : this() => AddListener(action);
         

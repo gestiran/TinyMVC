@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
@@ -14,10 +13,10 @@ namespace TinyMVC.ReactiveFields {
     public sealed class ObservedDictionary<TKey, TValue> {
         public int count => _value.Count;
         
-        private readonly List<Action> _onAdd;
-        private readonly List<Action<TValue>> _onAddWithValue;
-        private readonly List<Action> _onRemove;
-        private readonly List<Action<TValue>> _onRemoveWithValue;
+        private readonly List<ActionListener> _onAdd;
+        private readonly List<ActionListener<TValue>> _onAddWithValue;
+        private readonly List<ActionListener> _onRemove;
+        private readonly List<ActionListener<TValue>> _onRemoveWithValue;
         
     #if UNITY_EDITOR
         [ShowInInspector, LabelText("Elements"),
@@ -25,20 +24,16 @@ namespace TinyMVC.ReactiveFields {
         private List<TValue> _inspectorDisplay;
     #endif
         
-        private Dictionary<TKey, TValue> _value;
+        private readonly Dictionary<TKey, TValue> _value;
         
-        private const int _CAPACITY = 16;
+        public ObservedDictionary(int capacity = Observed.CAPACITY) : this(new Dictionary<TKey, TValue>(capacity)) { }
         
-        public ObservedDictionary() : this(new Dictionary<TKey, TValue>()) { }
-        
-        public ObservedDictionary(int capacity) : this(new Dictionary<TKey, TValue>(capacity)) { }
-        
-        public ObservedDictionary(Dictionary<TKey, TValue> value) {
+        public ObservedDictionary(Dictionary<TKey, TValue> value, int capacity = Observed.CAPACITY) {
             _value = value;
-            _onAdd = new List<Action>(_CAPACITY);
-            _onAddWithValue = new List<Action<TValue>>(_CAPACITY);
-            _onRemove = new List<Action>(_CAPACITY);
-            _onRemoveWithValue = new List<Action<TValue>>(_CAPACITY);
+            _onAdd = new List<ActionListener>(capacity);
+            _onAddWithValue = new List<ActionListener<TValue>>(capacity);
+            _onRemove = new List<ActionListener>(capacity);
+            _onRemoveWithValue = new List<ActionListener<TValue>>(capacity);
             
         #if ODIN_INSPECTOR && UNITY_EDITOR
             _inspectorDisplay = new List<TValue>();
@@ -131,40 +126,40 @@ namespace TinyMVC.ReactiveFields {
             }
         }
         
-        public void AddOnAddListener(Action listener) => _onAdd.Add(listener);
+        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener);
         
-        public void AddOnAddListener(Action listener, UnloadPool unload) {
+        public void AddOnAddListener(ActionListener listener, UnloadPool unload) {
             _onAdd.Add(listener);
             unload.Add(new UnloadAction(() => _onAdd.Remove(listener)));
         }
         
-        public void AddOnAddListener(Action<TValue> listener) => _onAddWithValue.Add(listener);
+        public void AddOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Add(listener);
         
-        public void AddOnAddListener(Action<TValue> listener, UnloadPool unload) {
+        public void AddOnAddListener(ActionListener<TValue> listener, UnloadPool unload) {
             _onAddWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onAddWithValue.Remove(listener)));
         }
         
-        public void RemoveOnAddListener(Action listener) => _onAdd.Remove(listener);
+        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener);
         
-        public void RemoveOnAddListener(Action<TValue> listener) => _onAddWithValue.Remove(listener);
+        public void RemoveOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Remove(listener);
         
-        public void AddOnRemoveListener(Action listener) => _onRemove.Add(listener);
+        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener);
         
-        public void AddOnRemoveListener(Action listener, UnloadPool unload) {
+        public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) {
             _onRemove.Add(listener);
             unload.Add(new UnloadAction(() => _onRemove.Remove(listener)));
         }
         
-        public void AddOnRemoveListener(Action<TValue> listener) => _onRemoveWithValue.Add(listener);
+        public void AddOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Add(listener);
         
-        public void AddOnRemoveListener(Action<TValue> listener, UnloadPool unload) {
+        public void AddOnRemoveListener(ActionListener<TValue> listener, UnloadPool unload) {
             _onRemoveWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(listener)));
         }
         
-        public void RemoveOnRemoveListener(Action listener) => _onRemove.Remove(listener);
+        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener);
         
-        public void RemoveOnRemoveListener(Action<TValue> listener) => _onRemoveWithValue.Remove(listener);
+        public void RemoveOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Remove(listener);
     }
 }

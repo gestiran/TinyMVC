@@ -14,9 +14,9 @@ namespace TinyMVC.ReactiveFields {
         private readonly int _id;
         private readonly List<ActionListener> _listeners;
         
-        public InputListener() {
+        public InputListener(int capacity = Observed.CAPACITY) {
             _id = Observed.globalId++;
-            _listeners = new List<ActionListener>(16);
+            _listeners = new List<ActionListener>(capacity);
         }
         
         public InputListener(ActionListener action) : this() => AddListener(action);
@@ -62,19 +62,19 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<ActionListener> _listeners;
         private readonly List<ActionListener<T>> _listenersValue;
         
-        public InputListener() {
+        public InputListener(int capacity = Observed.CAPACITY) {
             _id = Observed.globalId++;
-            _listeners = new List<ActionListener>(16);
-            _listenersValue = new List<ActionListener<T>>(16);
+            _listeners = new List<ActionListener>(capacity);
+            _listenersValue = new List<ActionListener<T>>(capacity);
         }
         
-        public InputListener(ActionListener action) : this() => this.AddListener(action);
+        public InputListener(ActionListener action) : this() => AddListener(action);
         
-        public InputListener(ActionListener<T> action) : this() => this.AddListener(action);
+        public InputListener(ActionListener<T> action) : this() => AddListener(action);
         
-        public InputListener(ActionListener action, UnloadPool unload) : this() => this.AddListener(action, unload);
+        public InputListener(ActionListener action, UnloadPool unload) : this() => AddListener(action, unload);
         
-        public InputListener(ActionListener<T> action, UnloadPool unload) : this() => this.AddListener(action, unload);
+        public InputListener(ActionListener<T> action, UnloadPool unload) : this() => AddListener(action, unload);
         
     #if UNITY_EDITOR
         [Button]
@@ -138,10 +138,10 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<ActionListener> _listeners;
         private readonly List<ActionListener<T1, T2>> _listenersValue;
         
-        public InputListener() {
+        public InputListener(int capacity = Observed.CAPACITY) {
             _id = Observed.globalId++;
-            _listeners = new List<ActionListener>(16);
-            _listenersValue = new List<ActionListener<T1, T2>>(16);
+            _listeners = new List<ActionListener>(capacity);
+            _listenersValue = new List<ActionListener<T1, T2>>(capacity);
         }
         
         public InputListener(ActionListener action) : this() => AddListener(action);
@@ -209,10 +209,10 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<ActionListener> _listeners;
         private readonly List<ActionListener<T1, T2, T3>> _listenersValue;
         
-        public InputListener() {
+        public InputListener(int capacity = Observed.CAPACITY) {
             _id = Observed.globalId++;
-            _listeners = new List<ActionListener>(16);
-            _listenersValue = new List<ActionListener<T1, T2, T3>>(16);
+            _listeners = new List<ActionListener>(capacity);
+            _listenersValue = new List<ActionListener<T1, T2, T3>>(capacity);
         }
         
         public InputListener(ActionListener action) : this() => AddListener(action);

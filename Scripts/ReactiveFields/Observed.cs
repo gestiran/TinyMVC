@@ -8,6 +8,8 @@ namespace TinyMVC.ReactiveFields {
     public static class Observed {
         internal static int globalId;
         
+        internal const int CAPACITY = 4;
+        
         static Observed() => globalId = 0;
     }
     
@@ -21,21 +23,25 @@ namespace TinyMVC.ReactiveFields {
         private readonly int _id;
         private readonly List<ActionListener> _listeners;
         private readonly List<ActionListener<T>> _listenersValue;
+        private readonly List<ActionListener<T, T>> _listenersChange;
         
-        public Observed(T data) : this() => _value = data;
+        public Observed(T data, int capacity = Observed.CAPACITY) : this(capacity) => _value = data;
         
-        public Observed() {
+        public Observed(int capacity = Observed.CAPACITY) {
             _id = Observed.globalId++;
-            _listeners = new List<ActionListener>(16);
-            _listenersValue = new List<ActionListener<T>>(16);
+            _listeners = new List<ActionListener>(Observed.CAPACITY);
+            _listenersValue = new List<ActionListener<T>>(Observed.CAPACITY);
+            _listenersChange = new List<ActionListener<T, T>>(Observed.CAPACITY);
         }
         
         public void SetSilent(T newValue) => _value = newValue;
         
         public void Set(T newValue) {
+            T current = _value;
             _value = newValue;
             _listeners.Invoke();
             _listenersValue.Invoke(newValue);
+            _listenersChange.Invoke(current, newValue);
         }
         
     #region Add
@@ -56,6 +62,15 @@ namespace TinyMVC.ReactiveFields {
         public void AddListener(ActionListener<T> listener, UnloadPool unload) {
             AddListener(listener);
             unload.Add(new UnloadAction(() => _listenersValue.Remove(listener)));
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        public void AddChangeListener(ActionListener<T, T> listener) => _listenersChange.Add(listener);
+        
+        // Resharper disable Unity.ExpensiveCode
+        public void AddChangeListener(ActionListener<T, T> listener, UnloadPool unload) {
+            AddChangeListener(listener);
+            unload.Add(new UnloadAction(() => _listenersChange.Remove(listener)));
         }
         
     #endregion
@@ -132,11 +147,15 @@ namespace TinyMVC.ReactiveFields {
         // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(ActionListener<T> listener) => _listenersValue.Remove(listener);
         
+        // Resharper disable Unity.ExpensiveCode
+        public void RemoveChangeListener(ActionListener<T, T> listener) => _listenersChange.Remove(listener);
+        
     #endregion
         
         public void Unload() {
             _listeners.Clear();
             _listenersValue.Clear();
+            _listenersChange.Clear();
         }
         
         public static implicit operator T(Observed<T> observed) => observed.value;
