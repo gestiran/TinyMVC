@@ -25,9 +25,16 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<ActionListener<T>> _listenersValue;
         private readonly List<ActionListener<T, T>> _listenersChange;
         
-        public Observed(T data, int capacity = Observed.CAPACITY) : this(capacity) => _value = data;
+        public Observed(T data, int capacity = Observed.CAPACITY) {
+            _value = data;
+            _id = Observed.globalId++;
+            _listeners = new List<ActionListener>(capacity);
+            _listenersValue = new List<ActionListener<T>>(capacity);
+            _listenersChange = new List<ActionListener<T, T>>(capacity);
+        }
         
-        public Observed(int capacity = Observed.CAPACITY) {
+        public Observed() {
+            _value = default;
             _id = Observed.globalId++;
             _listeners = new List<ActionListener>(Observed.CAPACITY);
             _listenersValue = new List<ActionListener<T>>(Observed.CAPACITY);
