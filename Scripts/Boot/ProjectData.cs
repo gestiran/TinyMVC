@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using TinyMVC.Dependencies;
+using TinyMVC.Dependencies.Components;
 
 namespace TinyMVC.Boot {
     public sealed class ProjectData {
         internal DependencyContainer tempContainer;
         
         internal readonly Dictionary<string, DependencyContainer> contexts;
-        
-        public const string MAIN = "Project";
+        internal readonly Dictionary<string, Dictionary<Model, List<ModelComponent>>> contextComponents;
         
         private const int _CAPACITY = 16;
         
@@ -19,6 +19,7 @@ namespace TinyMVC.Boot {
         
         internal ProjectData() {
             contexts = new Dictionary<string, DependencyContainer>(_CAPACITY);
+            contextComponents = new Dictionary<string, Dictionary<Model, List<ModelComponent>>>(_CAPACITY);
         }
         
         public bool TryGetDependency<T>(out T dependency) where T : IDependency {
@@ -136,6 +137,7 @@ namespace TinyMVC.Boot {
                 }
             } else {
                 container = new DependencyContainer(dependencies);
+                contextComponents.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
                 contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR
@@ -149,6 +151,7 @@ namespace TinyMVC.Boot {
                 container.Update(dependency);
             } else {
                 container = new DependencyContainer(dependency);
+                contextComponents.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
                 contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR
@@ -163,11 +166,66 @@ namespace TinyMVC.Boot {
             }
             
             container.Dispose();
+            contextComponents.Remove(contextKey);
             contexts.Remove(contextKey);
             
         #if UNITY_EDITOR
             onRemove?.Invoke(contextKey);
         #endif
+        }
+        
+        internal IEnumerable<(Model, T)> ForEachComponents<T>() {
+            List<(Model, T)> temp = new List<(Model, T)>();
+            
+            foreach (Dictionary<Model, List<ModelComponent>> components in contextComponents.Values) {
+                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
+                    foreach (ModelComponent component in pair.Value) {
+                        if (component is T other) {
+                            temp.Add((pair.Key, other));
+                        }
+                    }
+                }
+            }
+            
+            foreach ((Model, T) result in temp) {
+                yield return result;
+            }
+        }
+        
+        internal IEnumerable<(Model, T)> ForEachComponents<T>(string contextKey) {
+            List<(Model, T)> temp = new List<(Model, T)>();
+            
+            if (contextComponents.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
+                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
+                    foreach (ModelComponent component in pair.Value) {
+                        if (component is T other) {
+                            temp.Add((pair.Key, other));
+                        }
+                    }
+                }
+            }
+            
+            foreach ((Model, T) result in temp) {
+                yield return result;
+            }
+        }
+        
+        internal void AddComponent(Model model, ModelComponent component) {
+            if (contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
+                if (components.TryGetValue(model, out List<ModelComponent> list)) {
+                    list.Add(component);
+                } else {
+                    components.Add(model, new List<ModelComponent>() { component });
+                }
+            }
+        }
+        
+        internal void RemoveComponent(Model model, ModelComponent component) {
+            if (contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
+                if (components.TryGetValue(model, out List<ModelComponent> list)) {
+                    list.Remove(component);
+                }
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace TinyMVC.ReactiveFields {
     [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class ObservedDictionary<TKey, TValue> {
-        public int count => _value.Count;
+        public int count => root.Count;
         
         private readonly List<ActionListener> _onAdd;
         private readonly List<ActionListener<TValue>> _onAddWithValue;
@@ -24,12 +24,12 @@ namespace TinyMVC.ReactiveFields {
         private List<TValue> _inspectorDisplay;
     #endif
         
-        private readonly Dictionary<TKey, TValue> _value;
+        internal readonly Dictionary<TKey, TValue> root;
         
         public ObservedDictionary(int capacity = Observed.CAPACITY) : this(new Dictionary<TKey, TValue>(capacity)) { }
         
         public ObservedDictionary(Dictionary<TKey, TValue> value, int capacity = Observed.CAPACITY) {
-            _value = value;
+            root = value;
             _onAdd = new List<ActionListener>(capacity);
             _onAddWithValue = new List<ActionListener<TValue>>(capacity);
             _onRemove = new List<ActionListener>(capacity);
@@ -46,7 +46,7 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public void Add(TKey key, TValue value) {
-            _value.Add(key, value);
+            this.root.Add(key, value);
             _onAdd.Invoke();
             _onAddWithValue.Invoke(value);
             
@@ -56,7 +56,7 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public void RemoveByKey(TKey key) {
-            if (_value.Remove(key, out TValue value) == false) {
+            if (root.Remove(key, out TValue value) == false) {
                 return;
             }
             
@@ -69,10 +69,10 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public void RemoveRange(List<TValue> values) {
-            KeyValuePair<TKey, TValue>[] dataPair = new KeyValuePair<TKey, TValue>[_value.Count];
+            KeyValuePair<TKey, TValue>[] dataPair = new KeyValuePair<TKey, TValue>[root.Count];
             int dataId = 0;
             
-            foreach (KeyValuePair<TKey, TValue> data in _value) {
+            foreach (KeyValuePair<TKey, TValue> data in root) {
                 dataPair[dataId++] = data;
             }
             
@@ -84,7 +84,7 @@ namespace TinyMVC.ReactiveFields {
                         continue;
                     }
                     
-                    _value.Remove(dataPair[dataId].Key);
+                    this.root.Remove(dataPair[dataId].Key);
                     _onRemove.Invoke();
                     _onRemoveWithValue.Invoke(value);
                     
@@ -96,15 +96,15 @@ namespace TinyMVC.ReactiveFields {
             }
         }
         
-        public bool TryGetValue(TKey key, out TValue value) => _value.TryGetValue(key, out value);
+        public bool TryGetValue(TKey key, out TValue value) => this.root.TryGetValue(key, out value);
         
-        public bool ContainsKey(TKey key) => _value.ContainsKey(key);
+        public bool ContainsKey(TKey key) => root.ContainsKey(key);
         
         public IEnumerator<TKey> ForEachKeys() {
-            TKey[] keys = new TKey[_value.Count];
+            TKey[] keys = new TKey[root.Count];
             int keyId = 0;
             
-            foreach (TKey key in _value.Keys) {
+            foreach (TKey key in root.Keys) {
                 keys[keyId++] = key;
             }
             
@@ -114,10 +114,10 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public IEnumerable<TValue> ForEachValues() {
-            TValue[] values = new TValue[_value.Count];
+            TValue[] values = new TValue[root.Count];
             int valueId = 0;
             
-            foreach (TValue value in _value.Values) {
+            foreach (TValue value in root.Values) {
                 values[valueId++] = value;
             }
             

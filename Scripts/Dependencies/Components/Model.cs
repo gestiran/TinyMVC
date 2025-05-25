@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using TinyMVC.Boot;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
 
@@ -28,23 +29,40 @@ namespace TinyMVC.Dependencies.Components {
             _id = _globalId++;
         }
         
-        public void AddComponent<T>(T component) where T : ModelComponent => _components.Add(typeof(T).FullName, component);
+        public void AddComponent<T>(T component) where T : ModelComponent {
+            ProjectContext.data.AddComponent(this, component);
+            _components.Add(typeof(T).FullName, component);
+        }
         
-        public void RemoveComponent<T>() where T : ModelComponent => _components.RemoveByKey(typeof(T).FullName);
+        public void RemoveComponent<T>() where T : ModelComponent {
+            string key = typeof(T).FullName;
+            
+            if (_components.TryGetValue(key, out ModelComponent component)) {
+                ProjectContext.data.RemoveComponent(this, component);
+                _components.RemoveByKey(key);
+            }
+        }
         
-        public void RemoveComponents(List<ModelComponent> components) => _components.RemoveRange(components);
+        public void RemoveComponents(List<ModelComponent> components) {
+            foreach (ModelComponent current in components) {
+                string key = current.GetType().FullName;
+                
+                if (_components.TryGetValue(key, out ModelComponent component)) {
+                    ProjectContext.data.RemoveComponent(this, component);
+                    _components.RemoveByKey(key);
+                }
+            }
+        }
         
         public bool IsHaveComponent<T>() where T : ModelComponent => _components.ContainsKey(typeof(T).FullName);
         
         public bool TryGetComponent<T>(out T component) where T : ModelComponent {
             if (_components.TryGetValue(typeof(T).FullName, out ModelComponent componentValue)) {
                 component = (T)componentValue;
-                
                 return true;
             }
             
-            component = default;
-            
+            component = null;
             return false;
         }
         
