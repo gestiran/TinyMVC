@@ -70,12 +70,12 @@ namespace TinyMVC.Boot.Contexts {
                 connectLoop(loop);
             }
             
-            Type systemType = system.GetType();
+            string systemName = system.GetType().Name;
             
-            if (_controllers.TryGetValue(systemType.Name, out List<IController> controllers)) {
+            if (_controllers.TryGetValue(systemName, out List<IController> controllers)) {
                 controllers.Add(controller);
             } else {
-                _controllers.Add(systemType.Name, new List<IController>() { controller });
+                _controllers.Add(systemName, new List<IController>() { controller });
             }
         }
         
@@ -96,6 +96,24 @@ namespace TinyMVC.Boot.Contexts {
                 }
                 
                 controllers.Remove(controller);
+            }
+        }
+        
+        internal IEnumerable<IController> ForEach(string systemName) {
+            if (_controllers.TryGetValue(systemName, out List<IController> controllers)) {
+                for (int controllerId = controllers.Count - 1; controllerId >= 0; controllerId--) {
+                    yield return controllers[controllerId];
+                }
+            }
+        }
+        
+        internal IEnumerable<T> ForEach<T>(string systemName) where T : IController {
+            if (_controllers.TryGetValue(systemName, out List<IController> controllers)) {
+                for (int controllerId = controllers.Count - 1; controllerId >= 0; controllerId--) {
+                    if (controllers[controllerId] is T controller) {
+                        yield return controller;
+                    }
+                }
             }
         }
         

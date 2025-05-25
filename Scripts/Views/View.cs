@@ -169,12 +169,55 @@ namespace TinyMVC.Views {
             }
         }
         
+        public void DisconnectAll<T>(string contextKey) where T : View {
+            if (_connections.Count == 0) {
+                return;
+            }
+            
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                List<View> pool = new List<View>();
+                
+                for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
+                    View view = _connections[connectionId];
+                    
+                    if (view is not T) {
+                        continue;
+                    }
+                    
+                    pool.Add(view);
+                }
+                
+                for (int connectionId = 0; connectionId < pool.Count; connectionId++) {
+                    pool[connectionId].connectState = ConnectState.Disconnected;
+                    _connections.Remove(pool[connectionId]);
+                    context.Disconnect(pool[connectionId]);
+                }
+            }
+        }
+        
         public void DisconnectAll() {
             if (_connections.Count == 0) {
                 return;
             }
             
             if (ProjectContext.TryGetContext(ProjectContext.activeContext.key, out SceneContext context)) {
+                for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
+                    View view = _connections[connectionId];
+                    
+                    view.connectState = ConnectState.Disconnected;
+                    context.Disconnect(view);
+                }
+                
+                _connections.Clear();
+            }
+        }
+        
+        public void DisconnectAll(string contextKey) {
+            if (_connections.Count == 0) {
+                return;
+            }
+            
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
                     View view = _connections[connectionId];
                     
