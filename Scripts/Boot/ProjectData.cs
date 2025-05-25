@@ -130,6 +130,42 @@ namespace TinyMVC.Boot {
             return false;
         }
         
+        public IEnumerable<(Model, T)> ForEachComponents<T>() {
+            List<(Model, T)> temp = new List<(Model, T)>();
+            
+            foreach (Dictionary<Model, List<ModelComponent>> components in contextComponents.Values) {
+                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
+                    foreach (ModelComponent component in pair.Value) {
+                        if (component is T other) {
+                            temp.Add((pair.Key, other));
+                        }
+                    }
+                }
+            }
+            
+            foreach ((Model, T) result in temp) {
+                yield return result;
+            }
+        }
+        
+        public IEnumerable<(Model, T)> ForEachComponents<T>(string contextKey) {
+            List<(Model, T)> temp = new List<(Model, T)>();
+            
+            if (contextComponents.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
+                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
+                    foreach (ModelComponent component in pair.Value) {
+                        if (component is T other) {
+                            temp.Add((pair.Key, other));
+                        }
+                    }
+                }
+            }
+            
+            foreach ((Model, T) result in temp) {
+                yield return result;
+            }
+        }
+        
         internal void Add(string contextKey, List<IDependency> dependencies) {
             if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 foreach (IDependency dependency in dependencies) {
@@ -172,42 +208,6 @@ namespace TinyMVC.Boot {
         #if UNITY_EDITOR
             onRemove?.Invoke(contextKey);
         #endif
-        }
-        
-        internal IEnumerable<(Model, T)> ForEachComponents<T>() {
-            List<(Model, T)> temp = new List<(Model, T)>();
-            
-            foreach (Dictionary<Model, List<ModelComponent>> components in contextComponents.Values) {
-                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
-                    foreach (ModelComponent component in pair.Value) {
-                        if (component is T other) {
-                            temp.Add((pair.Key, other));
-                        }
-                    }
-                }
-            }
-            
-            foreach ((Model, T) result in temp) {
-                yield return result;
-            }
-        }
-        
-        internal IEnumerable<(Model, T)> ForEachComponents<T>(string contextKey) {
-            List<(Model, T)> temp = new List<(Model, T)>();
-            
-            if (contextComponents.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
-                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
-                    foreach (ModelComponent component in pair.Value) {
-                        if (component is T other) {
-                            temp.Add((pair.Key, other));
-                        }
-                    }
-                }
-            }
-            
-            foreach ((Model, T) result in temp) {
-                yield return result;
-            }
         }
         
         internal void AddComponent(Model model, ModelComponent component) {
