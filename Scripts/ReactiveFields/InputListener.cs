@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
@@ -76,10 +77,15 @@ namespace TinyMVC.ReactiveFields {
         
         public InputListener(ActionListener<T> action, UnloadPool unload) : this() => AddListener(action, unload);
         
+        [Obsolete("Can't use without parameters!", true)]
+        public void Send() {
+            // Do nothing
+        }
+        
     #if UNITY_EDITOR
         [Button]
     #endif
-        public void Send(T data = default) {
+        public void Send(T data) {
             _listeners.Invoke();
             _listenersValue.Invoke(data);
         }
@@ -155,7 +161,7 @@ namespace TinyMVC.ReactiveFields {
     #if UNITY_EDITOR
         [Button]
     #endif
-        public void Send(T1 data1 = default, T2 data2 = default) {
+        public void Send(T1 data1, T2 data2) {
             _listeners.Invoke();
             _listenersValue.Invoke(data1, data2);
         }
@@ -226,7 +232,7 @@ namespace TinyMVC.ReactiveFields {
     #if UNITY_EDITOR
         [Button]
     #endif
-        public void Send(T1 data1 = default, T2 data2 = default, T3 data3 = default) {
+        public void Send(T1 data1, T2 data2, T3 data3) {
             _listeners.Invoke();
             _listenersValue.Invoke(data1, data2, data3);
         }

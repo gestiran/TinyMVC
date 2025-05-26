@@ -65,11 +65,11 @@ namespace TinyMVC.ReactiveFields.Extensions {
             ActionListener<T1, T2>[] temp = new ActionListener<T1, T2>[actions.Count];
             actions.CopyTo(temp);
             
-            foreach (ActionListener<T1, T2> listener in actions) {
+            foreach (ActionListener<T1, T2> listener in temp) {
                 try {
                     listener(value1, value2);
-                } catch (Exception e) {
-                    Debug.LogException(e);
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
                 }
             }
         }
