@@ -90,11 +90,9 @@ namespace TinyMVC.Dependencies {
             _currentId = -1;
         }
         
-        public T this[int index]
-        {
+        public T this[int index] {
             get => _value[index];
-            set
-            {
+            set {
                 _onRemove.Invoke();
                 _onRemoveWithValue.Invoke(_value[index]);
                 
@@ -103,6 +101,11 @@ namespace TinyMVC.Dependencies {
                 _onAdd.Invoke();
                 _onAddWithValue.Invoke(value);
             }
+        }
+        
+        [Obsolete("Can`t use without parameters!", true)]
+        public void Add() {
+            // Do nothing
         }
         
         public void Add([NotNull] params T[] values) {
@@ -117,6 +120,22 @@ namespace TinyMVC.Dependencies {
             
             _onAdd.Invoke();
             _onAddWithValue.Invoke(value);
+        }
+        
+        [Obsolete("Can`t use without parameters!", true)]
+        public Task AddAsync() {
+            // Do nothing
+            return null;
+        }
+        
+        [Obsolete("Can`t use without parameters!", true)]
+        public Task AddAsync(ICancellation cancellation) {
+            return null;
+        }
+        
+        [Obsolete("Can`t use without parameters!", true)]
+        public Task AddAsync(int anr, ICancellation cancellation) {
+            return null;
         }
         
         public Task AddAsync([NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
@@ -239,6 +258,11 @@ namespace TinyMVC.Dependencies {
             _lock = false;
         }
         
+        [Obsolete("Can`t use without parameters!", true)]
+        public void Remove() {
+            // Do nothing
+        }
+        
         public void Remove([NotNull] params T[] values) {
             for (int i = values.Length - 1; i >= 0; i--) {
                 _value.Remove(values[i]);
@@ -257,6 +281,24 @@ namespace TinyMVC.Dependencies {
             if (value is IDisposable disposable) {
                 disposable.Dispose();
             }
+        }
+        
+        [Obsolete("Can`t use without parameters!", true)]
+        public Task RemoveAsync() {
+            // Do nothing
+            return null;
+        }
+        
+        [Obsolete("Can`t use without parameters!", true)]
+        public Task RemoveAsync(ICancellation cancellation) {
+            // Do nothing
+            return null;
+        }
+        
+        [Obsolete("Can`t use without parameters!", true)]
+        public Task RemoveAsync(int anr, ICancellation cancellation) {
+            // Do nothing
+            return null;
         }
         
         public Task RemoveAsync([NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
