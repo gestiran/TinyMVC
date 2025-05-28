@@ -8,8 +8,7 @@ namespace TinyMVC.Boot.Binding {
         
         protected string _key { get; private set; }
         
-        internal string keyValue
-        {
+        internal string keyValue {
             get => _key;
             set => _key = value;
         }
@@ -87,6 +86,7 @@ namespace TinyMVC.Boot.Binding {
         
         public override IDependency GetDependency() {
             T model = new T();
+            BindInternal(model);
             Bind(model);
             return model;
         }
@@ -96,5 +96,7 @@ namespace TinyMVC.Boot.Binding {
         public T Bind() => (T)GetDependency();
         
         protected abstract void Bind(T model);
+        
+        internal virtual void BindInternal(T model) { }
     }
 }
