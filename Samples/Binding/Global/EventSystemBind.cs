@@ -1,13 +1,21 @@
-﻿using TinyMVC.Boot.Binding;
-using TinyMVC.Dependencies;
+﻿using TinyMVC.Boot;
+using TinyMVC.Boot.Binding;
 using TinyMVC.ReactiveFields;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Samples.Views.Global;
 
 namespace TinyMVC.Samples.Binding.Global {
     public sealed class EventSystemBind : Binder<EventSystemModel> {
-        [Inject] private EventSystemView _view;
-
+        private readonly EventSystemView _view;
+        
+        public EventSystemBind() {
+            ProjectContext.data.Get(out _view);
+        }
+        
+        public EventSystemBind(EventSystemView view) {
+            _view = view;
+        }
+        
         protected override void Bind(EventSystemModel model) {
             model.isActive = new Observed<bool>(_view.isActive);
         }

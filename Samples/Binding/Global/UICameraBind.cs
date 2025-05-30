@@ -1,5 +1,5 @@
-﻿using TinyMVC.Boot.Binding;
-using TinyMVC.Dependencies;
+﻿using TinyMVC.Boot;
+using TinyMVC.Boot.Binding;
 using TinyMVC.ReactiveFields;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Samples.Views.Global;
@@ -7,7 +7,15 @@ using UnityEngine;
 
 namespace TinyMVC.Samples.Binding.Global {
     public sealed class UICameraBind : Binder<UICameraModel> {
-        [Inject] private UICameraView _view;
+        private readonly UICameraView _view;
+        
+        public UICameraBind() {
+            ProjectContext.data.Get(out _view);
+        }
+        
+        public UICameraBind(UICameraView view) {
+            _view = view;
+        }
 
         protected override void Bind(UICameraModel model) {
             model.position = new Observed<Vector3>(_view.position);
