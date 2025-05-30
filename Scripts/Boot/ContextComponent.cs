@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
+using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Views;
@@ -14,7 +15,7 @@ namespace TinyMVC.Boot {
         
         private View[] _instances;
         private List<IController> _systems;
-        private List<IBinder> _binders;
+        private ModelsContext _models;
         private List<IDependency> _parameters;
         
         internal void Instantiate() {
@@ -47,8 +48,8 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal void CreateBindersInternal(List<IBinder> binders) {
-            _binders = binders;
+        internal void CreateBindersInternal<T>(T context) where T : ModelsContext {
+            _models = context;
             CreateBinders();
         }
         
@@ -79,7 +80,15 @@ namespace TinyMVC.Boot {
         
         protected void Add<T>(T controller) where T : IController => _systems.Add(controller);
         
-        protected void AddBinder<T>(T binder) where T : Binder => _binders.Add(binder);
+        protected void AddBinder<T>(T binder) where T : Binder {
+            if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
+                return;
+            }
+            
+            IDependency dependency = binder.GetDependency();
+            ProjectContext.data.Add(_models.key, dependency);
+            _models.dependenciesBinded.Add(dependency);
+        }
         
         protected void Load<T>(T dependency) where T : ScriptableObject, IDependency {
         #if UNITY_EDITOR

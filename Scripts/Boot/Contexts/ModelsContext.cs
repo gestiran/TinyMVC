@@ -5,9 +5,9 @@ using TinyMVC.Loop.Extensions;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ModelsContext : IResolving {
-        internal readonly List<IBinder> binders;
         internal readonly List<IDependency> dependenciesBinded;
         internal readonly List<IDependency> dependencies;
+        internal string key;
         
         public sealed class EmptyContext : ModelsContext {
             internal EmptyContext() { }
@@ -18,27 +18,15 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         protected ModelsContext() {
-            binders = new List<IBinder>();
             dependenciesBinded = new List<IDependency>();
             dependencies = new List<IDependency>();
         }
         
         public static EmptyContext Empty() => new EmptyContext();
         
-        internal void CreateBinders() => Bind();
-        
-        internal void ApplyBindDependencies(string contextKey) {
-            for (int bindId = 0; bindId < binders.Count; bindId++) {
-                IBinder binder = binders[bindId];
-                
-                if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
-                    continue;
-                }
-                
-                IDependency dependency = binder.GetDependency();
-                ProjectContext.data.Add(contextKey, dependency);
-                dependenciesBinded.Add(dependency);
-            }
+        internal void CreateBinders(string contextKey) {
+            key = contextKey;
+            Bind();
         }
         
         internal void Create() => Create(dependencies);
@@ -48,7 +36,15 @@ namespace TinyMVC.Boot.Contexts {
             dependencies.TryUnload();
         }
         
-        protected void Add<T>(T binder) where T : Binder => binders.Add(binder);
+        protected void Add<T>(T binder) where T : Binder {
+            if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
+                return;
+            }
+            
+            IDependency dependency = binder.GetDependency();
+            ProjectContext.data.Add(key, dependency);
+            dependenciesBinded.Add(dependency);
+        }
         
         protected abstract void Bind();
         

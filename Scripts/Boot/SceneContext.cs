@@ -8,7 +8,6 @@ using UnityEngine;
 using System;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
-using TinyMVC.Boot.Binding;
 
 namespace TinyMVC.Boot {
     [DisallowMultipleComponent]
@@ -107,12 +106,11 @@ namespace TinyMVC.Boot {
             
             ProjectContext.data.viewsContainer = new DependencyContainer(dependenciesViews);
             
-            models.CreateBinders();
-            CreateBindersComponents(models.binders);
+            models.CreateBinders(key);
+            CreateBindersComponents(models);
             
             List<IDependency> runtimeDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
-            models.ApplyBindDependencies(key);
             runtimeDependencies.AddRange(models.dependenciesBinded);
             
             tempContainer = new DependencyContainer(runtimeDependencies);
@@ -169,9 +167,9 @@ namespace TinyMVC.Boot {
             }
         }
         
-        private void CreateBindersComponents(List<IBinder> binders) {
+        private void CreateBindersComponents<T>(T context) where T : ModelsContext {
             for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CreateBindersInternal(binders);
+                components[componentId].CreateBindersInternal(context);
             }
         }
         
