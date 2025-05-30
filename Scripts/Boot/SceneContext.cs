@@ -92,29 +92,23 @@ namespace TinyMVC.Boot {
             
             List<IDependency> dependenciesParameters = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             List<IDependency> dependenciesViews = new List<IDependency>(_DEPENDENCIES_CAPACITY);
-            List<IDependency> dependenciesParametersAndViews = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
             parameters.Init();
             CreateParametersComponents(parameters.all);
             
             parameters.AddDependencies(dependenciesParameters);
-            parameters.AddDependencies(dependenciesParametersAndViews);
             
             ProjectContext.data.Add(key, dependenciesParameters);
             DependencyContainer tempContainer = new DependencyContainer(dependenciesParameters);
             ProjectContext.data.tempContainer = tempContainer;
             ResolveUtility.Resolve(models, tempContainer);
             
-            models.CreateBinders();
-            CreateBindersComponents(models.binders, models.initContainer);
-            
             views.GetDependencies(dependenciesViews);
-            views.GetDependencies(dependenciesParametersAndViews);
             
-            List<IResolving> resolvers = models.GetBindResolving();
-            tempContainer = new DependencyContainer(dependenciesViews);
-            ProjectContext.data.tempContainer = tempContainer;
-            ResolveUtility.Resolve(resolvers, tempContainer);
+            ProjectContext.data.viewsContainer = new DependencyContainer(dependenciesViews);
+            
+            models.CreateBinders();
+            CreateBindersComponents(models.binders);
             
             List<IDependency> runtimeDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
@@ -126,16 +120,11 @@ namespace TinyMVC.Boot {
             ResolveUtility.Resolve(models, tempContainer);
             ResolveUtility.TryApply(models);
             
-            dependenciesParametersAndViews.AddRange(runtimeDependencies);
-            models.initContainer = new DependencyContainer(dependenciesParametersAndViews);
-            
             models.Create();
             CreateModelsComponents(models.dependencies);
             ProjectContext.data.Add(key, models.dependencies);
             
-            models.initContainer = null;
-            
-            resolvers.Clear();
+            List<IResolving> resolvers = new List<IResolving>();
             
             controllers.Init();
             
@@ -180,9 +169,9 @@ namespace TinyMVC.Boot {
             }
         }
         
-        private void CreateBindersComponents(List<IBinder> binders, DependencyContainer initContainer) {
+        private void CreateBindersComponents(List<IBinder> binders) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CreateBindersInternal(binders, initContainer);
+                components[componentId].CreateBindersInternal(binders);
             }
         }
         

@@ -20,57 +20,31 @@ namespace TinyMVC.Controllers {
         }
         
         public static T Connect<T>(params IDependency[] dependencies) where T : IController, IResolving, new() {
-            T controller = new T();
-            _system.Connect(controller, dependencies);
-            return controller;
+            return _system.Connect<RootSystem, T>(dependencies);
         }
         
         public static void Connect<T>(T controller) where T : IController {
             _system.Connect(controller);
         }
         
-        public static void Connect<T>(T controller, params IDependency[] dependencies) where T : IController, IResolving {
-            _system.Connect(controller, dependencies);
-        }
-        
         public static void Connect(List<IController> controller) {
             _system.Connect(controller);
-        }
-        
-        public static void Connect(List<IController> controllers, params IDependency[] dependencies) {
-            _system.Connect(controllers, dependencies);
         }
         
         public static void Connect(IController[] controller) {
             _system.Connect(controller);
         }
         
-        public static void Connect(IController[] controllers, params IDependency[] dependencies) {
-            _system.Connect(controllers, dependencies);
-        }
-        
         public static void Connect<T1, T2>(T1 system, T2 controller) where T1 : IController where T2 : IController {
             system.Connect(controller);
-        }
-        
-        public static void Connect<T1, T2>(T1 system, T2 controller, params IDependency[] dependencies) where T1 : IController where T2 : IController, IResolving {
-            system.Connect(controller, dependencies);
         }
         
         public static void Connect<T1>(T1 system, List<IController> controllers) where T1 : IController {
             system.Connect(controllers);
         }
         
-        public static void Connect<T1>(T1 system, List<IController> controllers, params IDependency[] dependencies) where T1 : IController {
-            system.Connect(controllers, dependencies);
-        }
-        
         public static void Connect<T1>(T1 system, IController[] controllers) where T1 : IController {
             system.Connect(controllers);
-        }
-        
-        public static void Connect<T1>(T1 system, IController[] controllers, params IDependency[] dependencies) where T1 : IController {
-            system.Connect(controllers, dependencies);
         }
         
         public static void Disconnect<T>(T controller) where T : IController {

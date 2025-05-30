@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
@@ -13,7 +12,6 @@ namespace TinyMVC.Boot {
         [SerializeField, ListDrawerSettings(NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
         private View[] _assets;
         
-        private DependencyContainer _initContainer;
         private View[] _instances;
         private List<IController> _systems;
         private List<IBinder> _binders;
@@ -49,9 +47,8 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal void CreateBindersInternal(List<IBinder> binders, DependencyContainer initContainer) {
+        internal void CreateBindersInternal(List<IBinder> binders) {
             _binders = binders;
-            _initContainer = initContainer;
             CreateBinders();
         }
         
@@ -82,17 +79,7 @@ namespace TinyMVC.Boot {
         
         protected void Add<T>(T controller) where T : IController => _systems.Add(controller);
         
-        protected void AddBinder<T>(T binder, params Type[] types) where T : Binder => _binders.Add(new BinderLink(binder, types));
-        
         protected void AddBinder<T>(T binder) where T : Binder => _binders.Add(binder);
-        
-        protected void AddRuntimeBinder<T>(T binder) where T : Binder => ProjectBinding.Add(binder);
-        
-        protected T Resolve<T>(T binder) where T : Binder {
-            ResolveUtility.Resolve(binder, _initContainer);
-            ResolveUtility.TryApply(binder);
-            return binder;
-        }
         
         protected void Load<T>(T dependency) where T : ScriptableObject, IDependency {
         #if UNITY_EDITOR

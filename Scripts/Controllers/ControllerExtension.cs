@@ -59,12 +59,14 @@ namespace TinyMVC.Controllers {
             }
         }
         
-        public static T2 Connect<T1, T2>(this T1 system, T2 controller, params IDependency[] dependencies) where T1 : IController where T2 : IController, IResolving {
+        public static T2 Connect<T1, T2>(this T1 system, params IDependency[] dependencies) where T1 : IController where T2 : IController, IResolving, new() {
             string contextKey = ProjectContext.activeContext.key;
-            
+            T2 controller = default;
+                
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 DependencyContainer container = new DependencyContainer(dependencies);
                 ProjectContext.data.tempContainer = container;
+                controller = new T2();
                 
                 context.Connect(system, controller, resolving => ResolveUtility.Resolve(resolving, container));
             }
@@ -72,65 +74,19 @@ namespace TinyMVC.Controllers {
             return controller;
         }
         
-        public static T2 Connect<T1, T2>(this T1 system, T2 controller, string contextKey, params IDependency[] dependencies)
-            where T1 : IController where T2 : IController, IResolving {
+        public static T2 Connect<T1, T2>(this T1 system, string contextKey, params IDependency[] dependencies)
+            where T1 : IController where T2 : IController, IResolving, new() {
+            T2 controller = default;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 DependencyContainer container = new DependencyContainer(dependencies);
                 ProjectContext.data.tempContainer = container;
+                controller = new T2();
                 
                 context.Connect(system, controller, resolving => ResolveUtility.Resolve(resolving, container));
             }
             
             return controller;
-        }
-        
-        public static void Connect<T1>(this T1 system, List<IController> controllers, params IDependency[] dependencies) where T1 : IController {
-            string contextKey = ProjectContext.activeContext.key;
-            
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                DependencyContainer container = new DependencyContainer(dependencies);
-                ProjectContext.data.tempContainer = container;
-                
-                for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
-                    context.Connect(system, controllers[controllerId], resolving => ResolveUtility.Resolve(resolving, container));
-                }
-            }
-        }
-        
-        public static void Connect<T1>(this T1 system, List<IController> controllers, string contextKey, params IDependency[] dependencies) where T1 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                DependencyContainer container = new DependencyContainer(dependencies);
-                ProjectContext.data.tempContainer = container;
-                
-                for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
-                    context.Connect(system, controllers[controllerId], resolving => ResolveUtility.Resolve(resolving, container));
-                }
-            }
-        }
-        
-        public static void Connect<T1>(this T1 system, IController[] controllers, params IDependency[] dependencies) where T1 : IController {
-            string contextKey = ProjectContext.activeContext.key;
-            
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                DependencyContainer container = new DependencyContainer(dependencies);
-                ProjectContext.data.tempContainer = container;
-                
-                for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
-                    context.Connect(system, controllers[controllerId], resolving => ResolveUtility.Resolve(resolving, container));
-                }
-            }
-        }
-        
-        public static void Connect<T1>(this T1 system, IController[] controllers, string contextKey, params IDependency[] dependencies) where T1 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                DependencyContainer container = new DependencyContainer(dependencies);
-                ProjectContext.data.tempContainer = container;
-                
-                for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
-                    context.Connect(system, controllers[controllerId], resolving => ResolveUtility.Resolve(resolving, container));
-                }
-            }
         }
         
         public static void Disconnect<T>(this T controller) where T : IController {

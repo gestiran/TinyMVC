@@ -6,6 +6,7 @@ using TinyMVC.Dependencies.Components;
 namespace TinyMVC.Boot {
     public sealed class ProjectData {
         internal DependencyContainer tempContainer;
+        internal DependencyContainer viewsContainer;
         
         internal readonly Dictionary<string, DependencyContainer> contexts;
         internal readonly Dictionary<string, Dictionary<Model, List<ModelComponent>>> contextComponents;
@@ -26,6 +27,11 @@ namespace TinyMVC.Boot {
             Type type = typeof(T);
             
             if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            } 
+            
+            if (viewsContainer != null && viewsContainer.dependencies.TryGetValue(type, out tempValue)) {
                 dependency = (T)tempValue;
                 return true;
             }
@@ -49,6 +55,11 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
+            if (viewsContainer != null && viewsContainer.dependencies.TryGetValue(type, out tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            }
+            
             if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
@@ -66,6 +77,11 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
+            if (viewsContainer != null && viewsContainer.dependencies.TryGetValue(type, out tempValue)) {
+                dependency = tempValue;
+                return true;
+            }
+            
             if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = value;
@@ -79,6 +95,11 @@ namespace TinyMVC.Boot {
         
         public bool TryGetDependency(Type type, out IDependency dependency) {
             if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = tempValue;
+                return true;
+            }
+            
+            if (viewsContainer != null && viewsContainer.dependencies.TryGetValue(type, out tempValue)) {
                 dependency = tempValue;
                 return true;
             }
@@ -102,6 +123,11 @@ namespace TinyMVC.Boot {
                 return true;
             }
             
+            if (viewsContainer != null && viewsContainer.dependencies.TryGetValue(type, out tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            }
+            
             foreach (DependencyContainer container in contexts.Values) {
                 if (container.dependencies.TryGetValue(type, out IDependency value)) {
                     dependency = (T)value;
@@ -117,6 +143,11 @@ namespace TinyMVC.Boot {
             Type type = typeof(T);
             
             if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
+                dependency = (T)tempValue;
+                return true;
+            }
+            
+            if (viewsContainer != null && viewsContainer.dependencies.TryGetValue(type, out tempValue)) {
                 dependency = (T)tempValue;
                 return true;
             }
