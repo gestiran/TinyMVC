@@ -15,6 +15,8 @@ namespace TinyMVC.Modules.ADS {
             API<ADSTokenModule>.module.onCountChanged -= UpdateCount;
         }
         
+        private void UpdateCount(int value) => count = value;
+        
     #if UNITY_EDITOR
         private void ApplyCount() {
             int current = API<ADSTokenModule>.module.tokenCount;
@@ -29,8 +31,6 @@ namespace TinyMVC.Modules.ADS {
                 API<ADSTokenModule>.module.SubtractTokens(current - count);
             }
         }
-        
-        private void UpdateCount(int value) => count = value;
         
         [Button("+1"), HorizontalGroup]
         private void Add() {
