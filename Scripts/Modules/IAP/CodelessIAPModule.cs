@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using UnityEngine;
 
 #if UNITY_PURCHASING
+using UnityEngine;
 using UnityEngine.Purchasing;
 #endif
 
@@ -22,7 +22,6 @@ namespace TinyMVC.Modules.IAP {
         
         public async Task Initialize(Action<IAPStatus> onComplete) {
         #if UNITY_PURCHASING
-            
             if (Application.internetReachability == NetworkReachability.NotReachable) {
                 onComplete.Invoke(IAPStatus.FailedNetworkNotReachable);
                 
@@ -54,7 +53,7 @@ namespace TinyMVC.Modules.IAP {
             
             for (int handlerId = 0; handlerId < handlers.Length; handlerId++) {
                 if (handlers[handlerId].IsPurchased()) {
-                    handlers[handlerId].Confiscate();   
+                    handlers[handlerId].Confiscate();
                 }
             }
         }
@@ -65,11 +64,13 @@ namespace TinyMVC.Modules.IAP {
         internal static void OnBuySuccess(string productId) => onBuySuccess?.Invoke(productId);
         
         private async Task InitializeCodeless() {
+        #if UNITY_PURCHASING
             CodelessIAPStoreListener _ = CodelessIAPStoreListener.Instance;
             
             do {
                 await Task.Delay(_INIT_RETRY_DELAY);
             } while (CodelessIAPStoreListener.initializationComplete == false);
+        #endif
         }
         
         private async Task WaitLimit() {
