@@ -14,10 +14,14 @@ using UnityEngine;
 
 namespace TinyMVC.Modules.Networks {
     public static class NetService {
+        public static int ping { get; private set; }
+        
         private static IPAddress _serverIp;
         private static int _serverPort;
         private static uint _uid;
         private static uint _csrf;
+        private static long _lastReceiveTime;
+        
         private static bool _isInitialized;
         
         private static readonly UdpClient _udp;
@@ -25,7 +29,7 @@ namespace TinyMVC.Modules.Networks {
         private static readonly List<NetReader> _bufferRead;
         
         private const int _BUFFER_SIZE = 256;
-        private const int _RECEIVE_TIMEOUT = 1000;
+        private const int _RECEIVE_TIMEOUT = 2000;
         
         static NetService() {
             _udp = new UdpClient();
@@ -52,9 +56,9 @@ namespace TinyMVC.Modules.Networks {
         
         public static void UpdateCSRF(uint csrf) => _csrf = csrf;
         
-        internal static void Write<T>(T value, ushort key, byte[] group) {
+        internal static void Write<T>(byte group, byte part, ushort key, T value) {
             for (int writeId = 0; writeId < _bufferWrite.Count; writeId++) {
-                if (_bufferWrite[writeId].IsCurrent(key, group) == false) {
+                if (_bufferWrite[writeId].IsCurrent(group, part, key) == false) {
                     continue;
                 }
                 
@@ -62,12 +66,12 @@ namespace TinyMVC.Modules.Networks {
                 return;
             }
             
-            _bufferWrite.Add(new NetWriter(value, key, group));
+            _bufferWrite.Add(new NetWriter(group, part, key, value));
         }
         
-        internal static void AddRead(ActionListener<object> listener, ushort key, params byte[] group) {
+        internal static void AddRead(byte group, byte part, ushort key, ActionListener<object> listener) {
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
-                if (_bufferRead[bufferId].IsCurrent(key, group) == false) {
+                if (_bufferRead[bufferId].IsCurrent(group, part, key) == false) {
                     continue;
                 }
                 
@@ -75,12 +79,12 @@ namespace TinyMVC.Modules.Networks {
                 return;
             }
             
-            _bufferRead.Add(new NetReader(listener, key, group));
+            _bufferRead.Add(new NetReader(group, part, key, listener));
         }
         
-        internal static void RemoveRead(ActionListener<object> listener, ushort key, params byte[] group) {
+        internal static void RemoveRead(byte group, byte part, ushort key, ActionListener<object> listener) {
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
-                if (_bufferRead[bufferId].IsCurrent(key, group) == false) {
+                if (_bufferRead[bufferId].IsCurrent(group, part, key) == false) {
                     continue;
                 }
                 
@@ -120,6 +124,8 @@ namespace TinyMVC.Modules.Networks {
             
             byte[] data = SerializationUtility.SerializeValue(messageData, DataFormat.Binary);
             
+            DateTime now = DateTime.Now;
+            
             await _udp.SendAsync(data, data.Length, new IPEndPoint(_serverIp, _serverPort));
             
             if (readCommands == null) {
@@ -139,16 +145,18 @@ namespace TinyMVC.Modules.Networks {
             
             NetMessage message = SerializationUtility.DeserializeValue<NetMessage>(receive.Result.Buffer, DataFormat.Binary);
             
-            if (message.write == null) {
-                return;
-            }
+            ping = (int)DateTime.Now.Subtract(now).TotalMilliseconds;
             
-            for (int commandId = 0; commandId < message.write.Length; commandId++) {
-                NetWriteCommand command = message.write[commandId];
+            if (message.time > _lastReceiveTime) {
+                _lastReceiveTime = message.time;
                 
-                for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
-                    if (_bufferRead[bufferId].IsCurrent(command.key, command.group)) {
-                        _bufferRead[bufferId].listeners.Invoke(command.value);
+                if (message.write != null) {
+                    foreach (NetWriteCommand command in message.write) {
+                        foreach (NetReader buffer in _bufferRead) {
+                            if (buffer.IsCurrent(command.group, command.part, command.key)) {
+                                buffer.listeners.Invoke(command.value);
+                            }
+                        }
                     }
                 }
             }
@@ -162,7 +170,8 @@ namespace TinyMVC.Modules.Networks {
             NetReadCommand[] commands = new NetReadCommand[_bufferRead.Count];
             
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
-                commands[bufferId] = new NetReadCommand(_bufferRead[bufferId].key, _bufferRead[bufferId].group);
+                NetReader buffer = _bufferRead[bufferId];
+                commands[bufferId] = new NetReadCommand(buffer.group, buffer.part, buffer.key);
             }
             
             return commands;
@@ -176,7 +185,8 @@ namespace TinyMVC.Modules.Networks {
             NetWriteCommand[] commands = new NetWriteCommand[_bufferWrite.Count];
             
             for (int bufferId = 0; bufferId < _bufferWrite.Count; bufferId++) {
-                commands[bufferId] = new NetWriteCommand(_bufferWrite[bufferId].value, _bufferWrite[bufferId].key, _bufferWrite[bufferId].group);
+                NetWriter buffer = _bufferWrite[bufferId];
+                commands[bufferId] = new NetWriteCommand(buffer.group, buffer.part, buffer.key, buffer.value);
             }
             
             _bufferWrite.Clear();

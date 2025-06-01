@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using TinyMVC.Loop;
-using TinyMVC.Modules.Networks.Extensions;
 using TinyMVC.ReactiveFields;
 using TinyMVC.ReactiveFields.Extensions;
 
@@ -13,45 +12,36 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
         [ShowInInspector, HorizontalGroup, HideLabel, HideDuplicateReferenceBox, HideReferenceObjectPicker]
         private T _value;
         
+        public readonly byte group;
+        public readonly byte part;
         public readonly ushort key;
-        public readonly byte[] group;
         
         private readonly List<ActionListener<T>> _listenersValue;
         
-        [Obsolete("Can`t use without parameters!", true)]
-        public NetListener(ushort key) {
-            // Do Nothing
-        }
-        
-        [Obsolete("Can`t use without parameters!", true)]
-        public NetListener(T value, ushort key) {
-            // Do Nothing
-        }
-        
-        public NetListener(ushort key, params byte[] group) : this(default, key, group) { }
-        
-        public NetListener(T value, ushort key, params byte[] group) {
-            _value = value;
-            
-            this.key = key;
+        public NetListener(byte group, byte part, ushort key, T value = default) {
             this.group = group;
+            this.part = part;
+            this.key = key;
+            
+            _value = value;
             
             _listenersValue = new List<ActionListener<T>>();
         }
         
         private void SetValue(object obj) {
-            if (obj is T newValue) {
+            if (obj == null) {
+                _value = default;
+                _listenersValue.Invoke(_value);
+            } else if (obj is T newValue) {
                 _value = newValue;
                 _listenersValue.Invoke(newValue);
             }
         }
         
-    #region Add
-        
         // Resharper disable Unity.ExpensiveCode
         public void AddListener(ActionListener<T> listener) {
             if (_listenersValue.Count == 0) {
-                NetService.AddRead(SetValue, key, group);
+                NetService.AddRead(group, part, key, SetValue);
             }
             
             _listenersValue.Add(listener);
@@ -63,24 +53,18 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
             unload.Add(new UnloadAction(() => RemoveListener(listener)));
         }
         
-    #endregion
-        
-    #region Remove
-        
         // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(ActionListener<T> listener) {
             _listenersValue.Remove(listener);
             
             if (_listenersValue.Count == 0) {
-                NetService.RemoveRead(SetValue, key, group);
+                NetService.RemoveRead(group, part, key, SetValue);
             }
         }
         
-    #endregion
-        
         public void Unload() {
             if (_listenersValue.Count > 0) {
-                NetService.RemoveRead(SetValue, key, group);
+                NetService.RemoveRead(group, part, key, SetValue);
             }
             
             _listenersValue.Clear();
@@ -90,12 +74,12 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
         
         public override string ToString() => $"{value}";
         
-        public override int GetHashCode() => HashCode.Combine(key, group);
+        public override int GetHashCode() => HashCode.Combine(group, part, key);
         
-        public bool Equals(NetListener<T> other) => other != null && other.key == key && other.group.EqualsValues(group);
+        public bool Equals(NetListener<T> other) => other != null && other.group == group && other.part == part && other.key == key;
         
         public bool Equals(T other) => other != null && other.Equals(value);
         
-        public override bool Equals(object obj) => obj is NetListener<T> other && other.key == key && other.group.EqualsValues(group);
+        public override bool Equals(object obj) => obj is NetListener<T> other && other.group == group && other.part == part && other.key == key;
     }
 }

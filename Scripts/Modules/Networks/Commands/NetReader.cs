@@ -1,19 +1,20 @@
 ﻿using System.Collections.Generic;
-using TinyMVC.Modules.Networks.Extensions;
 using TinyMVC.ReactiveFields;
 
 namespace TinyMVC.Modules.Networks.Commands {
     internal sealed class NetReader {
+        public readonly byte group;
+        public readonly byte part;
         public readonly ushort key;
-        public readonly byte[] group;
         public readonly List<ActionListener<object>> listeners;
         
-        public NetReader(ActionListener<object> listener, ushort key, byte[] group) {
-            this.key = key;
+        public NetReader(byte group, byte part, ushort key, ActionListener<object> listener) {
             this.group = group;
+            this.part = part;
+            this.key = key;
             listeners = new List<ActionListener<object>>() { listener };
         }
         
-        public bool IsCurrent(ushort keyValue, byte[] groupValue) => key == keyValue && group.EqualsValues(groupValue);
+        public bool IsCurrent(byte groupValue, byte partValue, ushort keyValue) => group == groupValue && part == partValue && key == keyValue;
     }
 }

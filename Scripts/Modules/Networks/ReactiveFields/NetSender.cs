@@ -1,27 +1,23 @@
 ﻿using System;
-using TinyMVC.Modules.Networks.Extensions;
 
 namespace TinyMVC.Modules.Networks.ReactiveFields {
     public sealed class NetSender<T> : IEquatable<NetSender<T>> {
+        public readonly byte group;
+        public readonly byte part;
         public readonly ushort key;
-        public readonly byte[] group;
         
-        [Obsolete("Can`t use without parameters!", true)]
-        public NetSender(ushort key) {
-            // Do Nothing
-        }
-        
-        public NetSender(ushort key, params byte[] group) {
-            this.key = key;
+        public NetSender(byte group, byte part, ushort key) {
             this.group = group;
+            this.part = part;
+            this.key = key;
         }
         
-        public void Send(T value) => NetService.Write(value, key, group);
+        public void Send(T value) => NetService.Write(group, part, key, value);
         
-        public override int GetHashCode() => HashCode.Combine(key, group);
+        public override int GetHashCode() => HashCode.Combine(group, part, key);
         
-        public bool Equals(NetSender<T> other) => other != null && other.key == key && other.group.EqualsValues(group);
+        public bool Equals(NetSender<T> other) => other != null && other.group == group && other.part == part && other.key == key;
         
-        public override bool Equals(object obj) => obj is NetSender<T> other && other.key == key && other.group.EqualsValues(group);
+        public override bool Equals(object obj) => obj is NetSender<T> other && other.group == group && other.part == part && other.key == key;
     }
 }

@@ -1,17 +1,17 @@
-﻿using TinyMVC.Modules.Networks.Extensions;
-
-namespace TinyMVC.Modules.Networks.Commands {
+﻿namespace TinyMVC.Modules.Networks.Commands {
     internal sealed class NetWriter {
-        public object value;
+        public readonly byte group;
+        public readonly byte part;
         public readonly ushort key;
-        public readonly byte[] group;
+        public object value;
         
-        public NetWriter(object value, ushort key, byte[] group) {
-            this.value = value;
-            this.key = key;
+        public NetWriter(byte group, byte part, ushort key, object value) {
             this.group = group;
+            this.part = part;
+            this.key = key;
+            this.value = value;
         }
         
-        public bool IsCurrent(ushort keyValue, byte[] groupValue) => key == keyValue && group.EqualsValues(groupValue);
+        public bool IsCurrent(byte groupValue, byte partValue, ushort keyValue) => group == groupValue && part == partValue && key == keyValue;
     }
 }
