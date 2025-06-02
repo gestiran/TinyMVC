@@ -12,13 +12,13 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
         [ShowInInspector, HorizontalGroup, HideLabel, HideDuplicateReferenceBox, HideReferenceObjectPicker]
         private T _value;
         
-        public readonly byte group;
-        public readonly byte part;
-        public readonly ushort key;
+        public readonly ushort group;
+        public readonly ushort part;
+        public readonly byte key;
         
         private readonly List<ActionListener<T>> _listenersValue;
         
-        public NetListener(byte group, byte part, ushort key, T value = default) {
+        public NetListener(ushort group, ushort part, byte key, T value = default) {
             this.group = group;
             this.part = part;
             this.key = key;

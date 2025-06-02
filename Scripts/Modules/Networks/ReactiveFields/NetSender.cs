@@ -2,11 +2,11 @@
 
 namespace TinyMVC.Modules.Networks.ReactiveFields {
     public sealed class NetSender<T> : IEquatable<NetSender<T>> {
-        public readonly byte group;
-        public readonly byte part;
-        public readonly ushort key;
+        public readonly ushort group;
+        public readonly ushort part;
+        public readonly byte key;
         
-        public NetSender(byte group, byte part, ushort key) {
+        public NetSender(ushort group, ushort part, byte key) {
             this.group = group;
             this.part = part;
             this.key = key;

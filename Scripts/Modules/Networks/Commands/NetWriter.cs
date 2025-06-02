@@ -1,17 +1,17 @@
 ﻿namespace TinyMVC.Modules.Networks.Commands {
     internal sealed class NetWriter {
-        public readonly byte group;
-        public readonly byte part;
-        public readonly ushort key;
+        public readonly ushort group;
+        public readonly ushort part;
+        public readonly byte key;
         public object value;
         
-        public NetWriter(byte group, byte part, ushort key, object value) {
+        public NetWriter(ushort group, ushort part, byte key, object value) {
             this.group = group;
             this.part = part;
             this.key = key;
             this.value = value;
         }
         
-        public bool IsCurrent(byte groupValue, byte partValue, ushort keyValue) => group == groupValue && part == partValue && key == keyValue;
+        public bool IsCurrent(ushort groupValue, ushort partValue, byte keyValue) => group == groupValue && part == partValue && key == keyValue;
     }
 }

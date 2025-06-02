@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using NetworkTypes;
 using NetworkTypes.Commands;
+using NetworkTypes.Utilities;
 using TinyMVC.Modules.Networks.Commands;
 using TinyMVC.ReactiveFields;
 using TinyMVC.ReactiveFields.Extensions;
@@ -14,7 +15,7 @@ using UnityEngine;
 
 namespace TinyMVC.Modules.Networks {
     public static class NetService {
-        public static int ping { get; private set; }
+        public static event Action<int> ping;
         
         private static IPAddress _serverIp;
         private static int _serverPort;
@@ -56,7 +57,7 @@ namespace TinyMVC.Modules.Networks {
         
         public static void UpdateCSRF(uint csrf) => _csrf = csrf;
         
-        internal static void Write<T>(byte group, byte part, ushort key, T value) {
+        internal static void Write<T>(ushort group, ushort part, byte key, T value) {
             for (int writeId = 0; writeId < _bufferWrite.Count; writeId++) {
                 if (_bufferWrite[writeId].IsCurrent(group, part, key) == false) {
                     continue;
@@ -69,7 +70,7 @@ namespace TinyMVC.Modules.Networks {
             _bufferWrite.Add(new NetWriter(group, part, key, value));
         }
         
-        internal static void AddRead(byte group, byte part, ushort key, ActionListener<object> listener) {
+        internal static void AddRead(ushort group, ushort part, byte key, ActionListener<object> listener) {
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
                 if (_bufferRead[bufferId].IsCurrent(group, part, key) == false) {
                     continue;
@@ -82,7 +83,7 @@ namespace TinyMVC.Modules.Networks {
             _bufferRead.Add(new NetReader(group, part, key, listener));
         }
         
-        internal static void RemoveRead(byte group, byte part, ushort key, ActionListener<object> listener) {
+        internal static void RemoveRead(ushort group, ushort part, byte key, ActionListener<object> listener) {
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
                 if (_bufferRead[bufferId].IsCurrent(group, part, key) == false) {
                     continue;
@@ -120,9 +121,7 @@ namespace TinyMVC.Modules.Networks {
                 return;
             }
             
-            NetMessage messageData = new NetMessage(_uid, _csrf, readCommands, writeCommands);
-            
-            byte[] data = SerializationUtility.SerializeValue(messageData, DataFormat.Binary);
+            byte[] data = new NetMessage(_uid, _csrf, readCommands, writeCommands).ToBytes();
             
             DateTime now = DateTime.Now;
             
@@ -143,18 +142,20 @@ namespace TinyMVC.Modules.Networks {
                 return;
             }
             
-            NetMessage message = SerializationUtility.DeserializeValue<NetMessage>(receive.Result.Buffer, DataFormat.Binary);
+            NetMessage message = receive.Result.Buffer.ToMessage();
             
-            ping = (int)DateTime.Now.Subtract(now).TotalMilliseconds;
+            ping?.Invoke((int)DateTime.Now.Subtract(now).TotalMilliseconds);
             
             if (message.time > _lastReceiveTime) {
                 _lastReceiveTime = message.time;
                 
-                if (message.write != null) {
+                if (message.write != null && _bufferRead.Count > 0) {
                     foreach (NetWriteCommand command in message.write) {
+                        object value = SerializationUtility.DeserializeValueWeak(command.data, DataFormat.Binary);
+                        
                         foreach (NetReader buffer in _bufferRead) {
                             if (buffer.IsCurrent(command.group, command.part, command.key)) {
-                                buffer.listeners.Invoke(command.value);
+                                buffer.listeners.Invoke(value);
                             }
                         }
                     }
@@ -186,7 +187,7 @@ namespace TinyMVC.Modules.Networks {
             
             for (int bufferId = 0; bufferId < _bufferWrite.Count; bufferId++) {
                 NetWriter buffer = _bufferWrite[bufferId];
-                commands[bufferId] = new NetWriteCommand(buffer.group, buffer.part, buffer.key, buffer.value);
+                commands[bufferId] = new NetWriteCommand(buffer.group, buffer.part, buffer.key, SerializationUtility.SerializeValueWeak(buffer.value, DataFormat.Binary));
             }
             
             _bufferWrite.Clear();
