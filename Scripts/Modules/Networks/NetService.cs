@@ -105,7 +105,7 @@ namespace TinyMVC.Modules.Networks {
                     try {
                         Sync();
                     } catch (Exception exception) {
-                        Debug.LogWarning(exception);
+                        Debug.LogWarning(new Exception("NetService.Sync", exception));
                     }
                 }
                 
@@ -142,24 +142,42 @@ namespace TinyMVC.Modules.Networks {
                 return;
             }
             
-            NetMessage message = receive.Result.Buffer.ToMessage();
+            try {
+                ping?.Invoke((int)DateTime.Now.Subtract(now).TotalMilliseconds);
+            } catch (Exception exception) {
+                Debug.LogWarning(new Exception("NetService.Sync - Ping invoke", exception));
+            }
             
-            ping?.Invoke((int)DateTime.Now.Subtract(now).TotalMilliseconds);
-            
-            if (message.time > _lastReceiveTime) {
-                _lastReceiveTime = message.time;
+            try {
+                NetMessage message = receive.Result.Buffer.ToMessage();
                 
-                if (message.write != null && _bufferRead.Count > 0) {
-                    foreach (NetWriteCommand command in message.write) {
-                        object value = SerializationUtility.DeserializeValueWeak(command.data, DataFormat.Binary);
-                        
-                        foreach (NetReader buffer in _bufferRead) {
-                            if (buffer.IsCurrent(command.group, command.part, command.key)) {
-                                buffer.listeners.Invoke(value);
+                if (message.time > _lastReceiveTime) {
+                    _lastReceiveTime = message.time;
+                    
+                    if (message.write != null && _bufferRead.Count > 0) {
+                        foreach (NetWriteCommand command in message.write) {
+                            object value;
+                            
+                            if (command.data != null) {
+                                value = SerializationUtility.DeserializeValueWeak(command.data, DataFormat.Binary);
+                            } else {
+                                value = null;
+                            }
+                            
+                            foreach (NetReader buffer in _bufferRead) {
+                                if (buffer.IsCurrent(command.group, command.part, command.key)) {
+                                    try {
+                                        buffer.listeners.Invoke(value);
+                                    } catch (Exception exception) {
+                                        Debug.LogWarning(new Exception("NetService.Sync - Listener.Invoke", exception));
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            } catch (Exception exception) {
+                Debug.LogWarning(new Exception("NetService.Sync - Response read", exception));
             }
         }
         
