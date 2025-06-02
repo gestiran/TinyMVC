@@ -155,6 +155,9 @@ namespace TinyMVC.Modules.Networks {
                     _lastReceiveTime = message.time;
                     
                     if (message.write != null && _bufferRead.Count > 0) {
+                        NetReader[] bufferRead = new NetReader[_bufferRead.Count];
+                        _bufferRead.CopyTo(bufferRead);
+                        
                         foreach (NetWriteCommand command in message.write) {
                             object value;
                             
@@ -164,7 +167,7 @@ namespace TinyMVC.Modules.Networks {
                                 value = null;
                             }
                             
-                            foreach (NetReader buffer in _bufferRead) {
+                            foreach (NetReader buffer in bufferRead) {
                                 if (buffer.IsCurrent(command.group, command.part, command.key)) {
                                     try {
                                         buffer.listeners.Invoke(value);
