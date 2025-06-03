@@ -21,7 +21,9 @@ namespace TinyMVC.Modules.Networks {
         private static uint _uid;
         private static uint _csrf;
         private static long _lastReceiveTime;
-        private static sbyte _sendCount;
+        private static int _sendCount;
+        private static int _sendLimit;
+        private static int _receiveTimeout;
         
         private static bool _isInitialized;
         
@@ -30,8 +32,6 @@ namespace TinyMVC.Modules.Networks {
         private static readonly List<NetReader> _bufferRead;
         
         private const int _BUFFER_SIZE = 256;
-        private const int _RECEIVE_TIMEOUT = 4000;
-        private const sbyte _SEND_LIMIT = 16;
         
         static NetService() {
             _udp = new UdpClient();
@@ -41,13 +41,15 @@ namespace TinyMVC.Modules.Networks {
             SyncProcess();
         }
         
-        public static bool Initialize(string ip, int port) {
+        public static bool Initialize(string ip, int port, int sendLimit = 120, int receiveTimeout = 120) {
             if (_isInitialized) {
                 return _isInitialized;
             }
             
             if (IPAddress.TryParse(ip, out _serverIp)) {
                 _serverPort = port;
+                _sendLimit = sendLimit;
+                _receiveTimeout = receiveTimeout;
                 _isInitialized = true;
             }
             
@@ -102,7 +104,7 @@ namespace TinyMVC.Modules.Networks {
         
         private static async void SyncProcess() {
             while (Application.isPlaying) {
-                if (_isInitialized && _sendCount < _SEND_LIMIT) {
+                if (_isInitialized && _sendCount < _sendLimit) {
                     try {
                         Sync().Forget();
                     } catch (Exception exception) {
@@ -188,7 +190,7 @@ namespace TinyMVC.Modules.Networks {
         }
         
         private static async UniTask WaitTimeout() {
-            await UniTask.Delay(_RECEIVE_TIMEOUT, true);
+            await UniTask.Delay(_receiveTimeout, true);
             _sendCount--;
         }
         
