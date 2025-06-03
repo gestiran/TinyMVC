@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using NetworkTypes;
 using NetworkTypes.Commands;
@@ -22,6 +21,7 @@ namespace TinyMVC.Modules.Networks {
         private static uint _uid;
         private static uint _csrf;
         private static long _lastReceiveTime;
+        private static sbyte _sendCount;
         
         private static bool _isInitialized;
         
@@ -30,7 +30,8 @@ namespace TinyMVC.Modules.Networks {
         private static readonly List<NetReader> _bufferRead;
         
         private const int _BUFFER_SIZE = 256;
-        private const int _RECEIVE_TIMEOUT = 2000;
+        private const int _RECEIVE_TIMEOUT = 4000;
+        private const sbyte _SEND_LIMIT = 16;
         
         static NetService() {
             _udp = new UdpClient();
@@ -101,9 +102,9 @@ namespace TinyMVC.Modules.Networks {
         
         private static async void SyncProcess() {
             while (Application.isPlaying) {
-                if (_isInitialized) {
+                if (_isInitialized && _sendCount < _SEND_LIMIT) {
                     try {
-                        Sync();
+                        Sync().Forget();
                     } catch (Exception exception) {
                         Debug.LogWarning(new Exception("NetService.Sync", exception));
                     }
@@ -113,7 +114,7 @@ namespace TinyMVC.Modules.Networks {
             }
         }
         
-        private static async void Sync() {
+        private static async UniTask Sync() {
             NetReadCommand[] readCommands = GetReadCommands();
             NetWriteCommand[] writeCommands = GetWriteCommands();
             
@@ -124,21 +125,23 @@ namespace TinyMVC.Modules.Networks {
             byte[] data = new NetMessage(_uid, _csrf, readCommands, writeCommands).ToBytes();
             
             DateTime now = DateTime.Now;
+            _sendCount++;
             
             await _udp.SendAsync(data, data.Length, new IPEndPoint(_serverIp, _serverPort));
             
             if (readCommands == null) {
+                _sendCount--;
                 return;
             }
+           
+            UniTask.WhenAny(Receive(now), WaitTimeout()).Forget();
+        }
+        
+        private static async UniTask Receive(DateTime now) {
+            UdpReceiveResult receive = await _udp.ReceiveAsync();
+            _sendCount--;
             
-            Task<UdpReceiveResult> receive = _udp.ReceiveAsync();
-            await Task.WhenAny(receive, Task.Delay(_RECEIVE_TIMEOUT));
-            
-            if (receive.IsCompletedSuccessfully == false) {
-                return;
-            }
-            
-            if (receive.Result.Buffer.Length <= 0) {
+            if (receive.Buffer.Length <= 0) {
                 return;
             }
             
@@ -149,7 +152,7 @@ namespace TinyMVC.Modules.Networks {
             }
             
             try {
-                NetMessage message = receive.Result.Buffer.ToMessage();
+                NetMessage message = receive.Buffer.ToMessage();
                 
                 if (message.time > _lastReceiveTime) {
                     _lastReceiveTime = message.time;
@@ -182,6 +185,11 @@ namespace TinyMVC.Modules.Networks {
             } catch (Exception exception) {
                 Debug.LogWarning(new Exception("NetService.Sync - Response read", exception));
             }
+        }
+        
+        private static async UniTask WaitTimeout() {
+            await UniTask.Delay(_RECEIVE_TIMEOUT, true);
+            _sendCount--;
         }
         
         private static NetReadCommand[] GetReadCommands() {

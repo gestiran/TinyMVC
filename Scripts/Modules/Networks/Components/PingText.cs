@@ -26,11 +26,7 @@ namespace TinyMVC.Modules.Networks.Components {
             }
         }
         
-        private void UpdatePing(int ping) {
-            _ping.Add(ping);
-            
-            UpdatePing($"{ping} ms");
-        }
+        private void UpdatePing(int ping) => _ping.Add(ping);
         
         protected abstract void UpdatePing(string ping);
         
