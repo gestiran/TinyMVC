@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using TinyMVC.Modules.Saving.VirtualFiles;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 // ReSharper disable once CheckNamespace
 namespace TinyMVC.Modules.Saving {
@@ -45,7 +46,7 @@ namespace TinyMVC.Modules.Saving {
             _handler.Recreate();
         }
         
-        public static void GetHierarchy_Editor(UnityEngine.UIElements.VisualElement element) {
+        public static void GetHierarchy_Editor(VisualElement element) {
             string path;
             SaveParameters parameters = SaveParameters.LoadFromResources();
             
@@ -56,7 +57,7 @@ namespace TinyMVC.Modules.Saving {
             }
             
             if (Directory.Exists(path) == false) {
-                element.Add(new UnityEngine.UIElements.Label("Doesn't contain files"));
+                element.Add(new Label("Doesn't contain files"));
                 
                 return;
             }
@@ -64,15 +65,21 @@ namespace TinyMVC.Modules.Saving {
             string[] files = Directory.GetFiles(path);
             
             if (files.Length <= 0) {
-                element.Add(new UnityEngine.UIElements.Label("Doesn't contain files"));
+                element.Add(new Label("Doesn't contain files"));
                 
                 return;
             }
             
-            VDirectory[] directories = new VDirectory[files.Length];
+            List<VDirectory> directories = new List<VDirectory>(files.Length);
             
             for (int fileId = 0; fileId < files.Length; fileId++) {
-                _handler.TryLoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]), out directories[fileId]);
+                if (files[fileId].Contains($".{SaveHandler.BASE_EXTENSION}") == false) {
+                    continue;
+                }
+                
+                if (_handler.TryLoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]), out VDirectory directory)) {
+                    directories.Add(directory);
+                }
             }
             
             foreach (VDirectory directory in directories) {
@@ -80,9 +87,9 @@ namespace TinyMVC.Modules.Saving {
                     continue;
                 }
                 
-                UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
-                foldout.text = $"<b>{directory.name}.{SaveHandler.BASE_EXTENSION}</b>";
-                foldout.value = true;
+                Foldout foldout = new Foldout();
+                foldout.text = $"<b>{directory.name}</b>";
+                foldout.value = false;
                 
                 ConnectFiles_Editor(directory, foldout.contentContainer);
                 ConnectDirectories_Editor(directory, foldout.contentContainer);
@@ -109,17 +116,17 @@ namespace TinyMVC.Modules.Saving {
             }
         }
         
-        private static void ConnectFiles_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
+        private static void ConnectFiles_Editor(VDirectory root, VisualElement element) {
             foreach (VFile file in root.files.Values) {
-                element.Add(new UnityEngine.UIElements.Label($"{file.name}.file"));
+                element.Add(new Label($"{file.name}.file"));
             }
         }
         
-        private static void ConnectDirectories_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
+        private static void ConnectDirectories_Editor(VDirectory root, VisualElement element) {
             foreach (VDirectory directory in root.directories.Values) {
-                UnityEngine.UIElements.Foldout foldout = new UnityEngine.UIElements.Foldout();
+                Foldout foldout = new Foldout();
                 foldout.text = $"<b>{directory.name}</b>";
-                foldout.value = true;
+                foldout.value = false;
                 
                 ConnectFiles_Editor(directory, foldout.contentContainer);
                 ConnectDirectoriesNR_Editor(directory, foldout.contentContainer);
@@ -133,7 +140,7 @@ namespace TinyMVC.Modules.Saving {
             }
         }
         
-        private static void ConnectDirectoriesNR_Editor(VDirectory root, UnityEngine.UIElements.VisualElement element) {
+        private static void ConnectDirectoriesNR_Editor(VDirectory root, VisualElement element) {
             ConnectDirectories_Editor(root, element);
         }
     }
