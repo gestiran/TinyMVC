@@ -74,7 +74,7 @@ namespace TinyMVC.Modules.Saving {
                 return false;
             }
             
-            directory = LoadDirectory(directoryName);
+            TryLoadDirectory(directoryName, out directory);
             _directories.Add(directoryName, directory);
             
             if (directory.HasDirectory(out directory, group)) {
@@ -103,7 +103,7 @@ namespace TinyMVC.Modules.Saving {
                 return directory.GetAllDirectories(group);
             }
             
-            directory = LoadDirectory(directoryName);
+            TryLoadDirectory(directoryName, out directory);
             _directories.Add(directoryName, directory);
             
             return directory.GetAllDirectories(group);
@@ -120,7 +120,7 @@ namespace TinyMVC.Modules.Saving {
                 return directory.GetAllFiles(group);
             }
             
-            directory = LoadDirectory(directoryName);
+            TryLoadDirectory(directoryName, out directory);
             _directories.Add(directoryName, directory);
             
             return directory.GetAllFiles(group);
@@ -131,7 +131,9 @@ namespace TinyMVC.Modules.Saving {
             directory.semaphore.Wait();
             
             try {
-                directory.WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
+                if (directory.WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary))) {
+                    directory.isDirty = true;
+                }
             } catch (Exception exception) {
                 Debug.LogWarning(new Exception($"SaveService.Save - \"{key}\"", exception));
             } finally {
@@ -151,15 +153,19 @@ namespace TinyMVC.Modules.Saving {
             string directoryName = group[0];
             
             if (_directories.TryGetValue(directoryName, out VDirectory directory)) {
-                directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
+                if (directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary))) {
+                    directory.isDirty = true;
+                }
             } else {
-                directory = LoadDirectory(directoryName);
+                TryLoadDirectory(directoryName, out directory);
                 _directories.Add(directoryName, directory);
                 
                 directory.semaphore.Wait();
                 
                 try {
-                    directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary));
+                    if (directory.OpenOrCreateDirectory(group).WriteOrCreateFile(key, SerializationUtility.SerializeValue(value, DataFormat.Binary))) {
+                        directory.isDirty = true;
+                    }
                 } catch (Exception exception) {
                     Debug.LogWarning(new Exception($"SaveService.Save - Sub \"{GetDebugPath(group)}\"", exception));
                 } finally {
@@ -224,7 +230,9 @@ namespace TinyMVC.Modules.Saving {
                     directory.semaphore.Wait();
                     
                     try {
-                        directory.DeleteDirectory(group);
+                        if (directory.DeleteDirectory(group)) {
+                            directory.isDirty = true;
+                        }
                     } catch (Exception exception) {
                         Debug.LogWarning(new Exception($"SaveService.DeleteGroup - Root \"{GetDebugPath(group)}\"", exception));
                     } finally {
@@ -282,15 +290,16 @@ namespace TinyMVC.Modules.Saving {
                 directory.semaphore.Wait();
                 
                 try {
-                    root.DeleteFile(key);
-                    directory.isDirty = true;
+                    if (root.DeleteFile(key)) {
+                        directory.isDirty = true;
+                    }
                 } catch (Exception exception) {
                     Debug.LogWarning(new Exception($"SaveService.Delete - Sub \"{GetDebugPath(group)}\"\\\"{key}\"", exception));
                 } finally {
                     directory.semaphore.Release();
                 }
             } else {
-                directory = LoadDirectory(directoryName);
+                TryLoadDirectory(directoryName, out directory);
                 _directories.Add(directoryName, directory);
                 
                 if (directory.HasDirectory(out VDirectory root, group) == false) {
@@ -304,8 +313,9 @@ namespace TinyMVC.Modules.Saving {
                 directory.semaphore.Wait();
                 
                 try {
-                    root.DeleteFile(key);
-                    directory.isDirty = true;
+                    if (root.DeleteFile(key)) {
+                        directory.isDirty = true;
+                    }
                 } catch (Exception exception) {
                     Debug.LogWarning(new Exception($"SaveService.Delete - Root \"{GetDebugPath(group)}\"\\\"{key}\"", exception));
                 } finally {
@@ -332,8 +342,9 @@ namespace TinyMVC.Modules.Saving {
             directory.semaphore.Wait();
             
             try {
-                directory.DeleteFile(key);
-                directory.isDirty = true;
+                if (directory.DeleteFile(key)) {
+                    directory.isDirty = true;
+                }
             } catch (Exception exception) {
                 Debug.LogWarning(new Exception($"SaveService.Delete - \"{key}\"", exception));
             } finally {
@@ -351,7 +362,8 @@ namespace TinyMVC.Modules.Saving {
         
         internal void Recreate() {
             _directories = new Dictionary<string, VDirectory>(_CAPACITY);
-            _directories.Add(_MAIN_FILE_NAME, LoadDirectory(_MAIN_FILE_NAME));
+            TryLoadDirectory(_MAIN_FILE_NAME, out VDirectory directory);
+            _directories.Add(_MAIN_FILE_NAME, directory);
         }
         
         internal void Stop() {
@@ -396,9 +408,16 @@ namespace TinyMVC.Modules.Saving {
                 }
             } else {
                 try {
-                    directory = LoadDirectory(directoryName);
+                    T value;
+                    
+                    if (TryLoadDirectory(directoryName, out directory)) {
+                        value = SerializationUtility.DeserializeValue<T>(directory.GetDirectory(group).GetFile(key), DataFormat.Binary);
+                    } else {
+                        value = default;
+                    }
+                    
                     _directories.Add(directoryName, directory);
-                    return SerializationUtility.DeserializeValue<T>(directory.GetDirectory(group).GetFile(key), DataFormat.Binary);
+                    return value;
                 } catch (Exception exception) {
                     Debug.LogWarning(new Exception($"SaveService.LoadData - Deserialize root \"{GetDebugPath(group)}\"\\\"{key}\"", exception));
                 }
@@ -435,12 +454,13 @@ namespace TinyMVC.Modules.Saving {
             directory.isDirty = false;
         }
         
-        internal VDirectory LoadDirectory(string name) {
+        internal bool TryLoadDirectory(string name, out VDirectory directory) {
             string globalPath = GetPath(name, BASE_EXTENSION);
             
             if (File.Exists(globalPath)) {
                 try {
-                    return LoadRoot(globalPath);
+                    directory = LoadRoot(globalPath);
+                    return true;
                 } catch (Exception globalException) {
                     Debug.LogWarning(new Exception($"SaveService.LoadDirectory - Load global \"{globalPath}\"", globalException));
                     
@@ -454,7 +474,8 @@ namespace TinyMVC.Modules.Saving {
                     
                     if (File.Exists(tempPath)) {
                         try {
-                            return LoadRoot(tempPath);
+                            directory = LoadRoot(tempPath);
+                            return true;
                         } catch (Exception loadTempException) {
                             Debug.LogWarning(new Exception($"SaveService.LoadDirectory - Load temp \"{tempPath}\"", loadTempException));
                             
@@ -468,7 +489,8 @@ namespace TinyMVC.Modules.Saving {
                 }
             }
             
-            return new VDirectory(name);
+            directory = new VDirectory(name);
+            return false;
         }
         
         private VDirectory LoadRoot(string path) {

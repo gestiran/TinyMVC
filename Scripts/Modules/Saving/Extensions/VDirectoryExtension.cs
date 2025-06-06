@@ -5,28 +5,23 @@ namespace TinyMVC.Modules.Saving.Extensions {
     internal static class VDirectoryExtension {
         public static VDirectory AddDirectory(this VDirectory directory, string name) {
             VDirectory result = new VDirectory(name);
-            
             directory.directories.Add(name, result);
-            directory.isDirty = true;
-            
             return result;
         }
         
-        public static VFile WriteOrCreateFile(this VDirectory directory, string name, byte[] data) {
-            
+        public static bool WriteOrCreateFile(this VDirectory directory, string name, byte[] data) {
             if (directory.files.TryGetValue(name, out VFile file)) {
-                file.data = data;
-                directory.isDirty = true;
+                if (EqualsData(file.data, data)) {
+                    return false;
+                }
                 
-                return file;
+                file.data = data;
+                return true;
             }
             
             VFile result = new VFile(name, data);
-            
             directory.files.Add(name, result);
-            directory.isDirty = true;
-            
-            return result;
+            return true;
         }
         
         public static byte[] GetFile(this VDirectory directory, string name) => directory.files[name].data;
@@ -49,29 +44,28 @@ namespace TinyMVC.Modules.Saving.Extensions {
             return true;
         }
         
-        public static void DeleteDirectory(this VDirectory directory, params string[] group) {
+        public static bool DeleteDirectory(this VDirectory directory, params string[] group) {
             VDirectory root = directory;
+            VDirectory target = directory;
             string directoryName = directory.name;
             
             for (int groupId = 1; groupId < group.Length; groupId++) {
-                directory = root;
+                target = root;
                 
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
-                    root.isDirty = true;
                     root = other;
                 } else {
-                    return;
+                    return false;
                 }
                 
                 directoryName = group[groupId];
             }
             
-            directory.directories.Remove(directoryName);
+            return target.directories.Remove(directoryName);
         }
         
-        public static void DeleteFile(this VDirectory directory, string name) {
-            directory.files.Remove(name);
-            directory.isDirty = true;
+        public static bool DeleteFile(this VDirectory directory, string name) {
+            return directory.files.Remove(name);
         }
         
         public static string[] GetAllDirectories(this VDirectory directory, params string[] group) {
@@ -116,7 +110,6 @@ namespace TinyMVC.Modules.Saving.Extensions {
         
         public static VDirectory OpenOrCreateDirectory(this VDirectory directory, string[] group) {
             VDirectory root = directory;
-            root.isDirty = true;
             
             for (int groupId = 1; groupId < group.Length; groupId++) {
                 if (root.directories.TryGetValue(group[groupId], out VDirectory other)) {
@@ -127,6 +120,20 @@ namespace TinyMVC.Modules.Saving.Extensions {
             }
             
             return root;
+        }
+        
+        private static bool EqualsData(byte[] first, byte[] second) {
+            if (first.Length != second.Length) {
+                return false;
+            }
+            
+            for (int i = 0; i < first.Length; i++) {
+                if (first[i] != second[i]) {
+                    return false;
+                }
+            }
+            
+            return true;
         }
     }
 }

@@ -72,7 +72,7 @@ namespace TinyMVC.Modules.Saving {
             VDirectory[] directories = new VDirectory[files.Length];
             
             for (int fileId = 0; fileId < files.Length; fileId++) {
-                directories[fileId] = _handler.LoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]));
+                _handler.TryLoadDirectory(Path.GetFileNameWithoutExtension(files[fileId]), out directories[fileId]);
             }
             
             foreach (VDirectory directory in directories) {
