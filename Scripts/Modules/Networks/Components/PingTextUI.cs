@@ -7,7 +7,7 @@ namespace TinyMVC.Modules.Networks.Components {
         [field: SerializeField]
         private Text _thisText;
         
-        protected override void UpdatePing(string ping) => _thisText.text = ping;
+        protected override void UpdateText(string ping) => _thisText.text = ping;
         
     #if UNITY_EDITOR
         

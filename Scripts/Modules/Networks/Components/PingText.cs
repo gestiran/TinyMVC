@@ -9,7 +9,7 @@ namespace TinyMVC.Modules.Networks.Components {
         private Coroutine _drawPing;
         
         private void Awake() {
-            _ping = new List<int>();
+            _ping = new List<int>(256);
         }
         
         private void OnEnable() {
@@ -28,25 +28,35 @@ namespace TinyMVC.Modules.Networks.Components {
         
         private void UpdatePing(int ping) => _ping.Add(ping);
         
-        protected abstract void UpdatePing(string ping);
+        protected abstract void UpdateText(string ping);
         
         private int GetPing() {
-            int ping = 0;
-            
-            for (int i = 0; i < _ping.Count; i++) {
-                if (_ping[i] > ping) {
-                    ping = _ping[i];
-                }
+            if (_ping.Count == 0) {
+                return 0;
             }
             
-            _ping.Clear();
+            int ping = 0;
             
+            foreach (int value in _ping) {
+                ping += value;
+            }
+            
+            ping /= _ping.Count;
             return ping;
         }
         
         private IEnumerator DrawPing() {
             while (Application.isPlaying) {
-                UpdatePing($"{GetPing()} ms");
+                int ping = GetPing();
+                
+                if (ping > 0) {
+                    UpdateText($"Ping: {ping} ms");
+                } else {
+                    UpdateText("Disconnected");
+                }
+                
+                _ping.Clear();
+                
                 yield return new WaitForSecondsRealtime(1f);
             }
         }

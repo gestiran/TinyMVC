@@ -41,7 +41,7 @@ namespace TinyMVC.Modules.Networks {
             SyncProcess();
         }
         
-        public static bool Initialize(string ip, int port, int sendLimit = 120, int receiveTimeout = 120) {
+        public static bool Initialize(string ip, int port, int sendLimit = 120, int receiveTimeout = 4000) {
             if (_isInitialized) {
                 return _isInitialized;
             }
