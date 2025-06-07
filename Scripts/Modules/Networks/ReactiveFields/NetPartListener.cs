@@ -6,80 +6,78 @@ using TinyMVC.ReactiveFields;
 using TinyMVC.ReactiveFields.Extensions;
 
 namespace TinyMVC.Modules.Networks.ReactiveFields {
-    public sealed class NetListener<T> : IEquatable<NetListener<T>>, IEquatable<T>, IUnload {
+    public sealed class NetPartListener<T> : IEquatable<NetPartListener<T>>, IEquatable<T>, IUnload {
         public T value => _value;
         
         [ShowInInspector, HorizontalGroup, HideLabel, HideDuplicateReferenceBox, HideReferenceObjectPicker]
         private T _value;
         
         public readonly ushort group;
-        public readonly ushort part;
         public readonly byte key;
         
-        private readonly List<ActionListener<T>> _listenersValue;
+        private readonly List<ActionListener<ushort, T>> _listenersValue;
         
-        public NetListener(ushort group, ushort part, byte key, T value = default) {
+        public NetPartListener(ushort group, byte key, T value = default) {
             this.group = group;
-            this.part = part;
             this.key = key;
             
             _value = value;
             
-            _listenersValue = new List<ActionListener<T>>();
+            _listenersValue = new List<ActionListener<ushort, T>>();
         }
         
-        private void SetValue(ushort _, object obj) {
+        private void SetValue(ushort partValue, object obj) {
             if (obj == null) {
                 _value = default;
-                _listenersValue.Invoke(_value);
+                _listenersValue.Invoke(partValue, _value);
             } else if (obj is T newValue) {
                 _value = newValue;
-                _listenersValue.Invoke(newValue);
+                _listenersValue.Invoke(partValue, newValue);
             }
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddListener(ActionListener<T> listener) {
+        public void AddListener(ActionListener<ushort, T> listener) {
             if (_listenersValue.Count == 0) {
-                NetSyncService.AddRead(group, part, key, SetValue);
+                NetSyncService.AddRead(group, 0, key, SetValue);
             }
             
             _listenersValue.Add(listener);
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddListener(ActionListener<T> listener, UnloadPool unload) {
+        public void AddListener(ActionListener<ushort, T> listener, UnloadPool unload) {
             AddListener(listener);
             unload.Add(new UnloadAction(() => RemoveListener(listener)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(ActionListener<T> listener) {
+        public void RemoveListener(ActionListener<ushort, T> listener) {
             _listenersValue.Remove(listener);
             
             if (_listenersValue.Count == 0) {
-                NetSyncService.RemoveRead(group, part, key, SetValue);
+                NetSyncService.RemoveRead(group, 0, key, SetValue);
             }
         }
         
         public void Unload() {
             if (_listenersValue.Count > 0) {
-                NetSyncService.RemoveRead(group, part, key, SetValue);
+                NetSyncService.RemoveRead(group, 0, key, SetValue);
             }
             
             _listenersValue.Clear();
         }
         
-        public static implicit operator T(NetListener<T> observed) => observed.value;
+        public static implicit operator T(NetPartListener<T> observed) => observed.value;
         
         public override string ToString() => $"{value}";
         
-        public override int GetHashCode() => HashCode.Combine(group, part, key);
+        public override int GetHashCode() => HashCode.Combine(group, key);
         
-        public bool Equals(NetListener<T> other) => other != null && other.group == group && other.part == part && other.key == key;
+        public bool Equals(NetPartListener<T> other) => other != null && other.group == group && other.key == key;
         
         public bool Equals(T other) => other != null && other.Equals(value);
         
-        public override bool Equals(object obj) => obj is NetListener<T> other && other.group == group && other.part == part && other.key == key;
+        public override bool Equals(object obj) => obj is NetPartListener<T> other && other.group == group && other.key == key;
     }
 }

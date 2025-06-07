@@ -90,7 +90,7 @@ namespace TinyMVC.Modules.Networks {
         
         public static void UpdateCSRF(ulong csrf) => _csrf = csrf;
         
-        internal static void AddRead(ushort group, ushort part, byte key, ActionListener<object> listener) {
+        internal static void AddRead(ushort group, ushort part, byte key, ActionListener<ushort, object> listener) {
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
                 if (_bufferRead[bufferId].IsCurrent(group, part, key) == false) {
                     continue;
@@ -103,7 +103,7 @@ namespace TinyMVC.Modules.Networks {
             _bufferRead.Add(new NetReaderBuffer(group, part, key, listener));
         }
         
-        internal static void RemoveRead(ushort group, ushort part, byte key, ActionListener<object> listener) {
+        internal static void RemoveRead(ushort group, ushort part, byte key, ActionListener<ushort, object> listener) {
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
                 if (_bufferRead[bufferId].IsCurrent(group, part, key) == false) {
                     continue;
@@ -221,11 +221,19 @@ namespace TinyMVC.Modules.Networks {
                             }
                             
                             foreach (NetReaderBuffer read in bufferRead) {
-                                if (read.IsCurrent(command.group, command.part, command.key)) {
-                                    try {
-                                        read.listeners.Invoke(value);
-                                    } catch (Exception exception) {
-                                        Debug.LogWarning(new Exception("NetService.Sync - Listener.Invoke", exception));
+                                if (read.group == command.group && read.key == command.key) {
+                                    if (read.part == 0) {
+                                        try {
+                                            read.listeners.Invoke(command.part, value);
+                                        } catch (Exception exception) {
+                                            Debug.LogWarning(new Exception("NetService.Sync - Listener.Invoke", exception));
+                                        }
+                                    } else if (read.part == command.part) {
+                                        try {
+                                            read.listeners.Invoke(command.part, value);
+                                        } catch (Exception exception) {
+                                            Debug.LogWarning(new Exception("NetService.Sync - Listener.Invoke", exception));
+                                        }
                                     }
                                 }
                             }

@@ -6,13 +6,13 @@ namespace TinyMVC.Modules.Networks.Buffers {
         public readonly ushort group;
         public readonly ushort part;
         public readonly byte key;
-        public readonly List<ActionListener<object>> listeners;
+        public readonly List<ActionListener<ushort, object>> listeners;
         
-        public NetReaderBuffer(ushort group, ushort part, byte key, ActionListener<object> listener) {
+        public NetReaderBuffer(ushort group, ushort part, byte key, ActionListener<ushort, object> listener) {
             this.group = group;
             this.part = part;
             this.key = key;
-            listeners = new List<ActionListener<object>>() { listener };
+            listeners = new List<ActionListener<ushort, object>>() { listener };
         }
         
         public bool IsCurrent(ushort groupValue, ushort partValue, byte keyValue) => group == groupValue && part == partValue && key == keyValue;
