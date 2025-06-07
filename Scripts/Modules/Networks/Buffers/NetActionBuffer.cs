@@ -2,21 +2,17 @@
     internal sealed class NetActionBuffer {
         public readonly ushort type;
         public readonly ushort locationId;
-        public float directionX;
-        public float directionZ;
+        public readonly byte section;
         
-        public NetActionBuffer(ushort type, ushort location, float x, float z) {
+        public byte[] data;
+        
+        public NetActionBuffer(ushort type, ushort location, byte section, byte[] data) {
             this.type = type;
             locationId = location;
-            directionX = x;
-            directionZ = z;
+            this.section = section;
+            this.data = data;
         }
         
-        public void UpdateDirection(float x, float z) {
-            directionX = x;
-            directionZ = z;
-        }
-        
-        public bool IsCurrent(ushort typeValue, ushort locationValue) => typeValue == type && locationValue == locationId;
+        public bool IsCurrent(ushort typeValue, ushort locationValue, byte sectionValue) => typeValue == type && locationValue == locationId && sectionValue == section;
     }
 }

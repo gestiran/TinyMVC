@@ -1,6 +1,6 @@
 ﻿using System;
 using Sirenix.OdinInspector;
-using UnityEngine;
+using TinySerializer.Core.Misc;
 
 namespace TinyMVC.Modules.Networks.ReactiveFields {
     public sealed class NetAction : IEquatable<NetAction> {
@@ -10,19 +10,23 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
         [ShowInInspector, HorizontalGroup, HideLabel, SuffixLabel("Location")]
         public readonly ushort locationId;
         
-        public NetAction(ushort type, ushort location) {
+        [ShowInInspector, HorizontalGroup, HideLabel, SuffixLabel("Section")]
+        public readonly byte section;
+        
+        public NetAction(ushort type, ushort location, byte section) {
             this.type = type;
             locationId = location;
+            this.section = section;
         }
         
-        public void Send() => NetSyncService.Action(type, locationId, 0f, 0f);
+        public void Send<T>(T command) where T : unmanaged {
+            NetSyncService.Action(type, locationId, section, SerializationUtility.SerializeValueWeak(command, DataFormat.Binary));
+        }
         
-        public void Send(Vector3 direction) => NetSyncService.Action(type, locationId, direction.x, direction.z);
+        public bool Equals(NetAction other) => other != null && type == other.type && locationId == other.locationId && section == other.section;
         
-        public bool Equals(NetAction other) => other != null && type == other.type && locationId == other.locationId;
+        public override bool Equals(object obj) => obj is NetAction other && type == other.type && locationId == other.locationId && section == other.section;
         
-        public override bool Equals(object obj) => obj is NetAction other && type == other.type && locationId == other.locationId;
-        
-        public override int GetHashCode() => HashCode.Combine(type, locationId);
+        public override int GetHashCode() => HashCode.Combine(type, locationId, section);
     }
 }

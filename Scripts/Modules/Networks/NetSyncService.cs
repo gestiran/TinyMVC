@@ -16,6 +16,8 @@ using UnityEngine;
 
 namespace TinyMVC.Modules.Networks {
     public static class NetSyncService {
+        public static bool isInitialized { get; private set; }
+        
         public static event Action<int> ping;
         
         private static IPEndPoint _serverPoint;
@@ -28,7 +30,6 @@ namespace TinyMVC.Modules.Networks {
         private static int _sendLimit;
         
         private static CancellationTokenSource _cancellation;
-        private static bool _isInitialized;
         
         private static readonly List<NetReaderBuffer> _bufferRead;
         private static readonly List<NetWriterBuffer> _bufferWrite;
@@ -45,9 +46,9 @@ namespace TinyMVC.Modules.Networks {
         }
         
         public static bool Initialize(string ip, int port, int sendLimit = 60, int receiveTimeout = 3000) {
-            if (_isInitialized) {
+            if (isInitialized) {
                 Debug.LogError("NetService.Initialize - Already initialized!");
-                return _isInitialized;
+                return isInitialized;
             }
             
             if (IPAddress.TryParse(ip, out IPAddress serverIP)) {
@@ -55,7 +56,7 @@ namespace TinyMVC.Modules.Networks {
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 _socket.ReceiveTimeout = receiveTimeout;
                 _sendLimit = sendLimit;
-                _isInitialized = true;
+                isInitialized = true;
                 
                 _cancellation = new CancellationTokenSource();
                 SyncProcess(_cancellation.Token);
@@ -63,11 +64,11 @@ namespace TinyMVC.Modules.Networks {
                 Debug.LogError("NetService.Initialize - Invalid ip data!");
             }
             
-            return _isInitialized;
+            return isInitialized;
         }
         
         public static void Deinitialize() {
-            if (_isInitialized == false) {
+            if (isInitialized == false) {
                 Debug.LogError("NetService.Initialize - Already deinitialized!");
                 return;
             }
@@ -80,7 +81,7 @@ namespace TinyMVC.Modules.Networks {
             _socket.Close();
             _socket.Dispose();
             
-            _isInitialized = false;
+            isInitialized = false;
         }
         
         public static void UpdateUID(ulong uid) => _uid = uid;
@@ -131,21 +132,21 @@ namespace TinyMVC.Modules.Networks {
             _bufferWrite.Add(new NetWriterBuffer(group, part, key, value));
         }
         
-        internal static void Action(ushort type, ushort location, float x, float z) {
+        internal static void Action(ushort type, ushort location, byte section, byte[] data) {
             for (int bufferId = 0; bufferId < _bufferAction.Count; bufferId++) {
-                if (_bufferAction[bufferId].IsCurrent(type, location) == false) {
+                if (_bufferAction[bufferId].IsCurrent(type, location, section) == false) {
                     continue;
                 }
                 
-                _bufferAction[bufferId].UpdateDirection(x, z);
+                _bufferAction[bufferId].data = data;
                 return;
             }
             
-            _bufferAction.Add(new NetActionBuffer(type, location, x, z));
+            _bufferAction.Add(new NetActionBuffer(type, location, section, data));
         }
         
         private static async void SyncProcess(CancellationToken cancellation) {
-            while (_isInitialized) {
+            while (isInitialized) {
                 if (_sendCount < _sendLimit) {
                     try {
                         Sync();
@@ -276,7 +277,7 @@ namespace TinyMVC.Modules.Networks {
             
             for (int bufferId = 0; bufferId < _bufferAction.Count; bufferId++) {
                 NetActionBuffer buffer = _bufferAction[bufferId];
-                commands[bufferId] = new NetActionCommand(buffer.type, buffer.locationId, buffer.directionX, buffer.directionZ);
+                commands[bufferId] = new NetActionCommand(buffer.type, buffer.locationId, buffer.section, buffer.data);
             }
             
             _bufferAction.Clear();
