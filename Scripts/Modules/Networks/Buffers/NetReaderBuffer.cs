@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using TinyMVC.ReactiveFields;
 
-namespace TinyMVC.Modules.Networks.Commands {
-    internal sealed class NetReader {
+namespace TinyMVC.Modules.Networks.Buffers {
+    internal sealed class NetReaderBuffer {
         public readonly ushort group;
         public readonly ushort part;
         public readonly byte key;
         public readonly List<ActionListener<object>> listeners;
         
-        public NetReader(ushort group, ushort part, byte key, ActionListener<object> listener) {
+        public NetReaderBuffer(ushort group, ushort part, byte key, ActionListener<object> listener) {
             this.group = group;
             this.part = part;
             this.key = key;

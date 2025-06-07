@@ -1,11 +1,11 @@
-﻿namespace TinyMVC.Modules.Networks.Commands {
-    internal sealed class NetWriter {
+﻿namespace TinyMVC.Modules.Networks.Buffers {
+    internal sealed class NetWriterBuffer {
         public readonly ushort group;
         public readonly ushort part;
         public readonly byte key;
         public object value;
         
-        public NetWriter(ushort group, ushort part, byte key, object value) {
+        public NetWriterBuffer(ushort group, ushort part, byte key, object value) {
             this.group = group;
             this.part = part;
             this.key = key;

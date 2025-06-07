@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using NetworkTypes;
 using NetworkTypes.Commands;
 using NetworkTypes.Utilities;
-using TinyMVC.Modules.Networks.Commands;
+using TinyMVC.Modules.Networks.Buffers;
 using TinyMVC.ReactiveFields;
 using TinyMVC.ReactiveFields.Extensions;
 using TinySerializer.Core.Misc;
@@ -18,8 +18,9 @@ namespace TinyMVC.Modules.Networks {
         
         private static IPAddress _serverIp;
         private static int _serverPort;
-        private static uint _uid;
-        private static uint _csrf;
+        private static ulong _uid;
+        private static ushort _version;
+        private static ulong _csrf;
         private static long _lastReceiveTime;
         private static int _sendCount;
         private static int _sendLimit;
@@ -28,15 +29,18 @@ namespace TinyMVC.Modules.Networks {
         private static bool _isInitialized;
         
         private static readonly UdpClient _udp;
-        private static readonly List<NetWriter> _bufferWrite;
-        private static readonly List<NetReader> _bufferRead;
+        private static readonly List<NetReaderBuffer> _bufferRead;
+        private static readonly List<NetWriterBuffer> _bufferWrite;
+        private static readonly List<NetActionBuffer> _bufferAction;
         
         private const int _BUFFER_SIZE = 256;
+        private const int _NETWORK_TICK = 33;
         
         static NetService() {
             _udp = new UdpClient();
-            _bufferWrite = new List<NetWriter>(_BUFFER_SIZE);
-            _bufferRead = new List<NetReader>(_BUFFER_SIZE);
+            _bufferRead = new List<NetReaderBuffer>(_BUFFER_SIZE);
+            _bufferWrite = new List<NetWriterBuffer>(_BUFFER_SIZE);
+            _bufferAction = new List<NetActionBuffer>(_BUFFER_SIZE);
             
             SyncProcess();
         }
@@ -56,22 +60,11 @@ namespace TinyMVC.Modules.Networks {
             return _isInitialized;
         }
         
-        public static void UpdateUID(uint uid) => _uid = uid;
+        public static void UpdateUID(ulong uid) => _uid = uid;
         
-        public static void UpdateCSRF(uint csrf) => _csrf = csrf;
+        public static void UpdateVersion(ushort version) => _version = version;
         
-        internal static void Write<T>(ushort group, ushort part, byte key, T value) {
-            for (int writeId = 0; writeId < _bufferWrite.Count; writeId++) {
-                if (_bufferWrite[writeId].IsCurrent(group, part, key) == false) {
-                    continue;
-                }
-                
-                _bufferWrite[writeId].value = value;
-                return;
-            }
-            
-            _bufferWrite.Add(new NetWriter(group, part, key, value));
-        }
+        public static void UpdateCSRF(ulong csrf) => _csrf = csrf;
         
         internal static void AddRead(ushort group, ushort part, byte key, ActionListener<object> listener) {
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
@@ -83,7 +76,7 @@ namespace TinyMVC.Modules.Networks {
                 return;
             }
             
-            _bufferRead.Add(new NetReader(group, part, key, listener));
+            _bufferRead.Add(new NetReaderBuffer(group, part, key, listener));
         }
         
         internal static void RemoveRead(ushort group, ushort part, byte key, ActionListener<object> listener) {
@@ -102,6 +95,32 @@ namespace TinyMVC.Modules.Networks {
             }
         }
         
+        internal static void Write<T>(ushort group, ushort part, byte key, T value) {
+            for (int bufferId = 0; bufferId < _bufferWrite.Count; bufferId++) {
+                if (_bufferWrite[bufferId].IsCurrent(group, part, key) == false) {
+                    continue;
+                }
+                
+                _bufferWrite[bufferId].value = value;
+                return;
+            }
+            
+            _bufferWrite.Add(new NetWriterBuffer(group, part, key, value));
+        }
+        
+        internal static void Action(ushort type, ushort location, float x, float z) {
+            for (int bufferId = 0; bufferId < _bufferAction.Count; bufferId++) {
+                if (_bufferAction[bufferId].IsCurrent(type, location) == false) {
+                    continue;
+                }
+                
+                _bufferAction[bufferId].UpdateDirection(x, z);
+                return;
+            }
+            
+            _bufferAction.Add(new NetActionBuffer(type, location, x, z));
+        }
+        
         private static async void SyncProcess() {
             while (Application.isPlaying) {
                 if (_isInitialized && _sendCount < _sendLimit) {
@@ -112,19 +131,20 @@ namespace TinyMVC.Modules.Networks {
                     }
                 }
                 
-                await UniTask.Yield();
+                await UniTask.Delay(_NETWORK_TICK, DelayType.UnscaledDeltaTime, PlayerLoopTiming.LastPostLateUpdate);
             }
         }
         
         private static async UniTask Sync() {
             NetReadCommand[] readCommands = GetReadCommands();
             NetWriteCommand[] writeCommands = GetWriteCommands();
+            NetActionCommand[] actionCommands = GetActionCommands();
             
-            if (readCommands == null && writeCommands == null) {
+            if (readCommands == null && writeCommands == null && actionCommands == null) {
                 return;
             }
             
-            byte[] data = new NetMessage(_uid, _csrf, readCommands, writeCommands).ToBytes();
+            byte[] data = new NetMessage(_uid, _version, _csrf, readCommands, writeCommands, actionCommands).ToBytes();
             
             DateTime now = DateTime.Now;
             _sendCount++;
@@ -135,7 +155,7 @@ namespace TinyMVC.Modules.Networks {
                 _sendCount--;
                 return;
             }
-           
+            
             UniTask.WhenAny(Receive(now), WaitTimeout()).Forget();
         }
         
@@ -159,11 +179,11 @@ namespace TinyMVC.Modules.Networks {
                 if (message.time > _lastReceiveTime) {
                     _lastReceiveTime = message.time;
                     
-                    if (message.write != null && _bufferRead.Count > 0) {
-                        NetReader[] bufferRead = new NetReader[_bufferRead.Count];
+                    if (message.writes != null && _bufferRead.Count > 0) {
+                        NetReaderBuffer[] bufferRead = new NetReaderBuffer[_bufferRead.Count];
                         _bufferRead.CopyTo(bufferRead);
                         
-                        foreach (NetWriteCommand command in message.write) {
+                        foreach (NetWriteCommand command in message.writes) {
                             object value;
                             
                             if (command.data != null) {
@@ -172,7 +192,7 @@ namespace TinyMVC.Modules.Networks {
                                 value = null;
                             }
                             
-                            foreach (NetReader buffer in bufferRead) {
+                            foreach (NetReaderBuffer buffer in bufferRead) {
                                 if (buffer.IsCurrent(command.group, command.part, command.key)) {
                                     try {
                                         buffer.listeners.Invoke(value);
@@ -202,7 +222,7 @@ namespace TinyMVC.Modules.Networks {
             NetReadCommand[] commands = new NetReadCommand[_bufferRead.Count];
             
             for (int bufferId = 0; bufferId < _bufferRead.Count; bufferId++) {
-                NetReader buffer = _bufferRead[bufferId];
+                NetReaderBuffer buffer = _bufferRead[bufferId];
                 commands[bufferId] = new NetReadCommand(buffer.group, buffer.part, buffer.key);
             }
             
@@ -217,11 +237,27 @@ namespace TinyMVC.Modules.Networks {
             NetWriteCommand[] commands = new NetWriteCommand[_bufferWrite.Count];
             
             for (int bufferId = 0; bufferId < _bufferWrite.Count; bufferId++) {
-                NetWriter buffer = _bufferWrite[bufferId];
+                NetWriterBuffer buffer = _bufferWrite[bufferId];
                 commands[bufferId] = new NetWriteCommand(buffer.group, buffer.part, buffer.key, SerializationUtility.SerializeValueWeak(buffer.value, DataFormat.Binary));
             }
             
             _bufferWrite.Clear();
+            return commands;
+        }
+        
+        private static NetActionCommand[] GetActionCommands() {
+            if (_bufferAction.Count == 0) {
+                return null;
+            }
+            
+            NetActionCommand[] commands = new NetActionCommand[_bufferAction.Count];
+            
+            for (int bufferId = 0; bufferId < _bufferAction.Count; bufferId++) {
+                NetActionBuffer buffer = _bufferAction[bufferId];
+                commands[bufferId] = new NetActionCommand(buffer.type, buffer.locationId, buffer.directionX, buffer.directionZ);
+            }
+            
+            _bufferAction.Clear();
             return commands;
         }
     }
