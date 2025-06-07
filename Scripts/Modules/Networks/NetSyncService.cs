@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using NetworkTypes;
 using NetworkTypes.Commands;
@@ -43,7 +44,7 @@ namespace TinyMVC.Modules.Networks {
             _bufferAction = new List<NetActionBuffer>(_COMMAND_BUFFER_SIZE);
         }
         
-        public static bool Initialize(string ip, int port, int sendLimit = 120, int receiveTimeout = 4000) {
+        public static bool Initialize(string ip, int port, int sendLimit = 60, int receiveTimeout = 3000) {
             if (_isInitialized) {
                 Debug.LogError("NetService.Initialize - Already initialized!");
                 return _isInitialized;
@@ -52,7 +53,6 @@ namespace TinyMVC.Modules.Networks {
             if (IPAddress.TryParse(ip, out IPAddress serverIP)) {
                 _serverPoint = new IPEndPoint(serverIP, port);
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                _socket.Bind(_serverPoint);
                 _socket.ReceiveTimeout = receiveTimeout;
                 _sendLimit = sendLimit;
                 _isInitialized = true;
@@ -148,16 +148,7 @@ namespace TinyMVC.Modules.Networks {
             while (_isInitialized) {
                 if (_sendCount < _sendLimit) {
                     try {
-                        Sync(cancellation);
-                    } catch (SocketException exception) {
-                        if (exception.ErrorCode == 10060) {
-                            Debug.Log(new Exception("NetService.Sync - Timeout", exception));
-                            _sendCount--;
-                        } else {
-                            Debug.LogWarning(new Exception("NetService.Sync", exception));
-                        }
-                    } catch (OperationCanceledException exception) {
-                        Debug.Log(new Exception("NetService.Sync - Canceled", exception));
+                        Sync();
                     } catch (Exception exception) {
                         Debug.LogWarning(new Exception("NetService.Sync", exception));
                     }
@@ -167,7 +158,7 @@ namespace TinyMVC.Modules.Networks {
             }
         }
         
-        private static async void Sync(CancellationToken cancellation) {
+        private static async void Sync() {
             NetReadCommand[] readCommands = GetReadCommands();
             NetWriteCommand[] writeCommands = GetWriteCommands();
             NetActionCommand[] actionCommands = GetActionCommands();
@@ -176,10 +167,12 @@ namespace TinyMVC.Modules.Networks {
                 return;
             }
             
-            byte[] data = new NetMessage(_uid, _version, _csrf, readCommands, writeCommands, actionCommands).ToBytes();
+            byte[] buffer = new byte[_BUFFER_SIZE];
+            
+            int size = new NetMessage(_uid, _version, _csrf, readCommands, writeCommands, actionCommands).ToBytes(buffer);
             _sendCount++;
             
-            await _socket.SendAsync(data, SocketFlags.None, cancellation);
+            _socket.SendTo(buffer, size, SocketFlags.None, _serverPoint);
             
             if (readCommands == null) {
                 _sendCount--;
@@ -187,17 +180,22 @@ namespace TinyMVC.Modules.Networks {
             }
             
             EndPoint listenPoint = new IPEndPoint(IPAddress.Any, 0);
-            data = new byte[_BUFFER_SIZE];
+            Task<SocketReceiveFromResult> receive = _socket.ReceiveFromAsync(buffer, SocketFlags.None, listenPoint);
             
-            SocketReceiveFromResult result = await _socket.ReceiveFromAsync(data, SocketFlags.None, listenPoint);
+            await Task.WhenAny(receive, Task.Delay(_socket.ReceiveTimeout));
+            
             _sendCount--;
             
-            if (result.ReceivedBytes <= 0) {
+            if (receive.IsCompleted == false) {
+                return;
+            }
+            
+            if (receive.Result.ReceivedBytes <= 0) {
                 return;
             }
             
             try {
-                NetMessage message = data.ToMessage();
+                NetMessage message = buffer.ToMessage();
                 
                 if (message.time > _lastReceiveTime) {
                     _lastReceiveTime = message.time;
@@ -221,10 +219,10 @@ namespace TinyMVC.Modules.Networks {
                                 value = null;
                             }
                             
-                            foreach (NetReaderBuffer buffer in bufferRead) {
-                                if (buffer.IsCurrent(command.group, command.part, command.key)) {
+                            foreach (NetReaderBuffer read in bufferRead) {
+                                if (read.IsCurrent(command.group, command.part, command.key)) {
                                     try {
-                                        buffer.listeners.Invoke(value);
+                                        read.listeners.Invoke(value);
                                     } catch (Exception exception) {
                                         Debug.LogWarning(new Exception("NetService.Sync - Listener.Invoke", exception));
                                     }
