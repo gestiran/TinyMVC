@@ -15,9 +15,9 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
             locationId = location;
         }
         
-        public void Send() => NetService.Action(type, locationId, 0f, 0f);
+        public void Send() => NetSyncService.Action(type, locationId, 0f, 0f);
         
-        public void Send(Vector3 direction) => NetService.Action(type, locationId, direction.x, direction.z);
+        public void Send(Vector3 direction) => NetSyncService.Action(type, locationId, direction.x, direction.z);
         
         public bool Equals(NetAction other) => other != null && type == other.type && locationId == other.locationId;
         

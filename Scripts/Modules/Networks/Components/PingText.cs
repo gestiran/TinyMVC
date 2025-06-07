@@ -13,13 +13,13 @@ namespace TinyMVC.Modules.Networks.Components {
         }
         
         private void OnEnable() {
-            NetService.ping += UpdatePing;
+            NetSyncService.ping += UpdatePing;
             
             _drawPing = StartCoroutine(DrawPing());
         }
         
         private void OnDisable() {
-            NetService.ping -= UpdatePing;
+            NetSyncService.ping -= UpdatePing;
             
             if (_drawPing != null) {
                 StopCoroutine(_drawPing);

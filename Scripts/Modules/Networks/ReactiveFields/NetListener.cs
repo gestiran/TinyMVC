@@ -41,7 +41,7 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
         // Resharper disable Unity.ExpensiveCode
         public void AddListener(ActionListener<T> listener) {
             if (_listenersValue.Count == 0) {
-                NetService.AddRead(group, part, key, SetValue);
+                NetSyncService.AddRead(group, part, key, SetValue);
             }
             
             _listenersValue.Add(listener);
@@ -58,13 +58,13 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
             _listenersValue.Remove(listener);
             
             if (_listenersValue.Count == 0) {
-                NetService.RemoveRead(group, part, key, SetValue);
+                NetSyncService.RemoveRead(group, part, key, SetValue);
             }
         }
         
         public void Unload() {
             if (_listenersValue.Count > 0) {
-                NetService.RemoveRead(group, part, key, SetValue);
+                NetSyncService.RemoveRead(group, part, key, SetValue);
             }
             
             _listenersValue.Clear();

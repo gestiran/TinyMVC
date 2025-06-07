@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using NetworkTypes;
 using NetworkTypes.Commands;
@@ -13,51 +14,73 @@ using TinySerializer.Core.Misc;
 using UnityEngine;
 
 namespace TinyMVC.Modules.Networks {
-    public static class NetService {
+    public static class NetSyncService {
         public static event Action<int> ping;
         
-        private static IPAddress _serverIp;
-        private static int _serverPort;
+        private static IPEndPoint _serverPoint;
+        private static Socket _socket;
         private static ulong _uid;
         private static ushort _version;
         private static ulong _csrf;
         private static long _lastReceiveTime;
         private static int _sendCount;
         private static int _sendLimit;
-        private static int _receiveTimeout;
         
+        private static CancellationTokenSource _cancellation;
         private static bool _isInitialized;
         
-        private static readonly UdpClient _udp;
         private static readonly List<NetReaderBuffer> _bufferRead;
         private static readonly List<NetWriterBuffer> _bufferWrite;
         private static readonly List<NetActionBuffer> _bufferAction;
         
-        private const int _BUFFER_SIZE = 256;
+        private const int _BUFFER_SIZE = 8192;
+        private const int _COMMAND_BUFFER_SIZE = 256;
         private const int _NETWORK_TICK = 33;
         
-        static NetService() {
-            _udp = new UdpClient();
-            _bufferRead = new List<NetReaderBuffer>(_BUFFER_SIZE);
-            _bufferWrite = new List<NetWriterBuffer>(_BUFFER_SIZE);
-            _bufferAction = new List<NetActionBuffer>(_BUFFER_SIZE);
-            
-            SyncProcess();
+        static NetSyncService() {
+            _bufferRead = new List<NetReaderBuffer>(_COMMAND_BUFFER_SIZE);
+            _bufferWrite = new List<NetWriterBuffer>(_COMMAND_BUFFER_SIZE);
+            _bufferAction = new List<NetActionBuffer>(_COMMAND_BUFFER_SIZE);
         }
         
         public static bool Initialize(string ip, int port, int sendLimit = 120, int receiveTimeout = 4000) {
             if (_isInitialized) {
+                Debug.LogError("NetService.Initialize - Already initialized!");
                 return _isInitialized;
             }
             
-            if (IPAddress.TryParse(ip, out _serverIp)) {
-                _serverPort = port;
+            if (IPAddress.TryParse(ip, out IPAddress serverIP)) {
+                _serverPoint = new IPEndPoint(serverIP, port);
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                _socket.Bind(_serverPoint);
+                _socket.ReceiveTimeout = receiveTimeout;
                 _sendLimit = sendLimit;
-                _receiveTimeout = receiveTimeout;
                 _isInitialized = true;
+                
+                _cancellation = new CancellationTokenSource();
+                SyncProcess(_cancellation.Token);
+            } else {
+                Debug.LogError("NetService.Initialize - Invalid ip data!");
             }
             
             return _isInitialized;
+        }
+        
+        public static void Deinitialize() {
+            if (_isInitialized == false) {
+                Debug.LogError("NetService.Initialize - Already deinitialized!");
+                return;
+            }
+            
+            if (_cancellation != null) {
+                _cancellation.Cancel();
+                _cancellation.Dispose();
+            }
+            
+            _socket.Close();
+            _socket.Dispose();
+            
+            _isInitialized = false;
         }
         
         public static void UpdateUID(ulong uid) => _uid = uid;
@@ -121,21 +144,30 @@ namespace TinyMVC.Modules.Networks {
             _bufferAction.Add(new NetActionBuffer(type, location, x, z));
         }
         
-        private static async void SyncProcess() {
-            while (Application.isPlaying) {
-                if (_isInitialized && _sendCount < _sendLimit) {
+        private static async void SyncProcess(CancellationToken cancellation) {
+            while (_isInitialized) {
+                if (_sendCount < _sendLimit) {
                     try {
-                        Sync().Forget();
+                        Sync(cancellation);
+                    } catch (SocketException exception) {
+                        if (exception.ErrorCode == 10060) {
+                            Debug.Log(new Exception("NetService.Sync - Timeout", exception));
+                            _sendCount--;
+                        } else {
+                            Debug.LogWarning(new Exception("NetService.Sync", exception));
+                        }
+                    } catch (OperationCanceledException exception) {
+                        Debug.Log(new Exception("NetService.Sync - Canceled", exception));
                     } catch (Exception exception) {
                         Debug.LogWarning(new Exception("NetService.Sync", exception));
                     }
                 }
                 
-                await UniTask.Delay(_NETWORK_TICK, DelayType.UnscaledDeltaTime, PlayerLoopTiming.LastPostLateUpdate);
+                await UniTask.Delay(_NETWORK_TICK, DelayType.UnscaledDeltaTime, PlayerLoopTiming.LastPostLateUpdate, cancellation);
             }
         }
         
-        private static async UniTask Sync() {
+        private static async void Sync(CancellationToken cancellation) {
             NetReadCommand[] readCommands = GetReadCommands();
             NetWriteCommand[] writeCommands = GetWriteCommands();
             NetActionCommand[] actionCommands = GetActionCommands();
@@ -145,39 +177,36 @@ namespace TinyMVC.Modules.Networks {
             }
             
             byte[] data = new NetMessage(_uid, _version, _csrf, readCommands, writeCommands, actionCommands).ToBytes();
-            
-            DateTime now = DateTime.Now;
             _sendCount++;
             
-            await _udp.SendAsync(data, data.Length, new IPEndPoint(_serverIp, _serverPort));
+            await _socket.SendAsync(data, SocketFlags.None, cancellation);
             
             if (readCommands == null) {
                 _sendCount--;
                 return;
             }
             
-            UniTask.WhenAny(Receive(now), WaitTimeout()).Forget();
-        }
-        
-        private static async UniTask Receive(DateTime now) {
-            UdpReceiveResult receive = await _udp.ReceiveAsync();
+            EndPoint listenPoint = new IPEndPoint(IPAddress.Any, 0);
+            data = new byte[_BUFFER_SIZE];
+            
+            SocketReceiveFromResult result = await _socket.ReceiveFromAsync(data, SocketFlags.None, listenPoint);
             _sendCount--;
             
-            if (receive.Buffer.Length <= 0) {
+            if (result.ReceivedBytes <= 0) {
                 return;
             }
             
             try {
-                ping?.Invoke((int)DateTime.Now.Subtract(now).TotalMilliseconds);
-            } catch (Exception exception) {
-                Debug.LogWarning(new Exception("NetService.Sync - Ping invoke", exception));
-            }
-            
-            try {
-                NetMessage message = receive.Buffer.ToMessage();
+                NetMessage message = data.ToMessage();
                 
                 if (message.time > _lastReceiveTime) {
                     _lastReceiveTime = message.time;
+                    
+                    try {
+                        ping?.Invoke((int)DateTime.Now.Subtract(new DateTime(message.time)).TotalMilliseconds);
+                    } catch (Exception exception) {
+                        Debug.LogWarning(new Exception("NetService.Sync - Ping invoke", exception));
+                    }
                     
                     if (message.writes != null && _bufferRead.Count > 0) {
                         NetReaderBuffer[] bufferRead = new NetReaderBuffer[_bufferRead.Count];
@@ -207,11 +236,6 @@ namespace TinyMVC.Modules.Networks {
             } catch (Exception exception) {
                 Debug.LogWarning(new Exception("NetService.Sync - Response read", exception));
             }
-        }
-        
-        private static async UniTask WaitTimeout() {
-            await UniTask.Delay(_receiveTimeout, true);
-            _sendCount--;
         }
         
         private static NetReadCommand[] GetReadCommands() {

@@ -12,7 +12,7 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
             this.key = key;
         }
         
-        public void Send(T value) => NetService.Write(group, part, key, value);
+        public void Send(T value) => NetSyncService.Write(group, part, key, value);
         
         public override int GetHashCode() => HashCode.Combine(group, part, key);
         
