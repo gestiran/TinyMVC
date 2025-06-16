@@ -43,7 +43,16 @@ namespace TinyMVC.Dependencies.Components {
             }
         }
         
-        public void RemoveComponents(List<ModelComponent> components) {
+        public void RemoveComponent<T>(T component) where T : ModelComponent {
+            string key = component.GetType().FullName;
+            
+            if (_components.TryGetValue(key, out ModelComponent modelComponent)) {
+                ProjectContext.data.RemoveComponent(this, modelComponent);
+                _components.RemoveByKey(key);
+            }
+        }
+        
+        public void RemoveComponents<T>(T components) where T : IEnumerable<ModelComponent> {
             foreach (ModelComponent current in components) {
                 string key = current.GetType().FullName;
                 
@@ -55,6 +64,8 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public bool IsHaveComponent<T>() where T : ModelComponent => _components.ContainsKey(typeof(T).FullName);
+        
+        public bool IsHaveComponent<T>(T component) where T : ModelComponent => _components.ContainsKey(component.GetType().FullName);
         
         public bool TryGetComponent<T>(out T component) where T : ModelComponent {
             if (_components.TryGetValue(typeof(T).FullName, out ModelComponent componentValue)) {

@@ -1,5 +1,5 @@
 ﻿namespace TinyMVC.Dependencies.Components {
-    public sealed class ComponentLink<T> where T : ModelComponent {
+    public sealed class ComponentLink<T> {
         public readonly Model model;
         public readonly T component;
         

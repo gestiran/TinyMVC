@@ -161,7 +161,7 @@ namespace TinyMVC.Boot {
             return false;
         }
         
-        public IEnumerable<ComponentLink<T>> ForEachComponents<T>() where T : ModelComponent {
+        public IEnumerable<ComponentLink<T>> ForEachComponents<T>() {
             List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
             foreach (Dictionary<Model, List<ModelComponent>> components in contextComponents.Values) {
@@ -179,7 +179,7 @@ namespace TinyMVC.Boot {
             }
         }
         
-        public IEnumerable<ComponentLink<T>> ForEachComponents<T>(string contextKey) where T : ModelComponent {
+        public IEnumerable<ComponentLink<T>> ForEachComponents<T>(string contextKey) {
             List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
             if (contextComponents.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
