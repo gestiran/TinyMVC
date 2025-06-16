@@ -29,7 +29,7 @@ namespace TinyMVC.Boot {
             if (tempContainer != null && tempContainer.dependencies.TryGetValue(type, out IDependency tempValue)) {
                 dependency = (T)tempValue;
                 return true;
-            } 
+            }
             
             if (viewsContainer != null && viewsContainer.dependencies.TryGetValue(type, out tempValue)) {
                 dependency = (T)tempValue;
@@ -161,38 +161,38 @@ namespace TinyMVC.Boot {
             return false;
         }
         
-        public IEnumerable<(Model, T)> ForEachComponents<T>() {
-            List<(Model, T)> temp = new List<(Model, T)>();
+        public IEnumerable<ComponentLink<T>> ForEachComponents<T>() where T : ModelComponent {
+            List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
             foreach (Dictionary<Model, List<ModelComponent>> components in contextComponents.Values) {
                 foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
                     foreach (ModelComponent component in pair.Value) {
                         if (component is T other) {
-                            temp.Add((pair.Key, other));
+                            temp.Add(new ComponentLink<T>(pair.Key, other));
                         }
                     }
                 }
             }
             
-            foreach ((Model, T) result in temp) {
+            foreach (ComponentLink<T> result in temp) {
                 yield return result;
             }
         }
         
-        public IEnumerable<(Model, T)> ForEachComponents<T>(string contextKey) {
-            List<(Model, T)> temp = new List<(Model, T)>();
+        public IEnumerable<ComponentLink<T>> ForEachComponents<T>(string contextKey) where T : ModelComponent {
+            List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
             if (contextComponents.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
                 foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
                     foreach (ModelComponent component in pair.Value) {
                         if (component is T other) {
-                            temp.Add((pair.Key, other));
+                            temp.Add(new ComponentLink<T>(pair.Key, other));
                         }
                     }
                 }
             }
             
-            foreach ((Model, T) result in temp) {
+            foreach (ComponentLink<T> result in temp) {
                 yield return result;
             }
         }
