@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using TinyMVC.Dependencies;
 using TinyMVC.Dependencies.Components;
+using TinyMVC.Loop;
+using TinyMVC.ReactiveFields;
+using TinyMVC.ReactiveFields.Extensions;
 
 namespace TinyMVC.Boot {
     public sealed class ProjectData {
@@ -9,7 +12,10 @@ namespace TinyMVC.Boot {
         internal DependencyContainer viewsContainer;
         
         internal readonly Dictionary<string, DependencyContainer> contexts;
-        internal readonly Dictionary<string, Dictionary<Model, List<ModelComponent>>> contextComponents;
+        
+        private readonly Dictionary<string, Dictionary<Model, List<ModelComponent>>> _contextComponents;
+        private readonly List<ActionListener<Model, ModelComponent>> _addComponentListeners;
+        private readonly List<ActionListener<Model, ModelComponent>> _removeComponentListeners;
         
         private const int _CAPACITY = 16;
         
@@ -20,7 +26,9 @@ namespace TinyMVC.Boot {
         
         internal ProjectData() {
             contexts = new Dictionary<string, DependencyContainer>(_CAPACITY);
-            contextComponents = new Dictionary<string, Dictionary<Model, List<ModelComponent>>>(_CAPACITY);
+            _contextComponents = new Dictionary<string, Dictionary<Model, List<ModelComponent>>>(_CAPACITY);
+            _addComponentListeners = new List<ActionListener<Model, ModelComponent>>(_CAPACITY);
+            _removeComponentListeners = new List<ActionListener<Model, ModelComponent>>(_CAPACITY);
         }
         
         public bool TryGetDependency<T>(out T dependency) where T : IDependency {
@@ -115,6 +123,32 @@ namespace TinyMVC.Boot {
             return false;
         }
         
+        public void AddOnAddComponentListener(ActionListener<Model, ModelComponent> listener) {
+            _addComponentListeners.Add(listener);
+        }
+        
+        public void AddOnAddComponentListener(ActionListener<Model, ModelComponent> listener, UnloadPool unload) {
+            _addComponentListeners.Add(listener);
+            unload.Add(new UnloadAction(() => _addComponentListeners.Remove(listener)));
+        }
+        
+        public void RemoveOnAddComponentListener(ActionListener<Model, ModelComponent> listener) {
+            _removeComponentListeners.Add(listener);
+        }
+        
+        public void RemoveOnAddComponentListener(ActionListener<Model, ModelComponent> listener, UnloadPool unload) {
+            _removeComponentListeners.Add(listener);
+            unload.Add(new UnloadAction(() => _removeComponentListeners.Remove(listener)));
+        }
+        
+        public void AddOnRemoveComponentListener(ActionListener<Model, ModelComponent> listener) {
+            _addComponentListeners.Remove(listener);
+        }
+        
+        public void RemoveOnRemoveComponentListener(ActionListener<Model, ModelComponent> listener) {
+            _removeComponentListeners.Remove(listener);
+        }
+        
         public bool Get<T>(out T dependency) where T : IDependency {
             Type type = typeof(T);
             
@@ -164,7 +198,7 @@ namespace TinyMVC.Boot {
         public IEnumerable<ComponentLink<T>> ForEachComponents<T>() {
             List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
-            foreach (Dictionary<Model, List<ModelComponent>> components in contextComponents.Values) {
+            foreach (Dictionary<Model, List<ModelComponent>> components in _contextComponents.Values) {
                 foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
                     foreach (ModelComponent component in pair.Value) {
                         if (component is T other) {
@@ -182,7 +216,7 @@ namespace TinyMVC.Boot {
         public IEnumerable<ComponentLink<T>> ForEachComponents<T>(string contextKey) {
             List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
-            if (contextComponents.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
+            if (_contextComponents.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
                 foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
                     foreach (ModelComponent component in pair.Value) {
                         if (component is T other) {
@@ -204,7 +238,7 @@ namespace TinyMVC.Boot {
                 }
             } else {
                 container = new DependencyContainer(dependencies);
-                contextComponents.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
+                _contextComponents.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
                 contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR
@@ -218,7 +252,7 @@ namespace TinyMVC.Boot {
                 container.Update(dependency);
             } else {
                 container = new DependencyContainer(dependency);
-                contextComponents.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
+                _contextComponents.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
                 contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR
@@ -233,7 +267,7 @@ namespace TinyMVC.Boot {
             }
             
             container.Dispose();
-            contextComponents.Remove(contextKey);
+            _contextComponents.Remove(contextKey);
             contexts.Remove(contextKey);
             
         #if UNITY_EDITOR
@@ -242,19 +276,21 @@ namespace TinyMVC.Boot {
         }
         
         internal void AddComponent(Model model, ModelComponent component) {
-            if (contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
+            if (_contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
                 if (components.TryGetValue(model, out List<ModelComponent> list)) {
                     list.Add(component);
                 } else {
                     components.Add(model, new List<ModelComponent>() { component });
                 }
+                
+                _addComponentListeners.Invoke(model, component);
             }
         }
         
         internal void RemoveComponent(Model model, ModelComponent component) {
-            if (contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
-                if (components.TryGetValue(model, out List<ModelComponent> list)) {
-                    list.Remove(component);
+            if (_contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
+                if (components.TryGetValue(model, out List<ModelComponent> list) && list.Remove(component)) {
+                    _removeComponentListeners.Invoke(model, component);
                 }
             }
         }
