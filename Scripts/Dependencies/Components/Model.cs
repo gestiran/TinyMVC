@@ -16,7 +16,7 @@ namespace TinyMVC.Dependencies.Components {
     #if UNITY_EDITOR
         [ShowInInspector, HideLabel]
     #endif
-        private readonly ObservedDictionary<string, ModelComponent> _components;
+        internal readonly ObservedDictionary<string, ModelComponent> componentsList;
         
         private readonly int _id;
         
@@ -25,50 +25,40 @@ namespace TinyMVC.Dependencies.Components {
         private const int _CAPACITY = 16;
         
         protected Model() {
-            _components = new ObservedDictionary<string, ModelComponent>(_CAPACITY);
+            componentsList = new ObservedDictionary<string, ModelComponent>(_CAPACITY);
             _id = _globalId++;
         }
         
-        public void AddComponent<T>(T component) where T : ModelComponent {
-            ProjectContext.data.AddComponent(this, component);
-            _components.Add(typeof(T).FullName, component);
+        public void AddComponent<T>(T component) where T : ModelComponent => AddComponentInternal(component);
+        
+        internal protected virtual void AddComponentInternal<T>(T component) where T : ModelComponent {
+            ProjectContext.components.Add(this, component);
+            componentsList.Add(typeof(T).FullName, component);
         }
         
-        public void RemoveComponent<T>() where T : ModelComponent {
-            string key = typeof(T).FullName;
-            
-            if (_components.TryGetValue(key, out ModelComponent component)) {
-                ProjectContext.data.RemoveComponent(this, component);
-                _components.RemoveByKey(key);
-            }
-        }
+        public void RemoveComponent<T>() where T : ModelComponent => RemoveComponentInternal(typeof(T).FullName);
         
-        public void RemoveComponent<T>(T component) where T : ModelComponent {
-            string key = component.GetType().FullName;
-            
-            if (_components.TryGetValue(key, out ModelComponent modelComponent)) {
-                ProjectContext.data.RemoveComponent(this, modelComponent);
-                _components.RemoveByKey(key);
-            }
-        }
+        public void RemoveComponent<T>(T component) where T : ModelComponent => RemoveComponentInternal(component.GetType().FullName);
         
         public void RemoveComponents<T>(T components) where T : IEnumerable<ModelComponent> {
-            foreach (ModelComponent current in components) {
-                string key = current.GetType().FullName;
-                
-                if (_components.TryGetValue(key, out ModelComponent component)) {
-                    ProjectContext.data.RemoveComponent(this, component);
-                    _components.RemoveByKey(key);
-                }
+            foreach (ModelComponent component in components) {
+                RemoveComponentInternal(component.GetType().FullName);
             }
         }
         
-        public bool IsHaveComponent<T>() where T : ModelComponent => _components.ContainsKey(typeof(T).FullName);
+        internal protected virtual void RemoveComponentInternal(string key) {
+            if (componentsList.TryGetValue(key, out ModelComponent component)) {
+                ProjectContext.components.Remove(this, component);
+                componentsList.RemoveByKey(key);
+            }
+        }
         
-        public bool IsHaveComponent<T>(T component) where T : ModelComponent => _components.ContainsKey(component.GetType().FullName);
+        public bool IsHaveComponent<T>() where T : ModelComponent => componentsList.ContainsKey(typeof(T).FullName);
+        
+        public bool IsHaveComponent<T>(T component) where T : ModelComponent => componentsList.ContainsKey(component.GetType().FullName);
         
         public bool TryGetComponent<T>(out T component) where T : ModelComponent {
-            if (_components.TryGetValue(typeof(T).FullName, out ModelComponent componentValue)) {
+            if (componentsList.TryGetValue(typeof(T).FullName, out ModelComponent componentValue)) {
                 component = (T)componentValue;
                 return true;
             }
@@ -78,7 +68,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public IEnumerable<T> ForEach<T>() {
-            foreach (ModelComponent component in _components.ForEachValues()) {
+            foreach (ModelComponent component in componentsList.ForEachValues()) {
                 if (component is T target) {
                     yield return target;
                 }
@@ -86,7 +76,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public IEnumerable<(T1, T2)> ForEach<T1, T2>() {
-            IEnumerable<ModelComponent> values = _components.ForEachValues();
+            IEnumerable<ModelComponent> values = componentsList.ForEachValues();
             
             foreach (ModelComponent component in values) {
                 if (component is not T1 target1) {
@@ -102,7 +92,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public IEnumerable<(T1, T2, T3)> ForEach<T1, T2, T3>() {
-            IEnumerable<ModelComponent> values = _components.ForEachValues();
+            IEnumerable<ModelComponent> values = componentsList.ForEachValues();
             
             foreach (ModelComponent component in values) {
                 if (component is not T1 target1) {
@@ -122,7 +112,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public IEnumerable<(T1, T2, T3, T4)> ForEach<T1, T2, T3, T4>() {
-            IEnumerable<ModelComponent> values = _components.ForEachValues();
+            IEnumerable<ModelComponent> values = componentsList.ForEachValues();
             
             foreach (ModelComponent component in values) {
                 if (component is not T1 target1) {
@@ -146,40 +136,40 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener listener) => _components.AddOnAddListener(listener);
+        public void AddOnAddListener(ActionListener listener) => componentsList.AddOnAddListener(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener listener, UnloadPool unload) => _components.AddOnAddListener(listener, unload);
+        public void AddOnAddListener(ActionListener listener, UnloadPool unload) => componentsList.AddOnAddListener(listener, unload);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener<ModelComponent> listener) => _components.AddOnAddListener(listener);
+        public void AddOnAddListener(ActionListener<ModelComponent> listener) => componentsList.AddOnAddListener(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener<ModelComponent> listener, UnloadPool unload) => _components.AddOnAddListener(listener, unload);
+        public void AddOnAddListener(ActionListener<ModelComponent> listener, UnloadPool unload) => componentsList.AddOnAddListener(listener, unload);
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener listener) => _components.RemoveOnAddListener(listener);
+        public void RemoveOnAddListener(ActionListener listener) => componentsList.RemoveOnAddListener(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener<ModelComponent> listener) => _components.RemoveOnAddListener(listener);
+        public void RemoveOnAddListener(ActionListener<ModelComponent> listener) => componentsList.RemoveOnAddListener(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener listener) => _components.AddOnRemoveListener(listener);
+        public void AddOnRemoveListener(ActionListener listener) => componentsList.AddOnRemoveListener(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) => _components.AddOnRemoveListener(listener, unload);
+        public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) => componentsList.AddOnRemoveListener(listener, unload);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener<ModelComponent> listener) => _components.AddOnRemoveListener(listener);
+        public void AddOnRemoveListener(ActionListener<ModelComponent> listener) => componentsList.AddOnRemoveListener(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener<ModelComponent> listener, UnloadPool unload) => _components.AddOnRemoveListener(listener, unload);
+        public void AddOnRemoveListener(ActionListener<ModelComponent> listener, UnloadPool unload) => componentsList.AddOnRemoveListener(listener, unload);
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener listener) => _components.RemoveOnRemoveListener(listener);
+        public void RemoveOnRemoveListener(ActionListener listener) => componentsList.RemoveOnRemoveListener(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener<ModelComponent> listener) => _components.RemoveOnRemoveListener(listener);
+        public void RemoveOnRemoveListener(ActionListener<ModelComponent> listener) => componentsList.RemoveOnRemoveListener(listener);
         
     #if UNITY_EDITOR
         

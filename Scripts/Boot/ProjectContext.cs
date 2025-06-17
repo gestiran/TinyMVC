@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace TinyMVC.Boot {
     public static class ProjectContext {
+        public static ProjectComponents components { get; private set; }
         public static ProjectData data { get; private set; }
         public static SceneContext activeContext { get; private set; }
         
@@ -125,7 +126,8 @@ namespace TinyMVC.Boot {
         /// <summary> First project context creating </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         internal static void CreateContext() {
-            data = new ProjectData();
+            components = new ProjectComponents();
+            data = new ProjectData(components);
             
             _contexts = new Dictionary<string, SceneContext>();
             _sceneContexts = new Dictionary<int, List<SceneContext>>();

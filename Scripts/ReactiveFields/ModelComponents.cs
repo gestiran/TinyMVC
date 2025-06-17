@@ -3,13 +3,13 @@ using TinyMVC.Dependencies.Components;
 using TinyMVC.ReactiveFields.Extensions;
 
 namespace TinyMVC.ReactiveFields {
-    internal static class ComponentListeners<T> where T : ModelComponent {
+    internal static class ModelComponents<T> where T : ModelComponent {
         private static readonly List<ActionListener<Model, T>> _addListeners;
         private static readonly List<ActionListener<Model, T>> _removeListeners;
         
         private const int _CAPACITY = 8;
         
-        static ComponentListeners() {
+        static ModelComponents() {
             _addListeners = new List<ActionListener<Model, T>>(_CAPACITY);
             _removeListeners = new List<ActionListener<Model, T>>(_CAPACITY);
         }
