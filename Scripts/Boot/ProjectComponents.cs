@@ -13,67 +13,33 @@ namespace TinyMVC.Boot {
             all = new Dictionary<string, Dictionary<Model, List<ModelComponent>>>(_CAPACITY);
         }
         
-    #region Models
-        
-        public void AddOnAddListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
-            ModelComponents<T>.AddOnAddListener(listener);
+        public void AddOnAddListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener) where TModel : Model where TComponent : ModelComponent {
+            ModelComponents<TModel, TComponent>.AddOnAddListener(listener);
         }
         
-        public void AddOnAddListener<T>(ActionListener<Model, T> listener, UnloadPool unload) where T : ModelComponent {
-            ModelComponents<T>.AddOnAddListener(listener);
-            unload.Add(new UnloadAction(() => ModelComponents<T>.RemoveOnAddListener(listener)));
+        public void AddOnAddListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener, UnloadPool unload) where TModel : Model where TComponent : ModelComponent {
+            ModelComponents<TModel, TComponent>.AddOnAddListener(listener);
+            unload.Add(new UnloadAction(() => ModelComponents<TModel, TComponent>.RemoveOnAddListener(listener)));
         }
         
-        public void RemoveOnAddListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
-            ModelComponents<T>.RemoveOnAddListener(listener);
+        public void RemoveOnAddListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener) where TModel : Model where TComponent : ModelComponent {
+            ModelComponents<TModel, TComponent>.RemoveOnAddListener(listener);
         }
         
-        public void AddOnRemoveListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
-            ModelComponents<T>.AddOnRemoveListener(listener);
+        public void AddOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener) where TModel : Model where TComponent : ModelComponent {
+            ModelComponents<TModel, TComponent>.AddOnRemoveListener(listener);
         }
         
-        public void AddOnRemoveListener<T>(ActionListener<Model, T> listener, UnloadPool unload) where T : ModelComponent {
-            ModelComponents<T>.AddOnRemoveListener(listener);
-            unload.Add(new UnloadAction(() => ModelComponents<T>.RemoveOnRemoveListener(listener)));
+        public void AddOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener, UnloadPool unload) where TModel : Model where TComponent : ModelComponent {
+            ModelComponents<TModel, TComponent>.AddOnRemoveListener(listener);
+            unload.Add(new UnloadAction(() => ModelComponents<TModel, TComponent>.RemoveOnRemoveListener(listener)));
         }
         
-        public void RemoveOnRemoveListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
-            ModelComponents<T>.RemoveOnRemoveListener(listener);
+        public void RemoveOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener) where TModel : Model where TComponent : ModelComponent {
+            ModelComponents<TModel, TComponent>.RemoveOnRemoveListener(listener);
         }
         
-    #endregion
-        
-    #region Actors
-        
-        public void AddOnAddListener<T>(ActionListener<Actor, T> listener) where T : ModelComponent {
-            ActorComponents<T>.AddOnAddListener(listener);
-        }
-        
-        public void AddOnAddListener<T>(ActionListener<Actor, T> listener, UnloadPool unload) where T : ModelComponent {
-            ActorComponents<T>.AddOnAddListener(listener);
-            unload.Add(new UnloadAction(() => ActorComponents<T>.RemoveOnAddListener(listener)));
-        }
-        
-        public void RemoveOnAddListener<T>(ActionListener<Actor, T> listener) where T : ModelComponent {
-            ActorComponents<T>.RemoveOnAddListener(listener);
-        }
-        
-        public void AddOnRemoveListener<T>(ActionListener<Actor, T> listener) where T : ModelComponent {
-            ActorComponents<T>.AddOnRemoveListener(listener);
-        }
-        
-        public void AddOnRemoveListener<T>(ActionListener<Actor, T> listener, UnloadPool unload) where T : ModelComponent {
-            ActorComponents<T>.AddOnRemoveListener(listener);
-            unload.Add(new UnloadAction(() => ActorComponents<T>.RemoveOnRemoveListener(listener)));
-        }
-        
-        public void RemoveOnRemoveListener<T>(ActionListener<Actor, T> listener) where T : ModelComponent {
-            ActorComponents<T>.RemoveOnRemoveListener(listener);
-        }
-        
-    #endregion
-        
-        internal void Add<T>(Model model, T component) where T : ModelComponent {
+        internal void Add<TModel, TComponent>(TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
             if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
                 if (components.TryGetValue(model, out List<ModelComponent> list)) {
                     list.Add(component);
@@ -81,34 +47,14 @@ namespace TinyMVC.Boot {
                     components.Add(model, new List<ModelComponent>() { component });
                 }
                 
-                ModelComponents<T>.InvokeAdd(model, component);
+                ModelComponents<TModel, TComponent>.InvokeAdd(model, component);
             }
         }
         
-        internal void Add<T>(Actor actor, T component) where T : ModelComponent {
-            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
-                if (components.TryGetValue(actor, out List<ModelComponent> list)) {
-                    list.Add(component);
-                } else {
-                    components.Add(actor, new List<ModelComponent>() { component });
-                }
-                
-                ActorComponents<T>.InvokeAdd(actor, component);
-            }
-        }
-        
-        internal void Remove<T>(Model model, T component) where T : ModelComponent {
+        internal void Remove<TModel, TComponent>(TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
             if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
                 if (components.TryGetValue(model, out List<ModelComponent> list) && list.Remove(component)) {
-                    ModelComponents<T>.InvokeRemove(model, component);
-                }
-            }
-        }
-        
-        internal void Remove<T>(Actor actor, T component) where T : ModelComponent {
-            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
-                if (components.TryGetValue(actor, out List<ModelComponent> list) && list.Remove(component)) {
-                    ActorComponents<T>.InvokeRemove(actor, component);
+                    ModelComponents<TModel, TComponent>.InvokeRemove(model, component);
                 }
             }
         }
