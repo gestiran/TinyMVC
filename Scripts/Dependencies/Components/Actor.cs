@@ -3,35 +3,19 @@ using TinyMVC.Views;
 
 namespace TinyMVC.Dependencies.Components {
     public abstract class Actor<T> : Actor where T : View {
-    #if UNITY_EDITOR
-        internal override bool isVisibleBaseView => false;
-    #endif
+        public new T view { get => _view; internal set => _view = value; }
         
-        [ShowInInspector, ReadOnly]
-        public new T view {
-            get => viewTypeInternal;
-            internal set => viewTypeInternal = value;
-        }
+        internal override View viewInternal { get => _view; set => _view = value as T; }
         
-        internal override View viewInternal { get => viewTypeInternal; set => viewTypeInternal = value as T; }
-        
-        [ShowInInspector, LabelText("View"), ReadOnly]
-        internal T viewTypeInternal { get; set; }
+        private T _view { get; set; }
     }
     
     public abstract class Actor : Model {
-    #if UNITY_EDITOR
+        public View view { get => viewInternal; internal set => viewInternal = value; }
         
-        internal virtual bool isVisibleBaseView => true;
+        internal virtual View viewInternal { get => _view; set => _view = value; }
         
-    #endif
-        
-        public View view {
-            get => viewInternal;
-            internal set => viewInternal = value;
-        }
-        
-        [ShowInInspector, LabelText("View"), ShowIf("isVisibleBaseView"), ReadOnly]
-        internal virtual View viewInternal { get; set; }
+        [ShowInInspector, LabelText("View"), HideReferenceObjectPicker, HideDuplicateReferenceBox, PropertyOrder(-10000), ReadOnly]
+        private View _view;
     }
 }
