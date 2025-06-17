@@ -4,7 +4,6 @@ using TinyMVC.Dependencies;
 using TinyMVC.Dependencies.Components;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
-using TinyMVC.ReactiveFields.Extensions;
 
 namespace TinyMVC.Boot {
     public sealed class ProjectData {
@@ -14,8 +13,6 @@ namespace TinyMVC.Boot {
         internal readonly Dictionary<string, DependencyContainer> contexts;
         
         private readonly Dictionary<string, Dictionary<Model, List<ModelComponent>>> _contextComponents;
-        private readonly List<ActionListener<Model, ModelComponent>> _addComponentListeners;
-        private readonly List<ActionListener<Model, ModelComponent>> _removeComponentListeners;
         
         private const int _CAPACITY = 16;
         
@@ -27,8 +24,6 @@ namespace TinyMVC.Boot {
         internal ProjectData() {
             contexts = new Dictionary<string, DependencyContainer>(_CAPACITY);
             _contextComponents = new Dictionary<string, Dictionary<Model, List<ModelComponent>>>(_CAPACITY);
-            _addComponentListeners = new List<ActionListener<Model, ModelComponent>>(_CAPACITY);
-            _removeComponentListeners = new List<ActionListener<Model, ModelComponent>>(_CAPACITY);
         }
         
         public bool TryGetDependency<T>(out T dependency) where T : IDependency {
@@ -123,30 +118,30 @@ namespace TinyMVC.Boot {
             return false;
         }
         
-        public void AddOnAddComponentListener(ActionListener<Model, ModelComponent> listener) {
-            _addComponentListeners.Add(listener);
+        public static void AddOnAddComponentListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
+            ComponentListeners<T>.AddOnAddListener(listener);
         }
         
-        public void AddOnAddComponentListener(ActionListener<Model, ModelComponent> listener, UnloadPool unload) {
-            _addComponentListeners.Add(listener);
-            unload.Add(new UnloadAction(() => _addComponentListeners.Remove(listener)));
+        public static void AddOnAddComponentListener<T>(ActionListener<Model, T> listener, UnloadPool unload) where T : ModelComponent {
+            ComponentListeners<T>.AddOnAddListener(listener);
+            unload.Add(new UnloadAction(() => ComponentListeners<T>.RemoveOnAddListener(listener)));
         }
         
-        public void RemoveOnAddComponentListener(ActionListener<Model, ModelComponent> listener) {
-            _removeComponentListeners.Add(listener);
+        public static void RemoveOnAddComponentListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
+            ComponentListeners<T>.RemoveOnAddListener(listener);
         }
         
-        public void RemoveOnAddComponentListener(ActionListener<Model, ModelComponent> listener, UnloadPool unload) {
-            _removeComponentListeners.Add(listener);
-            unload.Add(new UnloadAction(() => _removeComponentListeners.Remove(listener)));
+        public static void AddOnRemoveComponentListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
+            ComponentListeners<T>.AddOnRemoveListener(listener);
         }
         
-        public void AddOnRemoveComponentListener(ActionListener<Model, ModelComponent> listener) {
-            _addComponentListeners.Remove(listener);
+        public static void AddOnRemoveComponentListener<T>(ActionListener<Model, T> listener, UnloadPool unload) where T : ModelComponent {
+            ComponentListeners<T>.AddOnRemoveListener(listener);
+            unload.Add(new UnloadAction(() => ComponentListeners<T>.RemoveOnRemoveListener(listener)));
         }
         
-        public void RemoveOnRemoveComponentListener(ActionListener<Model, ModelComponent> listener) {
-            _removeComponentListeners.Remove(listener);
+        public static void RemoveOnRemoveComponentListener<T>(ActionListener<Model, T> listener) where T : ModelComponent {
+            ComponentListeners<T>.RemoveOnRemoveListener(listener);
         }
         
         public bool Get<T>(out T dependency) where T : IDependency {
@@ -275,7 +270,7 @@ namespace TinyMVC.Boot {
         #endif
         }
         
-        internal void AddComponent(Model model, ModelComponent component) {
+        internal void AddComponent<T>(Model model, T component) where T : ModelComponent {
             if (_contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
                 if (components.TryGetValue(model, out List<ModelComponent> list)) {
                     list.Add(component);
@@ -283,14 +278,14 @@ namespace TinyMVC.Boot {
                     components.Add(model, new List<ModelComponent>() { component });
                 }
                 
-                _addComponentListeners.Invoke(model, component);
+                ComponentListeners<T>.InvokeAdd(model, component);
             }
         }
         
-        internal void RemoveComponent(Model model, ModelComponent component) {
+        internal void RemoveComponent<T>(Model model, T component) where T : ModelComponent {
             if (_contextComponents.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
                 if (components.TryGetValue(model, out List<ModelComponent> list) && list.Remove(component)) {
-                    _removeComponentListeners.Invoke(model, component);
+                    ComponentListeners<T>.InvokeRemove(model, component);
                 }
             }
         }
