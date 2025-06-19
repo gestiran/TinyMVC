@@ -1,11 +1,20 @@
 ﻿using System;
 using UnityEngine;
+
+#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.SmartLinks {
-    [Serializable, InlineProperty]
+    [Serializable]
+#if ODIN_INSPECTOR && UNITY_EDITOR
+    [InlineProperty]
+#endif
     public sealed class SoftLink<T> : SmartLink<T> where T : MonoBehaviour {
-        [SerializeField, HorizontalGroup, SuffixLabel("Root", true), HideLabel, ChildGameObjectsOnly(IncludeInactive = true), Required]
+        [SerializeField]
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [HorizontalGroup, SuffixLabel("Root", true), HideLabel, ChildGameObjectsOnly(IncludeInactive = true), Required]
+    #endif
         private Transform _root;
         
         public T GetInstance() => GetInstance(_ => { });

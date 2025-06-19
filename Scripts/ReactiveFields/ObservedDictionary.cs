@@ -2,12 +2,12 @@
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.ReactiveFields {
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
     [ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class ObservedDictionary<TKey, TValue> {
@@ -18,9 +18,9 @@ namespace TinyMVC.ReactiveFields {
         private readonly List<ActionListener> _onRemove;
         private readonly List<ActionListener<TValue>> _onRemoveWithValue;
         
-    #if UNITY_EDITOR
-        [ShowInInspector, LabelText("Elements"),
-         ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@GetType().Name")]
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [ShowInInspector, LabelText("Elements")]
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@GetType().Name")]
         private List<TValue> _inspectorDisplay;
     #endif
         
@@ -46,7 +46,7 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public void Add(TKey key, TValue value) {
-            this.root.Add(key, value);
+            root.Add(key, value);
             _onAdd.Invoke();
             _onAddWithValue.Invoke(value);
             
@@ -84,7 +84,7 @@ namespace TinyMVC.ReactiveFields {
                         continue;
                     }
                     
-                    this.root.Remove(dataPair[dataId].Key);
+                    root.Remove(dataPair[dataId].Key);
                     _onRemove.Invoke();
                     _onRemoveWithValue.Invoke(value);
                     
@@ -108,8 +108,8 @@ namespace TinyMVC.ReactiveFields {
                 keys[keyId++] = key;
             }
             
-            for (keyId = 0; keyId < keys.Length; keyId++) {
-                yield return keys[keyId];
+            foreach (TKey key in keys) {
+                yield return key;
             }
         }
         
@@ -121,8 +121,8 @@ namespace TinyMVC.ReactiveFields {
                 values[valueId++] = value;
             }
             
-            for (valueId = 0; valueId < values.Length; valueId++) {
-                yield return values[valueId];
+            foreach (TValue value in values) {
+                yield return value;
             }
         }
         

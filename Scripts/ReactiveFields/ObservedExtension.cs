@@ -215,7 +215,6 @@ namespace TinyMVC.ReactiveFields {
             }
             
             obj.Set(value);
-            
             return true;
         }
         
@@ -225,7 +224,6 @@ namespace TinyMVC.ReactiveFields {
             }
             
             obj.Set(value);
-            
             return true;
         }
         

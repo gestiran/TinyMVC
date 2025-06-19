@@ -3,19 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
 using TinyMVC.ReactiveFields.Extensions;
-using TinyMVC.Utilities.Async;
+using TinyUtilities;
 using UnityEngine;
 
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies {
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
     [HideLabel, ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class ObservedDependencyList<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
@@ -29,9 +30,9 @@ namespace TinyMVC.Dependencies {
         private readonly List<ActionListener<T>> _onRemoveWithValue;
         private readonly List<ActionListener> _onClear;
         
-    #if UNITY_EDITOR
-        [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox,
-         ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@ToString()"), Searchable]
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@ToString()")]
+        [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, Searchable]
     #endif
         private List<T> _value;
         
@@ -123,26 +124,19 @@ namespace TinyMVC.Dependencies {
         }
         
         [Obsolete("Can`t use without parameters!", true)]
-        public Task AddAsync() {
-            // Do nothing
-            return null;
-        }
+        public UniTask AddAsync() => default;
         
         [Obsolete("Can`t use without parameters!", true)]
-        public Task AddAsync(ICancellation cancellation) {
-            return null;
-        }
+        public UniTask AddAsync(CancellationToken cancellation) => default;
         
         [Obsolete("Can`t use without parameters!", true)]
-        public Task AddAsync(int anr, ICancellation cancellation) {
-            return null;
-        }
+        public UniTask AddAsync(int anr, CancellationToken cancellation) => default;
         
-        public Task AddAsync([NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
+        public UniTask AddAsync([NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, AsyncUtility.token, values);
         
-        public Task AddAsync(ICancellation cancellation, [NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, cancellation, values);
+        public UniTask AddAsync(CancellationToken cancellation, [NotNull] params T[] values) => AddAsync(_ASYNC_ANR_MS, cancellation, values);
         
-        public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
+        public async UniTask AddAsync(int anr, CancellationToken cancellation, [NotNull] params T[] values) {
             if (_lock) {
             #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
@@ -158,19 +152,14 @@ namespace TinyMVC.Dependencies {
                 _onAdd[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
@@ -180,30 +169,25 @@ namespace TinyMVC.Dependencies {
                 }
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
             _lock = false;
         }
         
-        public Task AddAsync([NotNull] T value) => AddAsync(_ASYNC_ANR_MS, new AsyncCancellation(), value);
+        public UniTask AddAsync([NotNull] T value) => AddAsync(_ASYNC_ANR_MS, AsyncUtility.token, value);
         
-        public Task AddAsync(ICancellation cancellation, [NotNull] T value) => AddAsync(_ASYNC_ANR_MS, cancellation, value);
+        public UniTask AddAsync(CancellationToken cancellation, [NotNull] T value) => AddAsync(_ASYNC_ANR_MS, cancellation, value);
         
-        public async Task AddAsync(int anr, ICancellation cancellation, [NotNull] T value) {
+        public async UniTask AddAsync(int anr, CancellationToken cancellation, [NotNull] T value) {
             if (_lock) {
             #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
@@ -219,19 +203,14 @@ namespace TinyMVC.Dependencies {
                 _onAdd[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
@@ -239,19 +218,14 @@ namespace TinyMVC.Dependencies {
                 _onAddWithValue[i].Invoke(value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
@@ -284,28 +258,19 @@ namespace TinyMVC.Dependencies {
         }
         
         [Obsolete("Can`t use without parameters!", true)]
-        public Task RemoveAsync() {
-            // Do nothing
-            return null;
-        }
+        public UniTask RemoveAsync() => default; // Do nothing
         
         [Obsolete("Can`t use without parameters!", true)]
-        public Task RemoveAsync(ICancellation cancellation) {
-            // Do nothing
-            return null;
-        }
+        public UniTask RemoveAsync(CancellationToken cancellation) => default; // Do nothing
         
         [Obsolete("Can`t use without parameters!", true)]
-        public Task RemoveAsync(int anr, ICancellation cancellation) {
-            // Do nothing
-            return null;
-        }
+        public UniTask RemoveAsync(int anr, CancellationToken cancellation) => default; // Do nothing
         
-        public Task RemoveAsync([NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), values);
+        public UniTask RemoveAsync([NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, AsyncUtility.token, values);
         
-        public Task RemoveAsync(ICancellation cancellation, [NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, cancellation, values);
+        public UniTask RemoveAsync(CancellationToken cancellation, [NotNull] params T[] values) => RemoveAsync(_ASYNC_ANR_MS, cancellation, values);
         
-        public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] params T[] values) {
+        public async UniTask RemoveAsync(int anr, CancellationToken cancellation, [NotNull] params T[] values) {
             if (_lock) {
             #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
@@ -325,19 +290,14 @@ namespace TinyMVC.Dependencies {
                 _onRemove[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
@@ -347,30 +307,25 @@ namespace TinyMVC.Dependencies {
                 }
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
             _lock = false;
         }
         
-        public Task RemoveAsync([NotNull] T value) => RemoveAsync(_ASYNC_ANR_MS, new AsyncCancellation(), value);
+        public UniTask RemoveAsync([NotNull] T value) => RemoveAsync(_ASYNC_ANR_MS, AsyncUtility.token, value);
         
-        public Task RemoveAsync(ICancellation cancellation, [NotNull] T value) => RemoveAsync(_ASYNC_ANR_MS, cancellation, value);
+        public UniTask RemoveAsync(CancellationToken cancellation, [NotNull] T value) => RemoveAsync(_ASYNC_ANR_MS, cancellation, value);
         
-        public async Task RemoveAsync(int anr, ICancellation cancellation, [NotNull] T value) {
+        public async UniTask RemoveAsync(int anr, CancellationToken cancellation, [NotNull] T value) {
             if (_lock) {
             #if UNITY_EDITOR || PERFORMANCE_DEBUG
                 Debug.LogError("ObservedList is locked!");
@@ -386,19 +341,14 @@ namespace TinyMVC.Dependencies {
                 _onRemove[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
@@ -406,19 +356,14 @@ namespace TinyMVC.Dependencies {
                 _onRemoveWithValue[i].Invoke(value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
-                    if (cancellation.isCancel) {
+                    if (cancellation.IsCancellationRequested) {
                         return;
                     }
                     
                     continue;
                 }
                 
-                await Task.Yield();
-                
-                if (cancellation.isCancel) {
-                    return;
-                }
-                
+                await UniTask.Yield(cancellation);
                 now = DateTime.Now;
             }
             
@@ -510,7 +455,6 @@ namespace TinyMVC.Dependencies {
         
         public bool MoveNext() {
             _currentId++;
-            
             return _currentId < _value.Count;
         }
         
@@ -519,9 +463,9 @@ namespace TinyMVC.Dependencies {
         public void Dispose() {
             Reset();
             
-            if (_value.Count > 0 && _value[0] is IDisposable) {
-                foreach (T obj in _value) {
-                    (obj as IDisposable).Dispose();
+            foreach (T obj in _value) {
+                if (obj is IDisposable disposable) {
+                    disposable.Dispose();
                 }
             }
             

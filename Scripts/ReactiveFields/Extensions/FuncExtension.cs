@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TinyMVC.ReactiveFields.Extensions {
     public static class FuncExtension {
-        public static void Invoke(this List<Func<bool>> actions, bool target = true) {
+        public static void InvokeAny(this List<Func<bool>> actions, bool target = true) {
             if (actions.Count <= 0) {
                 return;
             }

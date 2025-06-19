@@ -20,7 +20,7 @@ namespace TinyMVC.ReactiveFields {
     #if UNITY_EDITOR
         [Button]
     #endif
-        public void Send() => _listeners.Invoke();
+        public void Send(bool expectedResult = true) => _listeners.InvokeAny(expectedResult);
         
     #region Add
         

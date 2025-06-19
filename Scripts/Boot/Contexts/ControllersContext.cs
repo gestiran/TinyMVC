@@ -1,21 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using Sirenix.OdinInspector;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
 
+#if ODIN_INSPECTOR && UNITY_EDITOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace TinyMVC.Boot.Contexts {
-    public abstract class ControllersContext {
-        [ShowInInspector] 
+    public abstract class ControllersContext : IController {
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [ShowInInspector]
+    #endif
         internal readonly List<IController> systems;
         
-        [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout, KeyLabel = "Group", ValueLabel = "Controllers")] 
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout, KeyLabel = "Group", ValueLabel = "Controllers")]
+    #endif
         private readonly Dictionary<string, List<IController>> _controllers;
         
         private Action _lazyInit;
+        
+        private static EmptyContext _empty;
         
         public sealed class EmptyContext : ControllersContext {
             internal EmptyContext() { }
@@ -28,7 +37,13 @@ namespace TinyMVC.Boot.Contexts {
             _controllers = new Dictionary<string, List<IController>>();
         }
         
-        public static EmptyContext Empty() => new EmptyContext();
+        public static EmptyContext Empty() {
+            if (_empty == null) {
+                _empty = new EmptyContext();
+            }
+            
+            return _empty;
+        }
         
         internal void CreateControllers() => Create();
         

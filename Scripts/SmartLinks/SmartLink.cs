@@ -1,14 +1,23 @@
 ﻿using System;
 using UnityEngine;
-using Sirenix.OdinInspector;
 using UnityObject = UnityEngine.Object;
 
+#if ODIN_INSPECTOR && UNITY_EDITOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace TinyMVC.SmartLinks {
-    [Serializable, InlineProperty]
+    [Serializable]
+#if ODIN_INSPECTOR && UNITY_EDITOR
+    [InlineProperty]
+#endif
     public abstract class SmartLink<T> where T : MonoBehaviour {
         public bool isCreated { get; private set; }
         
-        [SerializeField, HorizontalGroup, SuffixLabel("Prefab", true), DisableIf(nameof(isCreated)), HideLabel, Required]
+        [SerializeField]
+    #if ODIN_INSPECTOR && UNITY_EDITOR
+        [HorizontalGroup, SuffixLabel("Prefab", true), DisableIf(nameof(isCreated)), HideLabel, Required]
+    #endif
         private T _prefab;
         
         protected Func<Transform, Action<T>, T> getInstance;
