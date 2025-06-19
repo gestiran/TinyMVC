@@ -2,16 +2,16 @@
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
 
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies.Components {
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
     [HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public abstract class Model : IDependency, IEquatable<Model> {
-    #if UNITY_EDITOR
+    #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, HideLabel]
     #endif
         internal readonly ObservedDictionary<string, ModelComponent> components;
@@ -69,7 +69,6 @@ namespace TinyMVC.Dependencies.Components {
         private static void Reset_Editor() => _globalId = 0;
         
     #endif
-        
         
         public bool Equals(Model other) => other != null && other._id == _id;
         

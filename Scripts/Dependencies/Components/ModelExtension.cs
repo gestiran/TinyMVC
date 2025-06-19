@@ -37,21 +37,35 @@ namespace TinyMVC.Dependencies.Components {
             }
         }
         
-        public static bool IsHaveComponent<T>(this Model model) where T : ModelComponent {
-            return model.components.ContainsKey(typeof(T).FullName);
-        }
-        
-        public static bool IsHaveComponent<T>(this Model model, T component) where T : ModelComponent {
-            return model.components.ContainsKey(component.GetType().FullName);
-        }
-        
-        public static bool TryGetComponent<T>(this Model model, out T component) where T : ModelComponent {
-            if (model.components.TryGetValue(typeof(T).FullName, out ModelComponent componentValue)) {
-                component = (T)componentValue;
-                return true;
+        public static bool IsHaveComponent<T>(this Model model) {
+            foreach (ModelComponent other in model.components.root.Values) {
+                if (other is T) {
+                    return true;
+                }
             }
             
-            component = null;
+            return false;
+        }
+        
+        public static bool IsHaveComponent<T>(this Model model, T component) {
+            foreach (ModelComponent other in model.components.root.Values) {
+                if (other.Equals(component)) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        public static bool TryGetComponent<T>(this Model model, out T component) {
+            foreach (ModelComponent other in model.components.root.Values) {
+                if (other is T target) {
+                    component = target;
+                    return true;
+                }
+            }
+            
+            component = default;
             return false;
         }
         
