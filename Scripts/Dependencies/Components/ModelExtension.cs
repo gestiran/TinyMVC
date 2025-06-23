@@ -3,27 +3,40 @@ using TinyMVC.Boot;
 
 namespace TinyMVC.Dependencies.Components {
     public static class ModelExtension {
-        public static void AddComponent<TModel, TComponent>(this TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
+        public static bool AddComponent<TModel, TComponent>(this TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
+            string key = typeof(TComponent).FullName;
+            
+            if (model.components.ContainsKey(key)) {
+                return false;
+            }
+            
             ProjectContext.components.Add(model, component);
-            model.components.Add(typeof(TComponent).FullName, component);
+            model.components.Add(key, component);
+            return true;
         }
         
-        public static void RemoveComponent<TModel, TComponent>(this TModel model) where TModel : Model where TComponent : ModelComponent {
+        public static bool RemoveComponent<TModel, TComponent>(this TModel model) where TModel : Model where TComponent : ModelComponent {
             string key = typeof(TComponent).FullName;
             
             if (model.components.TryGetValue(key, out ModelComponent component)) {
                 ProjectContext.components.Remove(model, component);
-                model.components.RemoveByKey(key);
+                model.components.Remove(key);
+                return true;
             }
+            
+            return false;
         }
         
-        public static void RemoveComponent<TModel, TComponent>(this TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
+        public static bool RemoveComponent<TModel, TComponent>(this TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
             string key = component.GetType().FullName;
             
             if (model.components.TryGetValue(key, out ModelComponent target)) {
                 ProjectContext.components.Remove(model, target);
-                model.components.RemoveByKey(key);
+                model.components.Remove(key);
+                return true;
             }
+            
+            return false;
         }
         
         public static void RemoveComponents<TModel, TComponent>(this TModel model, TComponent components) where TModel : Model where TComponent : IEnumerable<ModelComponent> {
@@ -32,7 +45,7 @@ namespace TinyMVC.Dependencies.Components {
                 
                 if (model.components.TryGetValue(key, out ModelComponent target)) {
                     ProjectContext.components.Remove(model, target);
-                    model.components.RemoveByKey(key);
+                    model.components.Remove(key);
                 }
             }
         }

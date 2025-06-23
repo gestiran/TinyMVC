@@ -55,9 +55,9 @@ namespace TinyMVC.ReactiveFields {
         #endif
         }
         
-        public void RemoveByKey(TKey key) {
+        public bool Remove(TKey key) {
             if (root.Remove(key, out TValue value) == false) {
-                return;
+                return false;
             }
             
             _onRemove.Invoke();
@@ -66,6 +66,8 @@ namespace TinyMVC.ReactiveFields {
         #if ODIN_INSPECTOR && UNITY_EDITOR
             _inspectorDisplay.Remove(value);
         #endif
+            
+            return true;
         }
         
         public void RemoveRange(List<TValue> values) {
@@ -96,7 +98,7 @@ namespace TinyMVC.ReactiveFields {
             }
         }
         
-        public bool TryGetValue(TKey key, out TValue value) => this.root.TryGetValue(key, out value);
+        public bool TryGetValue(TKey key, out TValue value) => root.TryGetValue(key, out value);
         
         public bool ContainsKey(TKey key) => root.ContainsKey(key);
         
