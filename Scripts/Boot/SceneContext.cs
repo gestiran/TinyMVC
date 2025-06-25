@@ -333,7 +333,24 @@ namespace TinyMVC.Boot {
             UnityEditor.EditorUtility.SetDirty(gameObject);
         }
         
-        private void MarkRemoved() => _isRemoved = true;
+        private void MarkRemoved() {
+            try {
+                fixedTicks.Clear();
+                ticks.Clear();
+                lateTicks.Clear();
+            } catch (Exception) {
+                // Do nothing, app closed
+            }
+            
+            try {
+                ProjectContext.RemoveContext(this, gameObject.scene.buildIndex);
+            } catch (Exception) {
+                // Do nothing, app closed
+            }
+            
+            _isRemoved = true;
+            Application.quitting -= MarkRemoved;
+        }
         
     #endif
         

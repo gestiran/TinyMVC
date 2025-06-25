@@ -26,6 +26,8 @@ namespace TinyMVC.Editor {
         [ShowInInspector, ReadOnly, HideLabel, HideInPlayMode, HideIf("_isVisibleContexts")]
         private static string _label = "Active only in PlayMode";
         
+        [HideInInspector] private static int _windowsCount;
+        
         private static SaveHandler _save;
         
         [HideReferenceObjectPicker, HideDuplicateReferenceBox]
@@ -169,6 +171,12 @@ namespace TinyMVC.Editor {
         
         [OnInspectorInit]
         public void Init() {
+            _windowsCount++;
+            
+            if (_windowsCount > 1) {
+                return;
+            }
+            
             _favorites = new List<DependencyLink>();
             _contexts = new List<ContextLink>();
             _save = new SaveHandler("Editor", "V1");
@@ -186,6 +194,12 @@ namespace TinyMVC.Editor {
         
         [OnInspectorDispose]
         public void Dispose() {
+            _windowsCount--;
+            
+            if (_windowsCount > 0) {
+                return;
+            }
+            
             _save.Stop();
             
             ProjectData.onAdd -= AddContext;

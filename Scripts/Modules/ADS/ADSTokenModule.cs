@@ -39,5 +39,14 @@ namespace TinyMVC.Modules.ADS {
             
             return false;
         }
+        
+        public void TrySpendTokens(Action onSuccess, int count = 1) {
+            if (IsHaveTokens(count) == false) {
+                return;
+            }
+            
+            SubtractTokens(count);
+            onSuccess.Invoke();
+        }
     }
 }
