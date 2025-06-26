@@ -36,7 +36,7 @@ namespace TinyMVC.Boot.Contexts {
             dependencies.TryUnload();
         }
         
-        protected void Add<T>(T binder) where T : Binder {
+        protected void Add(Binder binder) {
             if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
                 return;
             }
@@ -44,6 +44,14 @@ namespace TinyMVC.Boot.Contexts {
             IDependency dependency = binder.GetDependency();
             ProjectContext.data.Add(key, dependency);
             dependenciesBinded.Add(dependency);
+        }
+        
+        protected void Add(BinderSystem binderSystem) {
+            if (binderSystem is IBindConditions conditions && conditions.IsNeedBinding() == false) {
+                return;
+            }
+            
+            binderSystem.Connect(this);
         }
         
         protected abstract void Bind();
