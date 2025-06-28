@@ -162,6 +162,82 @@ namespace TinyMVC.Boot {
             return false;
         }
         
+        public bool GetReference<T>(out T dependency) {
+            if (tempContainer != null) {
+                foreach (IDependency current in tempContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    dependency = tempValue;
+                    return true;
+                }
+            }
+            
+            if (viewsContainer != null) {
+                foreach (IDependency current in viewsContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    dependency = tempValue;
+                    return true;
+                }
+            }
+            
+            foreach (DependencyContainer container in contexts.Values) {
+                foreach (IDependency current in container.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    dependency = tempValue;
+                    return true;
+                }
+            }
+            
+            dependency = default;
+            return false;
+        }
+        
+        public bool GetReference<T>(string contextKey, out T dependency) {
+            if (tempContainer != null) {
+                foreach (IDependency current in tempContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    dependency = tempValue;
+                    return true;
+                }
+            }
+            
+            if (viewsContainer != null) {
+                foreach (IDependency current in viewsContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    dependency = tempValue;
+                    return true;
+                }
+            }
+            
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                foreach (IDependency current in container.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    dependency = tempValue;
+                    return true;
+                }
+            }
+            
+            dependency = default;
+            return false;
+        }
+        
         internal void Add(string contextKey, List<IDependency> dependencies) {
             if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 foreach (IDependency dependency in dependencies) {
