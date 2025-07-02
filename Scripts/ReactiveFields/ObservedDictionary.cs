@@ -128,44 +128,44 @@ namespace TinyMVC.ReactiveFields {
             }
         }
         
-        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener.GetHashCode(), listener);
+        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener.Hash(), listener);
         
         public void AddOnAddListener(ActionListener listener, UnloadPool unload) {
-            int hash = listener.GetHashCode();
+            int hash = listener.Hash();
             _onAdd.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onAdd.Remove(hash)));
         }
         
-        public void AddOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Add(listener.GetHashCode(), listener);
+        public void AddOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Add(listener.Hash(), listener);
         
         public void AddOnAddListener(ActionListener<TValue> listener, UnloadPool unload) {
-            int hash = listener.GetHashCode();
+            int hash = listener.Hash();
             _onAddWithValue.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onAddWithValue.Remove(hash)));
         }
         
-        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener.GetHashCode());
+        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener.Hash());
         
-        public void RemoveOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Remove(listener.GetHashCode());
+        public void RemoveOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Remove(listener.Hash());
         
-        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener.GetHashCode(), listener);
+        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener.Hash(), listener);
         
         public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) {
-            int hash = listener.GetHashCode();
+            int hash = listener.Hash();
             _onRemove.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onRemove.Remove(hash)));
         }
         
-        public void AddOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Add(listener.GetHashCode(), listener);
+        public void AddOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Add(listener.Hash(), listener);
         
         public void AddOnRemoveListener(ActionListener<TValue> listener, UnloadPool unload) {
-            int hash = listener.GetHashCode();
+            int hash = listener.Hash();
             _onRemoveWithValue.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(hash)));
         }
         
-        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener.GetHashCode());
+        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener.Hash());
         
-        public void RemoveOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Remove(listener.GetHashCode());
+        public void RemoveOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Remove(listener.Hash());
     }
 }
