@@ -4,23 +4,23 @@ using TinyMVC.ReactiveFields.Extensions;
 
 namespace TinyMVC.ReactiveFields {
     internal sealed class ComponentListeners<TModel, TComponent> : IComponentListeners where TModel : Model where TComponent : ModelComponent {
-        private readonly List<ActionListener<TModel, TComponent>> _addListeners;
-        private readonly List<ActionListener<TModel, TComponent>> _removeListeners;
+        private readonly Dictionary<int, ActionListener<TModel, TComponent>> _addListeners;
+        private readonly Dictionary<int, ActionListener<TModel, TComponent>> _removeListeners;
         
         private const int _CAPACITY = 8;
         
         public ComponentListeners() {
-            _addListeners = new List<ActionListener<TModel, TComponent>>(_CAPACITY);
-            _removeListeners = new List<ActionListener<TModel, TComponent>>(_CAPACITY);
+            _addListeners = new Dictionary<int, ActionListener<TModel, TComponent>>(_CAPACITY);
+            _removeListeners = new Dictionary<int, ActionListener<TModel, TComponent>>(_CAPACITY);
         }
         
-        public void AddOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Add(listener);
+        public void AddOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Add(listener.GetHashCode(), listener);
         
-        public void RemoveOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Remove(listener);
+        public void RemoveOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Remove(listener.GetHashCode());
         
-        public void AddOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Add(listener);
+        public void AddOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Add(listener.GetHashCode(), listener);
         
-        public void RemoveOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Remove(listener);
+        public void RemoveOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Remove(listener.GetHashCode());
         
         public void TryInvokeAdd(Model model, ModelComponent component) {
             if (model is TModel targetModel && component is TComponent targetComponent) {

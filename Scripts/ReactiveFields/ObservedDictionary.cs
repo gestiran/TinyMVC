@@ -13,10 +13,10 @@ namespace TinyMVC.ReactiveFields {
     public sealed class ObservedDictionary<TKey, TValue> {
         public int count => root.Count;
         
-        private readonly List<ActionListener> _onAdd;
-        private readonly List<ActionListener<TValue>> _onAddWithValue;
-        private readonly List<ActionListener> _onRemove;
-        private readonly List<ActionListener<TValue>> _onRemoveWithValue;
+        private readonly Dictionary<int, ActionListener> _onAdd;
+        private readonly Dictionary<int, ActionListener<TValue>> _onAddWithValue;
+        private readonly Dictionary<int, ActionListener> _onRemove;
+        private readonly Dictionary<int, ActionListener<TValue>> _onRemoveWithValue;
         
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector, LabelText("Elements")]
@@ -30,10 +30,10 @@ namespace TinyMVC.ReactiveFields {
         
         public ObservedDictionary(Dictionary<TKey, TValue> value, int capacity = Observed.CAPACITY) {
             root = value;
-            _onAdd = new List<ActionListener>(capacity);
-            _onAddWithValue = new List<ActionListener<TValue>>(capacity);
-            _onRemove = new List<ActionListener>(capacity);
-            _onRemoveWithValue = new List<ActionListener<TValue>>(capacity);
+            _onAdd = new Dictionary<int, ActionListener>(capacity);
+            _onAddWithValue = new Dictionary<int, ActionListener<TValue>>(capacity);
+            _onRemove = new Dictionary<int, ActionListener>(capacity);
+            _onRemoveWithValue = new Dictionary<int, ActionListener<TValue>>(capacity);
             
         #if ODIN_INSPECTOR && UNITY_EDITOR
             _inspectorDisplay = new List<TValue>();
@@ -103,65 +103,69 @@ namespace TinyMVC.ReactiveFields {
         public bool ContainsKey(TKey key) => root.ContainsKey(key);
         
         public IEnumerator<TKey> ForEachKeys() {
-            TKey[] keys = new TKey[root.Count];
-            int keyId = 0;
+            TKey[] temp = new TKey[root.Count];
+            int i = 0;
             
             foreach (TKey key in root.Keys) {
-                keys[keyId++] = key;
+                temp[i++] = key;
             }
             
-            foreach (TKey key in keys) {
-                yield return key;
+            for (i = 0; i < temp.Length; i++) {
+                yield return temp[i];
             }
         }
         
         public IEnumerable<TValue> ForEachValues() {
-            TValue[] values = new TValue[root.Count];
-            int valueId = 0;
+            TValue[] temp = new TValue[root.Count];
+            int i = 0;
             
             foreach (TValue value in root.Values) {
-                values[valueId++] = value;
+                temp[i++] = value;
             }
             
-            foreach (TValue value in values) {
-                yield return value;
+            for (i = 0; i < temp.Length; i++) {
+                yield return temp[i];
             }
         }
         
-        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener);
+        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener.GetHashCode(), listener);
         
         public void AddOnAddListener(ActionListener listener, UnloadPool unload) {
-            _onAdd.Add(listener);
-            unload.Add(new UnloadAction(() => _onAdd.Remove(listener)));
+            int hash = listener.GetHashCode();
+            _onAdd.Add(hash, listener);
+            unload.Add(new UnloadAction(() => _onAdd.Remove(hash)));
         }
         
-        public void AddOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Add(listener);
+        public void AddOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Add(listener.GetHashCode(), listener);
         
         public void AddOnAddListener(ActionListener<TValue> listener, UnloadPool unload) {
-            _onAddWithValue.Add(listener);
-            unload.Add(new UnloadAction(() => _onAddWithValue.Remove(listener)));
+            int hash = listener.GetHashCode();
+            _onAddWithValue.Add(hash, listener);
+            unload.Add(new UnloadAction(() => _onAddWithValue.Remove(hash)));
         }
         
-        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener);
+        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener.GetHashCode());
         
-        public void RemoveOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Remove(listener);
+        public void RemoveOnAddListener(ActionListener<TValue> listener) => _onAddWithValue.Remove(listener.GetHashCode());
         
-        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener);
+        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener.GetHashCode(), listener);
         
         public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) {
-            _onRemove.Add(listener);
-            unload.Add(new UnloadAction(() => _onRemove.Remove(listener)));
+            int hash = listener.GetHashCode();
+            _onRemove.Add(hash, listener);
+            unload.Add(new UnloadAction(() => _onRemove.Remove(hash)));
         }
         
-        public void AddOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Add(listener);
+        public void AddOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Add(listener.GetHashCode(), listener);
         
         public void AddOnRemoveListener(ActionListener<TValue> listener, UnloadPool unload) {
-            _onRemoveWithValue.Add(listener);
-            unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(listener)));
+            int hash = listener.GetHashCode();
+            _onRemoveWithValue.Add(hash, listener);
+            unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(hash)));
         }
         
-        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener);
+        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener.GetHashCode());
         
-        public void RemoveOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Remove(listener);
+        public void RemoveOnRemoveListener(ActionListener<TValue> listener) => _onRemoveWithValue.Remove(listener.GetHashCode());
     }
 }

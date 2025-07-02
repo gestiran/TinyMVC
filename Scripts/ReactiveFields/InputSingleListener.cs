@@ -22,8 +22,6 @@ namespace TinyMVC.ReactiveFields {
     #endif
         public void Send(bool expectedResult = true) => _listeners.InvokeAny(expectedResult);
         
-    #region Add
-        
         // Resharper disable Unity.ExpensiveCode
         public void AddListener(Func<bool> listener) => _listeners.Add(listener);
         
@@ -33,14 +31,8 @@ namespace TinyMVC.ReactiveFields {
             unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
         }
         
-    #endregion
-        
-    #region Remove
-        
         // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(Func<bool> listener) => _listeners.Remove(listener);
-        
-    #endregion
         
         // Resharper disable Unity.ExpensiveCode
         public void Unload() => _listeners.Clear();

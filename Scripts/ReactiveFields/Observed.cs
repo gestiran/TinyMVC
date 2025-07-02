@@ -21,24 +21,24 @@ namespace TinyMVC.ReactiveFields {
         private T _value;
         
         private readonly int _id;
-        private readonly List<ActionListener> _listeners;
-        private readonly List<ActionListener<T>> _listenersValue;
-        private readonly List<ActionListener<T, T>> _listenersChange;
+        private readonly Dictionary<int, ActionListener> _listeners;
+        private readonly Dictionary<int, ActionListener<T>> _listenersValue;
+        private readonly Dictionary<int, ActionListener<T, T>> _listenersChange;
         
         public Observed(T data, int capacity = Observed.CAPACITY) {
             _value = data;
             _id = Observed.globalId++;
-            _listeners = new List<ActionListener>(capacity);
-            _listenersValue = new List<ActionListener<T>>(capacity);
-            _listenersChange = new List<ActionListener<T, T>>(capacity);
+            _listeners = new Dictionary<int, ActionListener>(capacity);
+            _listenersValue = new Dictionary<int, ActionListener<T>>(capacity);
+            _listenersChange = new Dictionary<int, ActionListener<T, T>>(capacity);
         }
         
         public Observed() {
             _value = default;
             _id = Observed.globalId++;
-            _listeners = new List<ActionListener>(Observed.CAPACITY);
-            _listenersValue = new List<ActionListener<T>>(Observed.CAPACITY);
-            _listenersChange = new List<ActionListener<T, T>>(Observed.CAPACITY);
+            _listeners = new Dictionary<int, ActionListener>(Observed.CAPACITY);
+            _listenersValue = new Dictionary<int, ActionListener<T>>(Observed.CAPACITY);
+            _listenersChange = new Dictionary<int, ActionListener<T, T>>(Observed.CAPACITY);
         }
         
         public void SetSilent(T newValue) => _value = newValue;
@@ -54,94 +54,30 @@ namespace TinyMVC.ReactiveFields {
     #region Add
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddListener(ActionListener listener) => _listeners.Add(listener);
+        public void AddListener(ActionListener listener) => _listeners.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddListener(ActionListener listener, UnloadPool unload) {
             AddListener(listener);
-            unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
+            unload.Add(new UnloadAction(() => _listeners.Remove(listener.GetHashCode())));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddListener(ActionListener<T> listener) => _listenersValue.Add(listener);
+        public void AddListener(ActionListener<T> listener) => _listenersValue.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddListener(ActionListener<T> listener, UnloadPool unload) {
             AddListener(listener);
-            unload.Add(new UnloadAction(() => _listenersValue.Remove(listener)));
+            unload.Add(new UnloadAction(() => _listenersValue.Remove(listener.GetHashCode())));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddChangeListener(ActionListener<T, T> listener) => _listenersChange.Add(listener);
+        public void AddChangeListener(ActionListener<T, T> listener) => _listenersChange.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddChangeListener(ActionListener<T, T> listener, UnloadPool unload) {
             AddChangeListener(listener);
-            unload.Add(new UnloadAction(() => _listenersChange.Remove(listener)));
-        }
-        
-    #endregion
-        
-    #region ByPriority
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerFirst(ActionListener listener) {
-            if (_listeners.Count > 0) {
-                _listeners.Insert(0, listener);
-            } else {
-                AddListener(listener);
-            }
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerFirst(ActionListener listener, UnloadPool unload) {
-            AddListenerFirst(listener);
-            unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerFirst(ActionListener<T> listener) {
-            if (_listenersValue.Count > 0) {
-                _listenersValue.Insert(0, listener);
-            } else {
-                AddListener(listener);
-            }
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerFirst(ActionListener<T> listener, UnloadPool unload) {
-            AddListenerFirst(listener);
-            unload.Add(new UnloadAction(() => _listenersValue.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerLast(ActionListener listener) {
-            if (_listeners.Count > 0) {
-                _listeners.Insert(_listeners.Count - 1, listener);
-            } else {
-                AddListener(listener);
-            }
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerLast(ActionListener listener, UnloadPool unload) {
-            AddListenerLast(listener);
-            unload.Add(new UnloadAction(() => _listeners.Remove(listener)));
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerLast(ActionListener<T> listener) {
-            if (_listenersValue.Count > 0) {
-                _listenersValue.Insert(_listenersValue.Count - 1, listener);
-            } else {
-                AddListener(listener);
-            }
-        }
-        
-        // Resharper disable Unity.ExpensiveCode
-        public void AddListenerLast(ActionListener<T> listener, UnloadPool unload) {
-            AddListenerLast(listener);
-            unload.Add(new UnloadAction(() => _listenersValue.Remove(listener)));
+            unload.Add(new UnloadAction(() => _listenersChange.Remove(listener.GetHashCode())));
         }
         
     #endregion
@@ -149,13 +85,13 @@ namespace TinyMVC.ReactiveFields {
     #region Remove
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(ActionListener listener) => _listeners.Remove(listener);
+        public void RemoveListener(ActionListener listener) => _listeners.Remove(listener.GetHashCode());
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveListener(ActionListener<T> listener) => _listenersValue.Remove(listener);
+        public void RemoveListener(ActionListener<T> listener) => _listenersValue.Remove(listener.GetHashCode());
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveChangeListener(ActionListener<T, T> listener) => _listenersChange.Remove(listener);
+        public void RemoveChangeListener(ActionListener<T, T> listener) => _listenersChange.Remove(listener.GetHashCode());
         
     #endregion
         
