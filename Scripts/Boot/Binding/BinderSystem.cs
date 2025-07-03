@@ -21,5 +21,13 @@ namespace TinyMVC.Boot.Binding {
             ProjectContext.data.Add(_context.key, dependency);
             _context.dependenciesBinded.Add(dependency);
         }
+        
+        protected void Add(BinderMod binder) {
+            if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
+                return;
+            }
+            
+            binder.BindInternal();
+        }
     }
 }

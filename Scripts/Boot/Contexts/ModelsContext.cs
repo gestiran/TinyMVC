@@ -54,6 +54,14 @@ namespace TinyMVC.Boot.Contexts {
             binderSystem.Connect(this);
         }
         
+        protected void Add(BinderMod binder) {
+            if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
+                return;
+            }
+            
+            binder.BindInternal();
+        }
+        
         protected abstract void Bind();
         
         protected virtual void Create(List<IDependency> models) { }
