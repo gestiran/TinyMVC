@@ -347,69 +347,69 @@ namespace TinyMVC.ReactiveFields {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener.Hash(), listener);
+        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(ActionListener listener, UnloadPool unload) {
-            int hash = listener.Hash();
+            int hash = listener.GetHashCode();
             _onAdd.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onAdd.Remove(hash)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener<T> listener) => _onAddWithValue.Add(listener.Hash(), listener);
+        public void AddOnAddListener(ActionListener<T> listener) => _onAddWithValue.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddOnAddListener(ActionListener<T> listener, UnloadPool unload) {
-            int hash = listener.Hash();
+            int hash = listener.GetHashCode();
             _onAddWithValue.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onAddWithValue.Remove(hash)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener.Hash());
+        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener.GetHashCode());
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener<T> listener) => _onAddWithValue.Remove(listener.Hash());
+        public void RemoveOnAddListener(ActionListener<T> listener) => _onAddWithValue.Remove(listener.GetHashCode());
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener.Hash(), listener);
+        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) {
-            int hash = listener.Hash();
+            int hash = listener.GetHashCode();
             _onRemove.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onRemove.Remove(hash)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener<T> listener) => _onRemoveWithValue.Add(listener.Hash(), listener);
+        public void AddOnRemoveListener(ActionListener<T> listener) => _onRemoveWithValue.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener(ActionListener<T> listener, UnloadPool unload) {
-            int hash = listener.Hash();
+            int hash = listener.GetHashCode();
             _onRemoveWithValue.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(hash)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener.Hash());
+        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener.GetHashCode());
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener<T> listener) => _onRemoveWithValue.Remove(listener.Hash());
+        public void RemoveOnRemoveListener(ActionListener<T> listener) => _onRemoveWithValue.Remove(listener.GetHashCode());
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnClearListener(ActionListener listener) => _onClear.Add(listener.Hash(), listener);
+        public void AddOnClearListener(ActionListener listener) => _onClear.Add(listener.GetHashCode(), listener);
         
         // Resharper disable Unity.ExpensiveCode
         public void AddOnClearListener(ActionListener listener, UnloadPool unload) {
-            int hash = listener.Hash();
+            int hash = listener.GetHashCode();
             _onClear.Add(hash, listener);
             unload.Add(new UnloadAction(() => _onClear.Remove(hash)));
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnClearListener(ActionListener listener) => _onClear.Remove(listener.Hash());
+        public void RemoveOnClearListener(ActionListener listener) => _onClear.Remove(listener.GetHashCode());
         
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace TinyMVC.ReactiveFields.Extensions {
@@ -208,58 +207,6 @@ namespace TinyMVC.ReactiveFields.Extensions {
                 } catch (Exception exception) {
                     Debug.LogException(exception);
                 }
-            }
-        }
-        
-        public static int Hash(this ActionListener listener) {
-            unchecked {
-                int hash = 17;
-                hash = hash * 31 + listener.Method.GetHashCode();
-                
-                if (listener.Target != null) {
-                    hash = hash * 31 + RuntimeHelpers.GetHashCode(listener.Target);
-                }
-                
-                return hash;
-            }
-        }
-        
-        public static int Hash<T>(this ActionListener<T> listener) {
-            unchecked {
-                int hash = 17;
-                hash = hash * 31 + listener.Method.GetHashCode();
-                
-                if (listener.Target != null) {
-                    hash = hash * 31 + RuntimeHelpers.GetHashCode(listener.Target);
-                }
-                
-                return hash;
-            }
-        }
-        
-        public static int Hash<T1, T2>(this ActionListener<T1, T2> listener) {
-            unchecked {
-                int hash = 17;
-                hash = hash * 31 + listener.Method.GetHashCode();
-                
-                if (listener.Target != null) {
-                    hash = hash * 31 + RuntimeHelpers.GetHashCode(listener.Target);
-                }
-                
-                return hash;
-            }
-        }
-        
-        public static int Hash<T1, T2, T3>(this ActionListener<T1, T2, T3> listener) {
-            unchecked {
-                int hash = 17;
-                hash = hash * 31 + listener.Method.GetHashCode();
-                
-                if (listener.Target != null) {
-                    hash = hash * 31 + RuntimeHelpers.GetHashCode(listener.Target);
-                }
-                
-                return hash;
             }
         }
     }

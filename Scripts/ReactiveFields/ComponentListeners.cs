@@ -14,13 +14,13 @@ namespace TinyMVC.ReactiveFields {
             _removeListeners = new Dictionary<int, ActionListener<TModel, TComponent>>(_CAPACITY);
         }
         
-        public void AddOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Add(listener.Hash(), listener);
+        public void AddOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Add(listener.GetHashCode(), listener);
         
-        public void RemoveOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Remove(listener.Hash());
+        public void RemoveOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Remove(listener.GetHashCode());
         
-        public void AddOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Add(listener.Hash(), listener);
+        public void AddOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Add(listener.GetHashCode(), listener);
         
-        public void RemoveOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Remove(listener.Hash());
+        public void RemoveOnRemoveListener(ActionListener<TModel, TComponent> listener) => _removeListeners.Remove(listener.GetHashCode());
         
         public void TryInvokeAdd(Model model, ModelComponent component) {
             if (model is TModel targetModel && component is TComponent targetComponent) {
