@@ -16,7 +16,7 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
         public readonly ushort part;
         public readonly byte key;
         
-        private readonly Dictionary<int, ActionListener<T>> _listenersValue;
+        private readonly List<ActionListener<T>> _listenersValue;
         
         public NetListener(ushort group, ushort part, byte key, T value = default) {
             this.group = group;
@@ -25,7 +25,7 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
             
             _value = value;
             
-            _listenersValue = new Dictionary<int, ActionListener<T>>();
+            _listenersValue = new List<ActionListener<T>>();
         }
         
         private void SetValue(ushort _, object obj) {
@@ -44,7 +44,7 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
                 NetSyncService.AddRead(group, part, key, SetValue);
             }
             
-            _listenersValue.Add(listener.GetHashCode(), listener);
+            _listenersValue.Add(listener);
         }
         
         // Resharper disable Unity.ExpensiveCode
@@ -55,7 +55,7 @@ namespace TinyMVC.Modules.Networks.ReactiveFields {
         
         // Resharper disable Unity.ExpensiveCode
         public void RemoveListener(ActionListener<T> listener) {
-            _listenersValue.Remove(listener.GetHashCode());
+            _listenersValue.Remove(listener);
             
             if (_listenersValue.Count == 0) {
                 NetSyncService.RemoveRead(group, part, key, SetValue);
