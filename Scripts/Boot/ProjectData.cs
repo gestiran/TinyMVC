@@ -245,7 +245,7 @@ namespace TinyMVC.Boot {
                 }
             } else {
                 container = new DependencyContainer(dependencies);
-                _components.all.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
+                _components.all.Add(contextKey, new Dictionary<int, Model>());
                 contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR
@@ -259,7 +259,7 @@ namespace TinyMVC.Boot {
                 container.Update(dependency);
             } else {
                 container = new DependencyContainer(dependency);
-                _components.all.Add(contextKey, new Dictionary<Model, List<ModelComponent>>());
+                _components.all.Add(contextKey, new Dictionary<int, Model>());
                 contexts.Add(contextKey, container);
                 
             #if UNITY_EDITOR

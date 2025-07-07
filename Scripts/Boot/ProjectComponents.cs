@@ -6,13 +6,13 @@ using UnityEngine;
 
 namespace TinyMVC.Boot {
     public sealed class ProjectComponents {
-        internal readonly Dictionary<string, Dictionary<Model, List<ModelComponent>>> all;
+        internal readonly Dictionary<string, Dictionary<int, Model>> all;
         private readonly Dictionary<string, IComponentListeners> _listeners;
         
         private const int _CAPACITY = 64;
         
         internal ProjectComponents() {
-            all = new Dictionary<string, Dictionary<Model, List<ModelComponent>>>(_CAPACITY);
+            all = new Dictionary<string, Dictionary<int, Model>>(_CAPACITY);
             _listeners = new Dictionary<string, IComponentListeners>(_CAPACITY);
         }
         
@@ -117,12 +117,8 @@ namespace TinyMVC.Boot {
         }
         
         internal void Add<TModel, TComponent>(TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
-            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
-                if (components.TryGetValue(model, out List<ModelComponent> list)) {
-                    list.Add(component);
-                } else {
-                    components.Add(model, new List<ModelComponent>() { component });
-                }
+            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<int, Model> data)) {
+                data.TryAdd(model.GetHashCode(), model);
                 
                 foreach (IComponentListeners listeners in _listeners.Values) {
                     listeners.TryInvokeAdd(model, component);
@@ -131,8 +127,14 @@ namespace TinyMVC.Boot {
         }
         
         internal void Remove<TModel, TComponent>(TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
-            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<Model, List<ModelComponent>> components)) {
-                if (components.TryGetValue(model, out List<ModelComponent> list) && list.Remove(component)) {
+            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<int, Model> data)) {
+                int key = model.GetHashCode();
+                
+                if (data.TryGetValue(key, out Model target)) {
+                    if (target.components.count == 0) {
+                        data.Remove(key);
+                    }
+                    
                     foreach (IComponentListeners listeners in _listeners.Values) {
                         listeners.TryInvokeRemove(model, component);
                     }
@@ -143,11 +145,11 @@ namespace TinyMVC.Boot {
         public IEnumerable<ComponentLink<T>> ForEach<T>() {
             List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
-            foreach (Dictionary<Model, List<ModelComponent>> components in all.Values) {
-                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
-                    foreach (ModelComponent component in pair.Value) {
+            foreach (Dictionary<int, Model> data in all.Values) {
+                foreach (Model model in data.Values) {
+                    foreach (ModelComponent component in model.components.root.Values) {
                         if (component is T other) {
-                            temp.Add(new ComponentLink<T>(pair.Key, other));
+                            temp.Add(new ComponentLink<T>(model, other));
                         }
                     }
                 }
@@ -161,11 +163,11 @@ namespace TinyMVC.Boot {
         public IEnumerable<ComponentLink<T>> ForEach<T>(string contextKey) {
             List<ComponentLink<T>> temp = new List<ComponentLink<T>>();
             
-            if (all.TryGetValue(contextKey, out Dictionary<Model, List<ModelComponent>> components)) {
-                foreach (KeyValuePair<Model, List<ModelComponent>> pair in components) {
-                    foreach (ModelComponent component in pair.Value) {
+            if (all.TryGetValue(contextKey, out Dictionary<int, Model> data)) {
+                foreach (Model model in data.Values) {
+                    foreach (ModelComponent component in model.components.root.Values) {
                         if (component is T other) {
-                            temp.Add(new ComponentLink<T>(pair.Key, other));
+                            temp.Add(new ComponentLink<T>(model, other));
                         }
                     }
                 }

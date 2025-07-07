@@ -10,8 +10,8 @@ namespace TinyMVC.Dependencies.Components {
                 return false;
             }
             
-            ProjectContext.components.Add(model, component);
             model.components.Add(key, component);
+            ProjectContext.components.Add(model, component);
             return true;
         }
         
@@ -19,8 +19,8 @@ namespace TinyMVC.Dependencies.Components {
             string key = typeof(TComponent).FullName;
             
             if (model.components.TryGetValue(key, out ModelComponent component)) {
-                ProjectContext.components.Remove(model, component);
                 model.components.Remove(key);
+                ProjectContext.components.Remove(model, component);
                 return true;
             }
             
@@ -31,8 +31,8 @@ namespace TinyMVC.Dependencies.Components {
             string key = component.GetType().FullName;
             
             if (model.components.TryGetValue(key, out ModelComponent target)) {
-                ProjectContext.components.Remove(model, target);
                 model.components.Remove(key);
+                ProjectContext.components.Remove(model, target);
                 return true;
             }
             
@@ -44,8 +44,8 @@ namespace TinyMVC.Dependencies.Components {
                 string key = component.GetType().FullName;
                 
                 if (model.components.TryGetValue(key, out ModelComponent target)) {
-                    ProjectContext.components.Remove(model, target);
                     model.components.Remove(key);
+                    ProjectContext.components.Remove(model, target);
                 }
             }
         }
