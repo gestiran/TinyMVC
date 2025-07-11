@@ -238,6 +238,118 @@ namespace TinyMVC.Boot {
             return false;
         }
         
+        public IEnumerable<T> ForEachReference<T>() {
+            List<int> currents = new List<int>();
+            int hash;
+            
+            if (tempContainer != null) {
+                foreach (IDependency current in tempContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    hash = tempValue.GetHashCode();
+                    
+                    if (currents.Contains(hash)) {
+                        continue;
+                    }
+                    
+                    yield return tempValue;
+                    currents.Add(hash);
+                }
+            }
+            
+            if (viewsContainer != null) {
+                foreach (IDependency current in viewsContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    hash = tempValue.GetHashCode();
+                    
+                    if (currents.Contains(hash)) {
+                        continue;
+                    }
+                    
+                    yield return tempValue;
+                    currents.Add(hash);
+                }
+            }
+            
+            foreach (DependencyContainer container in contexts.Values) {
+                foreach (IDependency current in container.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    hash = tempValue.GetHashCode();
+                    
+                    if (currents.Contains(hash)) {
+                        continue;
+                    }
+                    
+                    yield return tempValue;
+                    currents.Add(hash);
+                }
+            }
+        }
+        
+        public IEnumerable<T> ForEachReference<T>(string contextKey) {
+            List<int> currents = new List<int>();
+            int hash;
+            
+            if (tempContainer != null) {
+                foreach (IDependency current in tempContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    hash = tempValue.GetHashCode();
+                    
+                    if (currents.Contains(hash)) {
+                        continue;
+                    }
+                    
+                    yield return tempValue;
+                    currents.Add(hash);
+                }
+            }
+            
+            if (viewsContainer != null) {
+                foreach (IDependency current in viewsContainer.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    hash = tempValue.GetHashCode();
+                    
+                    if (currents.Contains(hash)) {
+                        continue;
+                    }
+                    
+                    yield return tempValue;
+                    currents.Add(hash);
+                }
+            }
+            
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                foreach (IDependency current in container.dependencies.Values) {
+                    if (current is not T tempValue) {
+                        continue;
+                    }
+                    
+                    hash = tempValue.GetHashCode();
+                    
+                    if (currents.Contains(hash)) {
+                        continue;
+                    }
+                    
+                    yield return tempValue;
+                    currents.Add(hash);
+                }
+            }
+        }
+        
         internal void Add(string contextKey, List<IDependency> dependencies) {
             if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
                 foreach (IDependency dependency in dependencies) {
