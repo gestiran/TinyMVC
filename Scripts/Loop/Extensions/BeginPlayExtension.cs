@@ -5,32 +5,64 @@ using UnityEngine;
 
 namespace TinyMVC.Loop.Extensions {
     public static class BeginPlayExtension {
-        public static void TryBeginPlay<T>(this ICollection<T> collection) {
-            foreach (T obj in collection) {
-                obj.TryBeginPlaySingle();
+        public static void TryBeginPlay<T>(this List<T> collection) {
+            for (int i = 0; i < collection.Count; i++) {
+                collection[i].TryBeginPlaySingle();
             }
         }
         
-        public static async UniTask TryBeginPlayAsync<T>(this ICollection<T> collection) {
-            foreach (T obj in collection) {
-                await obj.TryBeginPlayAsyncSingle();
+        public static void TryBeginPlay<T>(this T[] collection) {
+            for (int i = 0; i < collection.Length; i++) {
+                collection[i].TryBeginPlaySingle();
             }
         }
         
-        public static void BeginPlay<T>(this ICollection<T> collection) where T : IBeginPlay {
-            foreach (T obj in collection) {
+        public static async UniTask TryBeginPlayAsync<T>(this List<T> collection) {
+            for (int i = 0; i < collection.Count; i++) {
+                await collection[i].TryBeginPlayAsyncSingle();
+            }
+        }
+        
+        public static async UniTask TryBeginPlayAsync<T>(this T[] collection) {
+            for (int i = 0; i < collection.Length; i++) {
+                await collection[i].TryBeginPlayAsyncSingle();
+            }
+        }
+        
+        public static void BeginPlay<T>(this List<T> collection) where T : IBeginPlay {
+            for (int i = 0; i < collection.Count; i++) {
                 try {
-                    obj.BeginPlay();
+                    collection[i].BeginPlay();
                 } catch (Exception exception) {
                     Debug.LogException(exception);
                 }
             }
         }
         
-        public static async UniTask BeginPlayAsync<T>(this ICollection<T> collection) where T : IBeginPlayAsync {
-            foreach (T obj in collection) {
+        public static void BeginPlay<T>(this T[] collection) where T : IBeginPlay {
+            for (int i = 0; i < collection.Length; i++) {
                 try {
-                    await obj.BeginPlay();
+                    collection[i].BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
+            }
+        }
+        
+        public static async UniTask BeginPlayAsync<T>(this List<T> collection) where T : IBeginPlayAsync {
+            for (int i = 0; i < collection.Count; i++) {
+                try {
+                    await collection[i].BeginPlay();
+                } catch (Exception exception) {
+                    Debug.LogException(exception);
+                }
+            }
+        }
+        
+        public static async UniTask BeginPlayAsync<T>(this T[] collection) where T : IBeginPlayAsync {
+            for (int i = 0; i < collection.Length; i++) {
+                try {
+                    await collection[i].BeginPlay();
                 } catch (Exception exception) {
                     Debug.LogException(exception);
                 }
