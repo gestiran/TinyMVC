@@ -18,7 +18,7 @@ namespace TinyMVC.Dependencies.Components {
     public abstract class Actor : Model {
         public View view { get => viewInternal; internal set => viewInternal = value; }
         
-        [field: ShowInInspector, LabelText("View"), HideReferenceObjectPicker, HideDuplicateReferenceBox, PropertyOrder(-10000), ShowIf(nameof(isVisibleView)), ReadOnly]
+        [field: ShowInInspector, LabelText("View"), HideReferenceObjectPicker, HideDuplicateReferenceBox, PropertyOrder(-10000), ShowIf("isVisibleView"), ReadOnly]
         internal virtual View viewInternal { get; set; }
         
     #if UNITY_EDITOR
