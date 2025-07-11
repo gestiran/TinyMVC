@@ -35,7 +35,17 @@ namespace TinyMVC.Views {
         }
         
         [Obsolete("Can't connect nothing!", true)]
-        public void Connect(int sceneId) {
+        public void Connect(string contextKey) {
+            // Do nothing!
+        }
+        
+        [Obsolete("Can't insert nothing!", true)]
+        public void Insert() {
+            // Do nothing!
+        }
+        
+        [Obsolete("Can't insert nothing!", true)]
+        public void Insert(string contextKey) {
             // Do nothing!
         }
         
@@ -45,7 +55,7 @@ namespace TinyMVC.Views {
         }
         
         [Obsolete("Can't disconnect nothing!", true)]
-        public void Disconnect(int sceneId) {
+        public void Disconnect(string contextKey) {
             // Do nothing!
         }
         
@@ -114,6 +124,26 @@ namespace TinyMVC.Views {
                 view.connectState = ConnectState.Connected;
                 _connections.Add(view);
                 context.Connect(view, resolving => ResolveUtility.Resolve(resolving, container));
+            }
+            
+            return view;
+        }
+        
+        public T Insert<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View {
+            ProjectContext.data.tempContainer = new DependencyContainer(dependencies);
+            return Insert(view, ProjectContext.activeContext.key);
+        }
+        
+        public T Insert<T>([NotNull] T view) where T : View => Insert(view, ProjectContext.activeContext.key);
+        
+        public T Insert<T>([NotNull] T view, string contextKey, [NotNull] params IDependency[] dependencies) where T : View {
+            ProjectContext.data.tempContainer = new DependencyContainer(dependencies);
+            return Insert(view, contextKey);
+        }
+        
+        public T Insert<T>([NotNull] T view, string contextKey) where T : View {
+            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                context.views.Insert(view);
             }
             
             return view;

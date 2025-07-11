@@ -134,11 +134,17 @@ namespace TinyMVC.Boot.Contexts {
             mainViews.Clear();
         }
         
-        public void Add<T>(T view) where T : View {
+        protected void Add<T>(T view) where T : View => mainViews.Add(view);
+        
+        internal void Insert<T>(T view) where T : View {
             if (_isUsedViewResolve) {
                 string label = view.gameObject != null ? view.gameObject.name : typeof(T).Name;
                 Debug.LogError($"ViewsContext.Add({label}) - Can't be added, resolve is completed!");
                 return;
+            }
+            
+            if (view is IInit init) {
+                init.Init();
             }
             
             mainViews.Add(view);
