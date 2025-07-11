@@ -24,6 +24,7 @@ namespace TinyMVC.Boot.Contexts {
         private View[] _instances;
         internal List<View> mainViews;
         internal List<View> subViews;
+        private bool _isUsedViewResolve;
         
         internal void Instantiate() {
             List<View> instances = new List<View>(_assets.Length);
@@ -49,6 +50,8 @@ namespace TinyMVC.Boot.Contexts {
                     dependencies.Add(dependency);
                 }
             }
+            
+            _isUsedViewResolve = true;
         }
         
         internal void CreateViews() {
@@ -131,7 +134,15 @@ namespace TinyMVC.Boot.Contexts {
             mainViews.Clear();
         }
         
-        public void Add<T>(T view) where T : View => mainViews.Add(view);
+        public void Add<T>(T view) where T : View {
+            if (_isUsedViewResolve) {
+                string label = view.gameObject != null ? view.gameObject.name : typeof(T).Name;
+                Debug.LogError($"ViewsContext.Add({label}) - Can't be added, resolve is completed!");
+                return;
+            }
+            
+            mainViews.Add(view);
+        }
         
         protected abstract void Create();
         
