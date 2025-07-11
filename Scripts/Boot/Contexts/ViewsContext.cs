@@ -131,7 +131,7 @@ namespace TinyMVC.Boot.Contexts {
             mainViews.Clear();
         }
         
-        protected void Add<T>(T view) where T : View => mainViews.Add(view);
+        public void Add<T>(T view) where T : View => mainViews.Add(view);
         
         protected abstract void Create();
         

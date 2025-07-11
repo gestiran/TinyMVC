@@ -13,7 +13,9 @@ namespace TinyMVC.Boot {
     [DisallowMultipleComponent]
     public abstract class SceneContext<TViews> : SceneContext where TViews : ViewsContext {
         [field: SerializeField]
-        public TViews views { get; private set; }
+        public new TViews views { get; private set; }
+        
+        internal override ViewsContext viewsInternal { get => views; set => views = value as TViews; }
         
         private const int _DEPENDENCIES_CAPACITY = 64;
         
@@ -203,6 +205,10 @@ namespace TinyMVC.Boot {
     [DefaultExecutionOrder(-50)]
     public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext> {
         public string key { get; private set; }
+        
+        public ViewsContext views { get => viewsInternal; internal set => viewsInternal = value; }
+        
+        internal virtual ViewsContext viewsInternal { get; set; }
         
         internal List<IFixedTick> fixedTicks { get; private set; }
         internal List<ITick> ticks { get; private set; }

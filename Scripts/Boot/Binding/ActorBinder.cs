@@ -9,7 +9,7 @@ namespace TinyMVC.Boot.Binding {
         
         protected ActorBinder(string key, View view = null) : base(key) => _view = view;
         
-        internal override void BindInternal(TActor model) => model.view = _view;
+        internal override void BindInternal(TActor model) => model.viewInternal = _view;
     }
     
     public abstract class ActorBinder<TActor, TView> : ActorBinder<TActor> where TActor : Actor<TView>, new() where TView : View {
@@ -19,6 +19,6 @@ namespace TinyMVC.Boot.Binding {
         
         protected ActorBinder(string key, TView view = null) : base(key, view) => _view = view;
         
-        internal override void BindInternal(TActor model) => model.view = _view;
+        internal override void BindInternal(TActor model) => model.viewInternal = _view;
     }
 }
