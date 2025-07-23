@@ -45,7 +45,10 @@ namespace TinyMVC.Views {
             }
         }
         
-        internal virtual void UpdateViews() => SetViews(GetComponentsInChildren<View>(true));
+        internal virtual void UpdateViews() {
+            SetViews(GetComponentsInChildren<View>(true));
+            OnViewsChangedInternal();
+        }
         
         private void OnViewsChangedInternal() {
             if (isVisibleView) {
@@ -83,7 +86,10 @@ namespace TinyMVC.Views {
         
         protected new virtual void OnViewsChanged() { }
         
-        internal override void UpdateViews() => SetViews(GetComponentsInChildren<T>(true));
+        internal override void UpdateViews() {
+            SetViews(GetComponentsInChildren<T>(true));
+            OnViewsChanged();
+        }
         
         private void OnViewsChangedInternalType() => OnViewsChanged();
         

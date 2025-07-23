@@ -52,6 +52,8 @@ namespace TinyMVC.Views {
             } else {
                 SetViews(FindObjectsOfType<View>(true));
             }
+            
+            OnViewsChanged();
         }
         
         private void OnViewsChangedInternal() {
@@ -96,6 +98,8 @@ namespace TinyMVC.Views {
             } else {
                 SetViews(FindObjectsOfType<T>(true));
             }
+            
+            OnViewsChanged();
         }
         
         private void OnViewsChangedInternalType() => OnViewsChanged();
