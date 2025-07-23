@@ -5,7 +5,7 @@
         "name": "Derek Sliman",
         "url": "https://github.com/gestiran"
     },
-    "version": "1.10.1",
+    "version": "1.10.2",
     "unity": "2018.4",
     "description": "Model View Controller initialization system.",
     "keywords": [
@@ -23,7 +23,7 @@
         "com.unity.modules.uielements": "1.0.0",
         "com.unity.nuget.newtonsoft-json": "3.2.1",
         "com.cysharp.unitask": "2.5.10",
-        "com.ges.tinyutilities": "1.0.12"
+        "com.ges.tinyutilities": "1.0.15"
     },
     "publishConfig": {
         "registry": "https://package.openupm.com"
