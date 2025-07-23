@@ -72,11 +72,11 @@ namespace TinyMVC.ReactiveFields {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddChangeListener(ActionListener<T, T> listener) => _listenersChange.Add(listener);
+        public void AddListener(ActionListener<T, T> listener) => _listenersChange.Add(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddChangeListener(ActionListener<T, T> listener, UnloadPool unload) {
-            AddChangeListener(listener);
+        public void AddListener(ActionListener<T, T> listener, UnloadPool unload) {
+            AddListener(listener);
             unload.Add(new UnloadAction(() => _listenersChange.Remove(listener)));
         }
         
@@ -155,7 +155,7 @@ namespace TinyMVC.ReactiveFields {
         public void RemoveListener(ActionListener<T> listener) => _listenersValue.Remove(listener);
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveChangeListener(ActionListener<T, T> listener) => _listenersChange.Remove(listener);
+        public void RemoveListener(ActionListener<T, T> listener) => _listenersChange.Remove(listener);
         
     #endregion
         
@@ -172,11 +172,10 @@ namespace TinyMVC.ReactiveFields {
         public override int GetHashCode() => _id;
         
     #if UNITY_EDITOR
-        private bool IsInt() => typeof(T) == typeof(int);
+        private static readonly bool _isInt = typeof(T) == typeof(int); 
+        private static readonly bool _isFloat = typeof(T) == typeof(float); 
         
-        private bool IsFloat() => typeof(T) == typeof(float);
-        
-        [Button("x2"), HorizontalGroup, ShowIf("IsInt")]
+        [Button("x2"), HorizontalGroup, ShowIf("_isInt")]
         private void AddInt() {
             if (_value is int intValue) {
                 if (intValue == 0) {
@@ -191,7 +190,7 @@ namespace TinyMVC.ReactiveFields {
             }
         }
         
-        [Button("x2"), HorizontalGroup, ShowIf("IsFloat")]
+        [Button("x2"), HorizontalGroup, ShowIf("_isFloat")]
         private void AddFloat() {
             if (_value is float floatValue) {
                 if (floatValue == 0f) {
@@ -206,7 +205,7 @@ namespace TinyMVC.ReactiveFields {
             }
         }
         
-        [Button("x0.5"), HorizontalGroup, ShowIf("IsInt")]
+        [Button("x0.5"), HorizontalGroup, ShowIf("_isInt")]
         private void SubtractInt() {
             if (_value is int intValue) {
                 if (intValue > 0 && intValue <= 10) {
@@ -221,7 +220,7 @@ namespace TinyMVC.ReactiveFields {
             }
         }
         
-        [Button("x0.5"), HorizontalGroup, ShowIf("IsFloat")]
+        [Button("x0.5"), HorizontalGroup, ShowIf("_isFloat")]
         private void SubtractFloat() {
             if (_value is float floatValue) {
                 if (floatValue > 0f && floatValue <= 10f) {

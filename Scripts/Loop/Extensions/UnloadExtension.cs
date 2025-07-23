@@ -4,6 +4,19 @@ using UnityEngine;
 
 namespace TinyMVC.Loop.Extensions {
     public static class UnloadExtension {
+        public static bool TryUnload(this UnloadPool unload) {
+            if (unload == null) {
+                return false;
+            }
+            
+            if (unload.isUnloaded) {
+                return false;
+            }
+            
+            unload.Unload();
+            return true;
+        }
+        
         public static void TryUnload<T>(this ICollection<T> collection) {
             foreach (T obj in collection) {
                 obj.TryUnloadSingle();

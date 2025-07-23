@@ -326,7 +326,7 @@ namespace TinyMVC.Views {
         }
         
         private View GetActualParent() {
-            int current = GetComponent<View>().GetInstanceID();
+            int current = gameObject.GetInstanceID();
             View[] parents = GetComponentsInParent<View>(true);
             
             for (int i = 0; i < parents.Length; i++) {
@@ -334,7 +334,7 @@ namespace TinyMVC.Views {
                     continue;
                 }
                 
-                if (parents[i].GetInstanceID() == current) {
+                if (parents[i].gameObject.GetInstanceID() == current) {
                     continue;
                 }
                 

@@ -13,7 +13,7 @@ namespace TinyMVC.SmartLinks {
     public sealed class SoftLink<T> : SmartLink<T> where T : MonoBehaviour {
         [SerializeField]
     #if ODIN_INSPECTOR && UNITY_EDITOR
-        [HorizontalGroup, SuffixLabel("Root", true), HideLabel, ChildGameObjectsOnly(IncludeInactive = true), Required]
+        [HorizontalGroup, SuffixLabel("Root", true), HideLabel, Required]
     #endif
         private Transform _root;
         

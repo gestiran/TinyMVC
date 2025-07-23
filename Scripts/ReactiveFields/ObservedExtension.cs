@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using TinyMVC.Boot;
 using TinyMVC.Loop;
@@ -144,7 +145,7 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public static bool TrySet<T>(this Observed<T> obj, T value) {
-            if (obj.value.Equals(value)) {
+            if (EqualityComparer<T>.Default.Equals(obj.value, value)) {
                 return false;
             }
             
@@ -158,7 +159,7 @@ namespace TinyMVC.ReactiveFields {
         }
         
         public static bool TrySetWhen<T>(this Observed<T> obj, T equals, T set) {
-            if (obj.value.Equals(equals) == false) {
+            if (EqualityComparer<T>.Default.Equals(obj.value, equals) == false) {
                 return false;
             }
             

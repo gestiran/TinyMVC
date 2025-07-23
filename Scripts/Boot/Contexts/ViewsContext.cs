@@ -42,6 +42,7 @@ namespace TinyMVC.Boot.Contexts {
             
             _instances = new View[instances.Count];
             instances.CopyTo(_instances);
+            _isUsedViewResolve = false;
         }
         
         internal void GetDependencies(List<IDependency> dependencies) {

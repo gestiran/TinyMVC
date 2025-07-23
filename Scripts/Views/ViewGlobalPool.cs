@@ -2,18 +2,81 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using TinyMVC.Views.Extensions;
+using TinyUtilities.Unity;
 
 namespace TinyMVC.Views {
-    public abstract class ViewPoolGlobal<T> : View, IEnumerable<T> where T : View {
+    public abstract class ViewPoolGlobal : View, IEnumerable<View> {
         public int length => views.Length;
         
-        [field: SerializeField, LabelWidth(25), OnValueChanged("OnViewsChanged")]
+        public View[] views { get => viewsInternal; set => viewsInternal = value; }
+        
+        [field: SerializeField, LabelText("Views"), LabelWidth(25), ShowIf("isVisibleView"), OnValueChanged("OnViewsChangedInternal")]
         [field: ListDrawerSettings(ShowIndexLabels = true, DraggableItems = false, HideRemoveButton = true, OnTitleBarGUI = "ListGUI")]
-        public T[] views { get; private set; }
+        internal virtual View[] viewsInternal { get; set; }
         
-        public T this[int index] => views[index];
+        public View this[int index] => viewsInternal[index];
         
-        public IEnumerator<T> GetEnumerator() {
+        public void SetViews(View[] value) => viewsInternal = value;
+        
+        public IEnumerator<View> GetEnumerator() {
+            for (int viewId = 0; viewId < viewsInternal.Length; viewId++) {
+                yield return viewsInternal[viewId];
+            }
+        }
+        
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
+    #if UNITY_EDITOR
+        
+        internal virtual bool isVisibleView => true;
+        
+        public override void Reset() {
+            UpdateViews();
+            base.Reset();
+        }
+        
+        protected virtual void OnViewsChanged() { }
+        
+        // ReSharper disable once UnusedMember.Local
+        internal void ListGUI() {
+            if (Sirenix.Utilities.Editor.SirenixEditorGUI.ToolbarButton(Sirenix.Utilities.Editor.EditorIcons.Refresh)) {
+                UpdateViews();
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
+        }
+        
+        internal virtual void UpdateViews() {
+            if (GameObjectUtility.TryFindObjectsOfTypePrefab(out View[] result)) {
+                SetViews(result);
+            } else {
+                SetViews(FindObjectsOfType<View>(true));
+            }
+        }
+        
+        private void OnViewsChangedInternal() {
+            if (isVisibleView) {
+                OnViewsChanged();
+            }
+        }
+        
+    #endif
+    }
+    
+    public abstract class ViewPoolGlobal<T> : ViewPoolGlobal, IEnumerable<T> where T : View {
+        public new int length => views.Length;
+        
+        [field: SerializeField, LabelWidth(25), OnValueChanged("OnViewsChangedInternalType")]
+        [field: ListDrawerSettings(ShowIndexLabels = true, DraggableItems = false, HideRemoveButton = true, OnTitleBarGUI = "ListGUI")]
+        public new T[] views { get; private set; }
+        
+        internal override View[] viewsInternal { get => views.AsBaseView(); set => views = value.AsTargetView<T>(); }
+        
+        public new T this[int index] => views[index];
+        
+        public void SetViews(T[] value) => views = value;
+        
+        public new IEnumerator<T> GetEnumerator() {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 yield return views[viewId];
             }
@@ -23,25 +86,20 @@ namespace TinyMVC.Views {
         
     #if UNITY_EDITOR
         
-        public override void Reset() {
-            UpdateViews();
-            base.Reset();
-        }
+        internal override bool isVisibleView => false;
         
-        protected virtual void ApplyViews_Editor(T[] value) => views = value;
+        protected new virtual void OnViewsChanged() { }
         
-        protected virtual void OnViewsChanged() { }
-        
-        // ReSharper disable once UnusedMember.Local
-        private void ListGUI() {
-            if (Sirenix.Utilities.Editor.SirenixEditorGUI.ToolbarButton(Sirenix.Utilities.Editor.EditorIcons.Refresh)) {
-                UpdateViews();
-                UnityEditor.EditorUtility.SetDirty(this);
+        internal override void UpdateViews() {
+            if (GameObjectUtility.TryFindObjectsOfTypePrefab(out T[] result)) {
+                SetViews(result);   
+            } else {
+                SetViews(FindObjectsOfType<T>(true));
             }
         }
         
-        private void UpdateViews() => ApplyViews_Editor(FindObjectsOfType<T>(true));
-    
+        private void OnViewsChangedInternalType() => OnViewsChanged();
+        
     #endif
     }
 }
