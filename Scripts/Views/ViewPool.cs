@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
@@ -25,6 +26,8 @@ namespace TinyMVC.Views {
         }
         
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
+        public abstract Type GetTypeView();
         
     #if UNITY_EDITOR
         
@@ -66,6 +69,8 @@ namespace TinyMVC.Views {
         [field: ListDrawerSettings(ShowIndexLabels = true, DraggableItems = false, HideRemoveButton = true, OnTitleBarGUI = "ListGUI")]
         public new T[] views { get; private set; }
         
+        private static readonly Type _viewType = typeof(T);
+        
         internal override View[] viewsInternal { get => views.AsBaseView(); set => views = value.AsTargetView<T>(); }
         
         public new T this[int index] => views[index];
@@ -79,6 +84,8 @@ namespace TinyMVC.Views {
         }
         
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
+        public override Type GetTypeView() => _viewType;
         
     #if UNITY_EDITOR
         

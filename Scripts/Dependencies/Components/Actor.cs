@@ -1,3 +1,4 @@
+using System;
 using Sirenix.OdinInspector;
 using TinyMVC.Views;
 
@@ -7,6 +8,10 @@ namespace TinyMVC.Dependencies.Components {
         public new T view { get; internal set; }
         
         internal override View viewInternal { get => view; set => view = value as T; }
+        
+        private static readonly Type _viewType = typeof(T);
+        
+        public override Type GetTypeView() => _viewType;
         
     #if UNITY_EDITOR
         
@@ -20,6 +25,8 @@ namespace TinyMVC.Dependencies.Components {
         
         [field: ShowInInspector, LabelText("View"), HideReferenceObjectPicker, HideDuplicateReferenceBox, PropertyOrder(-10000), ShowIf("isVisibleView"), ReadOnly]
         internal virtual View viewInternal { get; set; }
+        
+        public virtual Type GetTypeView() => typeof(View);
         
     #if UNITY_EDITOR
         
