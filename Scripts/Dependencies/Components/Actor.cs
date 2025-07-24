@@ -1,10 +1,15 @@
 using System;
-using Sirenix.OdinInspector;
 using TinyMVC.Views;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Dependencies.Components {
     public abstract class Actor<T> : Actor where T : View {
+    #if ODIN_INSPECTOR
         [field: ShowInInspector, LabelText("View"), HideReferenceObjectPicker, HideDuplicateReferenceBox, PropertyOrder(-10000), ReadOnly]
+    #endif
         public new T view { get; internal set; }
         
         internal override View viewInternal { get => view; set => view = value as T; }
@@ -23,7 +28,9 @@ namespace TinyMVC.Dependencies.Components {
     public abstract class Actor : Model {
         public View view { get => viewInternal; internal set => viewInternal = value; }
         
+    #if ODIN_INSPECTOR
         [field: ShowInInspector, LabelText("View"), HideReferenceObjectPicker, HideDuplicateReferenceBox, PropertyOrder(-10000), ShowIf("isVisibleView"), ReadOnly]
+    #endif
         internal virtual View viewInternal { get; set; }
         
         public virtual Type GetTypeView() => typeof(View);

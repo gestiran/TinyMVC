@@ -1,11 +1,14 @@
-﻿using Sirenix.OdinInspector;
-using TinyMVC.Boot;
+﻿using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Samples.Views.Global {
     [RequireComponent(typeof(AudioListener))]
@@ -15,10 +18,16 @@ namespace TinyMVC.Samples.Views.Global {
         public Vector3 position => thisTransform.position;
         public AudioVelocityUpdateMode velocityUpdateMode => thisAudioListener.velocityUpdateMode;
         
-        [field: SerializeField, FoldoutGroup("Generated"), Required]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated"), Required]
+    #endif
+        [field: SerializeField]
         public AudioListener thisAudioListener { get; private set; }
         
-        [field: SerializeField, FoldoutGroup("Generated"), Required]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated"), Required]
+    #endif
+        [field: SerializeField]
         public Transform thisTransform { get; private set; }
         
         protected AudioListenerModel _model;

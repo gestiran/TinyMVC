@@ -1,16 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Sirenix.OdinInspector;
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using UnityEngine;
 
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace TinyMVC.Views {
-    public abstract class View : MonoBehaviour, ISelfValidator {
+    public abstract class View : MonoBehaviour
+#if ODIN_INSPECTOR && ODIN_VALIDATOR
+                               , ISelfValidator
+#endif
+    {
         public ConnectState connectState { get; internal set; }
         
-        [field: SerializeField, FoldoutGroup("Generated", 1000), ShowIn(PrefabKind.InstanceInScene | PrefabKind.InstanceInPrefab), ReadOnly]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated", 1000), ShowIn(PrefabKind.InstanceInScene | PrefabKind.InstanceInPrefab), ReadOnly]
+    #endif
+        [field: SerializeField]
         public View parent { get; private set; }
         
         private readonly List<View> _connections = new List<View>();
@@ -297,6 +307,7 @@ namespace TinyMVC.Views {
             }
         }
         
+    #if ODIN_INSPECTOR && ODIN_VALIDATOR
         public virtual void Validate(SelfValidationResult result) {
         #if UNITY_EDITOR
             if (parent != null) {
@@ -312,6 +323,7 @@ namespace TinyMVC.Views {
             }
         #endif
         }
+    #endif
         
     #if UNITY_EDITOR
         

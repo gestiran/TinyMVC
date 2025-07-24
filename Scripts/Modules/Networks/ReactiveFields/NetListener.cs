@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
 using TinyMVC.ReactiveFields.Extensions;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Modules.Networks.ReactiveFields {
     public sealed class NetListener<T> : IEquatable<NetListener<T>>, IEquatable<T>, IUnload {
         public T value => _value;
         
+    #if ODIN_INSPECTOR
         [ShowInInspector, HorizontalGroup, HideLabel, HideDuplicateReferenceBox, HideReferenceObjectPicker]
+    #endif
         private T _value;
         
         public readonly ushort group;

@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
 
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace TinyMVC.ReactiveFields {
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class InputSingleListener : IUnload {
@@ -17,7 +20,7 @@ namespace TinyMVC.ReactiveFields {
         
         public InputSingleListener(Func<bool> action, UnloadPool unload) : this() => AddListener(action, unload);
         
-    #if UNITY_EDITOR
+    #if ODIN_INSPECTOR
         [Button]
     #endif
         public void Send(bool expectedResult = true) => _listeners.InvokeAny(expectedResult);

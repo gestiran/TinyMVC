@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using TinyMVC.Loop;
 using TinyMVC.ReactiveFields.Extensions;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.ReactiveFields {
     public static class Observed {
@@ -13,11 +16,15 @@ namespace TinyMVC.ReactiveFields {
         static Observed() => globalId = 0;
     }
     
+#if ODIN_INSPECTOR
     [ShowInInspector, InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox]
+#endif
     public sealed class Observed<T> : IEquatable<Observed<T>>, IEquatable<T>, IUnload {
         public T value => _value;
         
+    #if ODIN_INSPECTOR
         [ShowInInspector, HorizontalGroup, HideLabel, OnValueChanged("@Set(_value)"), HideDuplicateReferenceBox, HideReferenceObjectPicker]
+    #endif
         private T _value;
         
         private readonly int _id;
@@ -171,9 +178,9 @@ namespace TinyMVC.ReactiveFields {
         
         public override int GetHashCode() => _id;
         
-    #if UNITY_EDITOR
-        private static readonly bool _isInt = typeof(T) == typeof(int); 
-        private static readonly bool _isFloat = typeof(T) == typeof(float); 
+    #if UNITY_EDITOR && ODIN_INSPECTOR
+        private static readonly bool _isInt = typeof(T) == typeof(int);
+        private static readonly bool _isFloat = typeof(T) == typeof(float);
         
         [Button("x2"), HorizontalGroup, ShowIf("_isInt")]
         private void AddInt() {

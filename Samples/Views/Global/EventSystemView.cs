@@ -1,5 +1,4 @@
-﻿using Sirenix.OdinInspector;
-using TinyMVC.Boot;
+﻿using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Samples.Models.Global;
@@ -8,13 +7,20 @@ using TinyMVC.Views.Generated;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace TinyMVC.Samples.Views.Global {
     [RequireComponent(typeof(EventSystem))]
     [DisallowMultipleComponent]
     public sealed class EventSystemView : View, IApplyResolving, IDependency, IApplyGenerated, IUnload, IDontDestroyOnLoad {
         public bool isActive => thisEventSystem.enabled;
         
-        [field: SerializeField, FoldoutGroup("Generated"), Required, ReadOnly]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated"), Required, ReadOnly]
+    #endif
+        [field: SerializeField]
         public EventSystem thisEventSystem { get; private set; }
         
         private EventSystemModel _model;

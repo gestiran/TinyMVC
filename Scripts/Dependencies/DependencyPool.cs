@@ -2,17 +2,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Dependencies {
+#if ODIN_INSPECTOR
     [HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox]
+#endif
     public sealed class DependencyPool<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
         public int length => _objects.Length;
         public T Current => _objects[_currentId];
         object IEnumerator.Current => _objects[_currentId];
         
+    #if ODIN_INSPECTOR
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, IsReadOnly = true, ListElementLabelName = "@ToString()"), Searchable]
         [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox, LabelText("@ToString()")]
+    #endif
         private T[] _objects;
         
         private int _currentId;
@@ -56,8 +63,7 @@ namespace TinyMVC.Dependencies {
             _currentId = -1;
         }
         
-        public T this[int index]
-        {
+        public T this[int index] {
             get => _objects[index];
             set => _objects[index] = value;
         }

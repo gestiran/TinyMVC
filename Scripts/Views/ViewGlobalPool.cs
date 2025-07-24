@@ -2,9 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Sirenix.OdinInspector;
 using TinyMVC.Views.Extensions;
 using TinyUtilities.Unity;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Views {
     public abstract class ViewPoolGlobal : View, IEnumerable<View> {
@@ -12,8 +15,11 @@ namespace TinyMVC.Views {
         
         public View[] views { get => viewsInternal; set => viewsInternal = value; }
         
-        [field: SerializeField, LabelText("Views"), LabelWidth(25), ShowIf("isVisibleView"), OnValueChanged("OnViewsChangedInternal")]
+    #if ODIN_INSPECTOR
         [field: ListDrawerSettings(ShowIndexLabels = true, DraggableItems = false, HideRemoveButton = true, OnTitleBarGUI = "ListGUI")]
+        [field: LabelText("Views"), LabelWidth(25), ShowIf("isVisibleView"), OnValueChanged("OnViewsChangedInternal")]
+    #endif
+        [field: SerializeField]
         internal virtual View[] viewsInternal { get; set; }
         
         public View this[int index] => viewsInternal[index];
@@ -41,6 +47,7 @@ namespace TinyMVC.Views {
         
         protected virtual void OnViewsChanged() { }
         
+    #if ODIN_INSPECTOR
         // ReSharper disable once UnusedMember.Local
         internal void ListGUI() {
             if (Sirenix.Utilities.Editor.SirenixEditorGUI.ToolbarButton(Sirenix.Utilities.Editor.EditorIcons.Refresh)) {
@@ -48,6 +55,7 @@ namespace TinyMVC.Views {
                 UnityEditor.EditorUtility.SetDirty(this);
             }
         }
+    #endif
         
         internal virtual void UpdateViews() {
             if (GameObjectUtility.TryFindObjectsOfTypePrefab(out View[] result)) {
@@ -59,11 +67,13 @@ namespace TinyMVC.Views {
             OnViewsChanged();
         }
         
+    #if ODIN_INSPECTOR
         private void OnViewsChangedInternal() {
             if (isVisibleView) {
                 OnViewsChanged();
             }
         }
+    #endif
         
     #endif
     }
@@ -71,8 +81,11 @@ namespace TinyMVC.Views {
     public abstract class ViewPoolGlobal<T> : ViewPoolGlobal, IEnumerable<T> where T : View {
         public new int length => views.Length;
         
-        [field: SerializeField, LabelWidth(25), OnValueChanged("OnViewsChangedInternalType")]
+    #if ODIN_INSPECTOR
         [field: ListDrawerSettings(ShowIndexLabels = true, DraggableItems = false, HideRemoveButton = true, OnTitleBarGUI = "ListGUI")]
+        [field: LabelWidth(25), OnValueChanged("OnViewsChangedInternalType")]
+    #endif
+        [field: SerializeField]
         public new T[] views { get; private set; }
         
         private static readonly Type _viewType = typeof(T);
@@ -101,7 +114,7 @@ namespace TinyMVC.Views {
         
         internal override void UpdateViews() {
             if (GameObjectUtility.TryFindObjectsOfTypePrefab(out T[] result)) {
-                SetViews(result);   
+                SetViews(result);
             } else {
                 SetViews(FindObjectsOfType<T>(true));
             }
@@ -109,7 +122,9 @@ namespace TinyMVC.Views {
             OnViewsChanged();
         }
         
+    #if ODIN_INSPECTOR
         private void OnViewsChangedInternalType() => OnViewsChanged();
+    #endif
         
     #endif
     }

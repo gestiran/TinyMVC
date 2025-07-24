@@ -1,10 +1,13 @@
-﻿using Sirenix.OdinInspector;
-using TinyMVC.Boot;
+﻿using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Samples.Views.Global {
     [RequireComponent(typeof(Camera))]
@@ -12,13 +15,22 @@ namespace TinyMVC.Samples.Views.Global {
     public sealed class UICameraView : View, IApplyResolving, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public Vector3 position => thisTransform.position;
         
-        [field: SerializeField, BoxGroup("Links"), ChildGameObjectsOnly(IncludeInactive = true), Required]
+    #if ODIN_INSPECTOR
+        [field: BoxGroup("Links"), ChildGameObjectsOnly(IncludeInactive = true), Required]
+    #endif
+        [field: SerializeField]
         public Camera inputCamera { get; private set; }
         
-        [field: SerializeField, FoldoutGroup("Generated", 1000), Required, ReadOnly]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated", 1000), Required, ReadOnly]
+    #endif
+        [field: SerializeField]
         public Transform thisTransform { get; private set; }
         
-        [field: SerializeField, FoldoutGroup("Generated", 1000), Required, ReadOnly]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated", 1000), Required, ReadOnly]
+    #endif
+        [field: SerializeField]
         public Camera thisCamera { get; private set; }
         
         private MainCameraModel _mainCamera;

@@ -1,5 +1,8 @@
 using UnityEngine;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 
 #if GOOGLE_ADS_MOBILE
 using System;
@@ -8,10 +11,16 @@ using System.Collections;
 
 namespace TinyMVC.Modules.ADS.Components {
     internal sealed class RewardTokenBranch : RewardBranch {
-        [field: SerializeField, Required]
+    #if ODIN_INSPECTOR
+        [field: Required]
+    #endif
+        [field: SerializeField]
         public GameObject token;
         
-        [field: SerializeField, MinValue(1)]
+    #if ODIN_INSPECTOR
+        [field: MinValue(1)]
+    #endif
+        [field: SerializeField]
         public int tokensPrice = 1;
         
     #if GOOGLE_ADS_MOBILE

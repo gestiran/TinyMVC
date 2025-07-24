@@ -1,5 +1,8 @@
 using UnityEngine;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 
 #if GOOGLE_ADS_MOBILE
 using System;
@@ -9,10 +12,16 @@ using System.Collections;
 namespace TinyMVC.Modules.ADS.Components {
     [DisallowMultipleComponent]
     internal class RewardBranch : MonoBehaviour {
-        [field: SerializeField, Required]
+    #if ODIN_INSPECTOR
+        [field: Required]
+    #endif
+        [field: SerializeField]
         public GameObject active;
         
-        [field: SerializeField, Required]
+    #if ODIN_INSPECTOR
+        [field: Required]
+    #endif
+        [field: SerializeField]
         public GameObject inactive;
         
         protected Coroutine _updateProcess;

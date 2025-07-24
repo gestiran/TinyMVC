@@ -7,18 +7,30 @@ using TinyMVC.Loop.Extensions;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using UnityEngine;
-using Sirenix.OdinInspector;
 using UnityObject = UnityEngine.Object;
 
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace TinyMVC.Boot.Contexts {
-    [Serializable, InlineProperty, HideLabel]
+#if ODIN_INSPECTOR
+    [InlineProperty, HideLabel]
+#endif
+    [Serializable]
     public abstract class ViewsContext {
+    #if ODIN_INSPECTOR
         [InfoBox("Instantiated automatically after scene loaded.")]
-        [SerializeField, ListDrawerSettings(HideAddButton = true, NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
+        [ListDrawerSettings(HideAddButton = true, NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
+    #endif
+        [SerializeField]
         private View[] _assets;
         
+    #if ODIN_INSPECTOR
         [InfoBox("Auto found in scene by Generate button.")]
-        [SerializeField, LabelText("Generated Assets"), ShowIn(PrefabKind.InstanceInScene), RequiredIn(PrefabKind.InstanceInScene), ReadOnly]
+        [LabelText("Generated Assets"), ShowIn(PrefabKind.InstanceInScene), RequiredIn(PrefabKind.InstanceInScene), ReadOnly]
+    #endif
+        [SerializeField]
         private View[] _generated;
         
         private View[] _instances;

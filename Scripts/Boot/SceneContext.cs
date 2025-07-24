@@ -7,7 +7,10 @@ using TinyMVC.Views;
 using UnityEngine;
 using System;
 using Cysharp.Threading.Tasks;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Boot {
     [DisallowMultipleComponent]
@@ -190,7 +193,9 @@ namespace TinyMVC.Boot {
         internal override void Disconnect<T1, T2>(T2 system, T1 controller) => controllers.Disconnect(system, controller, DisconnectLoop);
         
     #if UNITY_EDITOR
+    #if ODIN_INSPECTOR
         [Button("Generate"), PropertyOrder(20), ShowIn(PrefabKind.InstanceInScene), HideInPlayMode]
+    #endif
         public override void Reset() {
             if (views != null) {
                 views.Reset();
@@ -214,10 +219,15 @@ namespace TinyMVC.Boot {
         internal List<ITick> ticks { get; private set; }
         internal List<ILateTick> lateTicks { get; private set; }
         
+    #if ODIN_INSPECTOR
         [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
+    #endif
         internal ControllersContext controllers;
         
-        [SerializeField, PropertyOrder(10), InlineEditor(InlineEditorObjectFieldModes.Foldout), HideInPlayMode, Required]
+    #if ODIN_INSPECTOR
+        [PropertyOrder(10), InlineEditor(InlineEditorObjectFieldModes.Foldout), HideInPlayMode, Required]
+    #endif
+        [SerializeField]
         internal ContextComponent[] components;
         
         internal ModelsContext models;

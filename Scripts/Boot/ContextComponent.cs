@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
@@ -8,9 +7,16 @@ using TinyMVC.Views;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace TinyMVC.Boot {
     public abstract class ContextComponent : MonoBehaviour {
-        [SerializeField, ListDrawerSettings(NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
+    #if ODIN_INSPECTOR
+        [ListDrawerSettings(NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
+    #endif
+        [SerializeField]
         private View[] _assets;
         
         private View[] _instances;

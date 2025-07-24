@@ -1,12 +1,19 @@
 ﻿using System;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Boot.Helpers {
     internal abstract class ContextLink<T> : IEquatable<ContextLink<T>> {
+    #if ODIN_INSPECTOR
         [HideInEditorMode, HideInPlayMode]
+    #endif
         public readonly string contextKey;
         
+    #if ODIN_INSPECTOR
         [ShowInInspector, Title("@contextKey"), InlineProperty, HideLabel, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox]
+    #endif
         public readonly T context;
         
         protected ContextLink(string contextKey, T context) {

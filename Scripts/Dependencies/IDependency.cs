@@ -1,13 +1,13 @@
 ﻿using System;
 
-#if UNITY_EDITOR
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Dependencies {
-    #if UNITY_EDITOR
+#if ODIN_INSPECTOR
     [HideReferenceObjectPicker, HideDuplicateReferenceBox]
-    #endif
+#endif
     public interface IDependency {
         public Type GetType();
     }

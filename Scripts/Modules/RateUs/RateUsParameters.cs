@@ -1,6 +1,9 @@
 using System;
-using Sirenix.OdinInspector;
 using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 #if UNITY_NUGET_NEWTONSOFT_JSON
 using Newtonsoft.Json;
@@ -12,12 +15,17 @@ namespace TinyMVC.Modules.RateUs {
         [field: SerializeField]
         public bool isEnableRateUs { get; private set; } = true;
         
-        [field: SerializeField, BoxGroup("Remote")]
+    #if ODIN_INSPECTOR
+        [field: BoxGroup("Remote")]
+    #endif
+        [field: SerializeField]
         public RemoteConfig remoteConfig { get; private set; } = RemoteConfig.Empty();
         
         private const string _PATH = "Application/" + nameof(RateUsParameters);
-        
-        [Serializable, HideLabel, InlineProperty]
+    #if ODIN_INSPECTOR
+        [HideLabel, InlineProperty]
+    #endif
+        [Serializable]
         public sealed class RemoteConfig {
             [JsonIgnore] public int firstShowDelay => _firstShowDelay;
             [JsonIgnore] public int otherShowDelay => _otherShowDelay;
@@ -26,26 +34,44 @@ namespace TinyMVC.Modules.RateUs {
             [JsonIgnore] public int eventFailedDelay => _eventFailedDelay;
             [JsonIgnore] public int interstitialShowDelay => _interstitialShowDelay;
             
-            [SerializeField, JsonProperty("firstShowDelay"), OnValueChanged("UpdateRemote")]
+        #if ODIN_INSPECTOR
+            [OnValueChanged("UpdateRemote")]
+        #endif
+            [SerializeField, JsonProperty("firstShowDelay")]
             private int _firstShowDelay;
             
-            [SerializeField, JsonProperty("otherShowDelay"), OnValueChanged("UpdateRemote")]
+        #if ODIN_INSPECTOR
+            [OnValueChanged("UpdateRemote")]
+        #endif
+            [SerializeField, JsonProperty("otherShowDelay")]
             private int _otherShowDelay;
             
-            [SerializeField, JsonProperty("afterAppStartDelay"), OnValueChanged("UpdateRemote")]
+        #if ODIN_INSPECTOR
+            [OnValueChanged("UpdateRemote")]
+        #endif
+            [SerializeField, JsonProperty("afterAppStartDelay")]
             private int _afterAppStartDelay;
             
-            [SerializeField, JsonProperty("playerDeadDelay"), OnValueChanged("UpdateRemote")]
+        #if ODIN_INSPECTOR
+            [OnValueChanged("UpdateRemote")]
+        #endif
+            [SerializeField, JsonProperty("playerDeadDelay")]
             private int _playerDeadDelay;
             
-            [SerializeField, JsonProperty("eventFailedDelay"), OnValueChanged("UpdateRemote")]
+        #if ODIN_INSPECTOR
+            [OnValueChanged("UpdateRemote")]
+        #endif
+            [SerializeField, JsonProperty("eventFailedDelay")]
             private int _eventFailedDelay;
             
-            [SerializeField, JsonProperty("interstitialShowDelay"), OnValueChanged("UpdateRemote")]
+        #if ODIN_INSPECTOR
+            [OnValueChanged("UpdateRemote")]
+        #endif
+            [SerializeField, JsonProperty("interstitialShowDelay")]
             private int _interstitialShowDelay;
             
-        #if UNITY_EDITOR
-            [ShowInInspector, JsonIgnore, ReadOnly]
+        #if UNITY_EDITOR && ODIN_INSPECTOR
+            [JsonIgnore, ShowInInspector, ReadOnly]
             private string _remote;
         #endif
             
@@ -68,13 +94,13 @@ namespace TinyMVC.Modules.RateUs {
             
             public static RemoteConfig Empty() => new RemoteConfig(0);
             
-        #if UNITY_EDITOR
+        #if UNITY_EDITOR && ODIN_INSPECTOR
             [OnInspectorInit]
             private void UpdateRemote() => _remote = JsonConvert.SerializeObject(this);
         #endif
         }
         
-        public static RateUsParameters LoadFromResources() { 
+        public static RateUsParameters LoadFromResources() {
             RateUsParameters parameters = Resources.Load<RateUsParameters>(_PATH);
             
             if (parameters != null) {

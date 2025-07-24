@@ -5,7 +5,10 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 
 #if UNITY_PURCHASING
 using UnityEngine.Purchasing;
@@ -15,10 +18,18 @@ namespace TinyMVC.Modules.IAP {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Button))]
 #if UNITY_PURCHASING && !UNITY_PURCHASING_FAKE
-    public sealed class BuyButton : CodelessIAPButton, IDisposable, ISelfValidator {
-#else
-    public sealed class BuyButton : MonoBehaviour, IDisposable, ISelfValidator {
+    public sealed class BuyButton : CodelessIAPButton, IDisposable
+#if ODIN_INSPECTOR && ODIN_VALIDATOR
+                                  , ISelfValidator
 #endif
+    {
+    #else
+    public sealed class BuyButton : MonoBehaviour, IDisposable
+#if ODIN_INSPECTOR && ODIN_VALIDATOR
+                                  , ISelfValidator 
+#endif
+    {
+    #endif
         [SerializeField]
         private Text _price;
         
@@ -113,7 +124,7 @@ namespace TinyMVC.Modules.IAP {
             }
             
             if (_isActive) {
-                CodelessIAPStoreListener.Instance.RemoveButton(this);   
+                CodelessIAPStoreListener.Instance.RemoveButton(this);
             }
         #endif
             
@@ -137,7 +148,7 @@ namespace TinyMVC.Modules.IAP {
             
             return button;
         }
-
+        
         protected override void AddButtonToCodelessListener() {
             // Do nothing
         }
@@ -184,6 +195,7 @@ namespace TinyMVC.Modules.IAP {
             _handler.Purchase();
         }
         
+    #if ODIN_INSPECTOR && ODIN_VALIDATOR
         public void Validate(SelfValidationResult result) {
         #if UNITY_EDITOR
             
@@ -195,6 +207,8 @@ namespace TinyMVC.Modules.IAP {
             
         #endif
         }
+    #endif
+        
     #if UNITY_EDITOR
         private void FixAdaptiveText() {
             _price.resizeTextForBestFit = true;

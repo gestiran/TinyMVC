@@ -1,9 +1,14 @@
 ﻿using System;
 using UnityEngine;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Dependencies.Components {
+#if ODIN_INSPECTOR
     [InlineProperty, HideReferenceObjectPicker, HideDuplicateReferenceBox, ShowInInspector]
+#endif
     public abstract class ModelComponent : IEquatable<ModelComponent> {
         public int id { get; }
         

@@ -1,12 +1,18 @@
-﻿using Sirenix.OdinInspector;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinyMVC.Modules.IAP {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Button))]
     public abstract class ConfiscateFakeButton<T> : MonoBehaviour where T : CodelessIAPModule, new() {
-        [SerializeField, Required]
+    #if ODIN_INSPECTOR
+        [Required]
+    #endif
+        [SerializeField]
         private Button _thisButton;
         
         private void Awake() {

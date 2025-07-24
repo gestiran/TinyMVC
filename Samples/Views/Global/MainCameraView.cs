@@ -1,11 +1,14 @@
-﻿using Sirenix.OdinInspector;
-using TinyMVC.Boot;
+﻿using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 #if URP_RENDER_PIPELINE
 using UnityEngine.Rendering.Universal;
@@ -20,10 +23,16 @@ namespace TinyMVC.Samples.Views.Global {
     public sealed class MainCameraView : View, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public Vector3 position => thisTransform.position;
         
-        [field: SerializeField, FoldoutGroup("Generated"), Required, ReadOnly]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated"), Required, ReadOnly]
+    #endif
+        [field: SerializeField]
         public Camera thisCamera { get; private set; }
         
-        [field: SerializeField, FoldoutGroup("Generated"), Required, ReadOnly]
+    #if ODIN_INSPECTOR
+        [field: FoldoutGroup("Generated"), Required, ReadOnly]
+    #endif
+        [field: SerializeField]
         public Transform thisTransform { get; private set; }
         
     #if URP_RENDER_PIPELINE
