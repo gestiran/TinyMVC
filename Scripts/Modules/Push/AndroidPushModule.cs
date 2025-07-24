@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Derek Sliman
+// Licensed under the MIT License. See LICENSE.md for details.
+
 #if UNITY_ANDROID && UNITY_MOBILE_NOTIFICATIONS
 
 using System;

@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿// Copyright (c) 2023 Derek Sliman
+// Licensed under the MIT License. See LICENSE.md for details.
+
+using UnityEngine;
 
 namespace TinyMVC.Modules.Saving {
     public static partial class SaveService {

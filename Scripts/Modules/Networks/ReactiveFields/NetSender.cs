@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) 2023 Derek Sliman
+// Licensed under the MIT License. See LICENSE.md for details.
+
+using System;
 
 namespace TinyMVC.Modules.Networks.ReactiveFields {
     public sealed class NetSender<T> : IEquatable<NetSender<T>> {

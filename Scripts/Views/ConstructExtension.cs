@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Derek Sliman
+// Licensed under the MIT License. See LICENSE.md for details.
+
 namespace TinyMVC.Views {
     public static class ConstructExtension {
         public static void Construct<TConstruct, T>(this TConstruct[] constructs, T arg) where TConstruct : IConstruct<T> {

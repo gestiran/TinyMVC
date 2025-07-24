@@ -1,4 +1,7 @@
-﻿using TinyMVC.ReactiveFields;
+﻿// Copyright (c) 2023 Derek Sliman
+// Licensed under the MIT License. See LICENSE.md for details.
+
+using TinyMVC.ReactiveFields;
 using TinyMVC.Samples.Models.Positions;
 using UnityEngine;
 

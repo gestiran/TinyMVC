@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Derek Sliman
+// Licensed under the MIT License. See LICENSE.md for details.
+
 namespace TinyMVC.ReactiveFields {
     public delegate void ActionListener();
     public delegate void ActionListener<in T>(T value);

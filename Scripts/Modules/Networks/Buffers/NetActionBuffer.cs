@@ -1,4 +1,7 @@
-﻿namespace TinyMVC.Modules.Networks.Buffers {
+﻿// Copyright (c) 2023 Derek Sliman
+// Licensed under the MIT License. See LICENSE.md for details.
+
+namespace TinyMVC.Modules.Networks.Buffers {
     internal sealed class NetActionBuffer {
         public readonly ushort type;
         public readonly ushort locationId;
