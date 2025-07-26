@@ -17,7 +17,9 @@ namespace TinyMVC.Modules.ADS.Components {
         [SerializeField]
         private TMP_Text _thisText;
         
-        protected override void UpdateCount(int count) => _thisText.text = $"{count}";
+        internal override void UpdateCount(int count) => _thisText.text = ConvertToText(count);
+        
+        protected virtual string ConvertToText(int count) => count.ToString();
         
     #if UNITY_EDITOR
         

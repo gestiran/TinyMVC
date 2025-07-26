@@ -16,6 +16,6 @@ namespace TinyMVC.Modules.ADS.Components {
             API<ADSTokenModule>.module.onCountChanged -= UpdateCount;
         }
         
-        protected abstract void UpdateCount(int count);
+        internal abstract void UpdateCount(int count);
     }
 }

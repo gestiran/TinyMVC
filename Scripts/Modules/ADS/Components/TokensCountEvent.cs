@@ -11,6 +11,6 @@ namespace TinyMVC.Modules.ADS.Components {
         [SerializeField]
         private UnityEvent<int> _onCountChange;
         
-        protected override void UpdateCount(int count) => _onCountChange.Invoke(count);
+        internal override void UpdateCount(int count) => _onCountChange.Invoke(count);
     }
 }
