@@ -10,13 +10,13 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Modules.ADS.Components {
     internal sealed class NoAdsBranchState : NoAdsBranch {
     #if ODIN_INSPECTOR
-        [Required]
+        [Required, LabelText("Active")]
     #endif
         [SerializeField]
         private GameObject _noAdsActive;
         
     #if ODIN_INSPECTOR
-        [Required]
+        [Required, LabelText("Inactive")]
     #endif
         [SerializeField]
         private GameObject _noAdsInactive;
