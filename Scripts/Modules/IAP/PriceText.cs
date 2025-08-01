@@ -11,14 +11,14 @@ using UnityEngine.Purchasing;
 
 namespace TinyMVC.Modules.IAP {
     [DisallowMultipleComponent]
-    public sealed class PriceText : MonoBehaviour {
+    public class PriceText : MonoBehaviour {
         [SerializeField]
         private Text _price;
         
-        public void Init(BuyHandler handler) {
+        public void Init(string productId) {
         #if UNITY_PURCHASING
             try {
-                Product product = CodelessIAPStoreListener.Instance.GetProduct(handler.productId);
+                Product product = CodelessIAPStoreListener.Instance.GetProduct(productId);
                 
                 if (_price == null) {
                     return;
