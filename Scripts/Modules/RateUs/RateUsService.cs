@@ -41,8 +41,8 @@ namespace TinyMVC.Modules.RateUs {
         
         public static void AddTime(int minutes) => _timer += minutes;
         
-        public static bool TryOpenWindow() {
-            if (IsNeedShow()) {
+        public static bool TryOpenWindowWithoutTimer() {
+            if (isNeedShow) {
                 OpenWindow();
                 return true;
             }
@@ -50,7 +50,14 @@ namespace TinyMVC.Modules.RateUs {
             return false;
         }
         
-        public static bool IsNeedShow() => isNeedShow && _timer <= 0;
+        public static bool TryOpenWindow() {
+            if (isNeedShow && _timer <= 0) {
+                OpenWindow();
+                return true;
+            }
+            
+            return false;
+        }
         
         public static bool TryRateUs() {
             if (isNeedShow) {
