@@ -8,6 +8,11 @@ using TinyMVC.Boot;
 using TinyMVC.Loop;
 using UnityEngine;
 
+#if UNITASK_ENABLE
+using System.Threading;
+using Cysharp.Threading.Tasks;
+#endif
+
 namespace TinyMVC.ReactiveFields {
     public static class ObservedExtension {
         public static void Increment(this Observed<int> obj) => obj.Set(obj.value + 1);
@@ -147,13 +152,36 @@ namespace TinyMVC.ReactiveFields {
             obj.Set(value);
         }
         
+    #if UNITASK_ENABLE
+        public static async UniTask<T> GetFirstAsync<T>(this Observed<T> obj, CancellationToken cancellation) {
+            T result = default;
+            bool isCompleted = false;
+            
+            UnloadPool unload = new UnloadPool();
+            
+            obj.AddListener(value =>
+            {
+                result = value;
+                isCompleted = true;
+            }, unload);
+            
+            try {
+                await UniTask.WaitUntil(() => isCompleted, PlayerLoopTiming.Update, cancellation);
+            } finally {
+                unload.Unload();
+            }
+            
+            return result;
+        }
+        
+    #endif
+        
         public static bool TrySet<T>(this Observed<T> obj, T value) {
             if (EqualityComparer<T>.Default.Equals(obj.value, value)) {
                 return false;
             }
             
             obj.Set(value);
-            
             return true;
         }
         
@@ -167,7 +195,6 @@ namespace TinyMVC.ReactiveFields {
             }
             
             obj.Set(set);
-            
             return true;
         }
         
@@ -177,7 +204,6 @@ namespace TinyMVC.ReactiveFields {
             }
             
             obj.Set(value);
-            
             return true;
         }
         
@@ -187,7 +213,6 @@ namespace TinyMVC.ReactiveFields {
             }
             
             obj.Set(value);
-            
             return true;
         }
         
