@@ -211,15 +211,11 @@ namespace TinyMVC.Modules.ADS {
             ADSSaveUtility.SaveWithoutInterstitialTime(_withoutInterstitialTime);
         }
         
-        public bool TryShowInterstitial() {
-            bool isShowed = TryShowInterstitial(() => { });
-            
-            return isShowed;
-        }
+        public bool TryShowInterstitial() => TryShowInterstitialProcess(() => { });
         
         public bool TryShowInterstitial(Action onClose) => TryShowInterstitialProcess(onClose);
         
-        public bool TryShowReward(Action onSuccess) => TryShowReward(onSuccess, () => { });
+        public bool TryShowReward(Action onSuccess) => TryShowRewardProcess(onSuccess, () => { });
         
         public bool TryShowReward(Action onSuccess, Action onFailed) => TryShowRewardProcess(onSuccess, onFailed);
         
@@ -273,14 +269,16 @@ namespace TinyMVC.Modules.ADS {
         }
         
         private bool TryShowRewardProcess(Action onSuccess, Action onFailed) {
+            isAdsVisible = true;
+            
             if (data.fullNoADSMode) {
                 onSuccess();
+                isAdsVisible = false;
                 return true;
             }
             
             if (!isReady) {
-                onFailed();
-                
+                RewardShowFailed(onFailed);
             #if DEBUG_ADS
                 Debug.LogError("ADSModule.TryShowRewardProcess: Is not ready!");
             #endif
@@ -302,21 +300,20 @@ namespace TinyMVC.Modules.ADS {
                     onFailed += onRewardShowFailed;
                 }
                 
-                return _googleReward.TryShow(() => OnShowingReward(onSuccess), onFailed);
+                return _googleReward.TryShow(() => OnShowingReward(onSuccess), () => RewardShowFailed(onFailed));
             }
             
             _googleReward.Load();
         #else
             onSuccess();
-            
+            isAdsVisible = false;
             return true;
         #endif
         #if DEBUG_ADS
             Debug.LogError("ADSModule.TryShowRewardProcess: Failed!");
         #endif
             
-            onFailed();
-            
+            RewardShowFailed(onFailed);
             return false;
         }
         
@@ -438,6 +435,11 @@ namespace TinyMVC.Modules.ADS {
             isAdsVisible = false;
         }
         
+        private void RewardShowFailed(Action onFailed) {
+            onFailed.Invoke();
+            isAdsVisible = false;
+        }
+        
         private bool IsActiveADS() {
             if (data.fullNoADSMode) {
                 return false;
@@ -457,6 +459,7 @@ namespace TinyMVC.Modules.ADS {
             ADSSaveUtility.SaveWithoutInterstitialTime(_withoutInterstitialTime);
             
             onComplete();
+            isAdsVisible = false;
         }
     #endif
     }
