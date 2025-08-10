@@ -435,11 +435,6 @@ namespace TinyMVC.Modules.ADS {
             isAdsVisible = false;
         }
         
-        private void RewardShowFailed(Action onFailed) {
-            onFailed.Invoke();
-            isAdsVisible = false;
-        }
-        
         private bool IsActiveADS() {
             if (data.fullNoADSMode) {
                 return false;
@@ -462,5 +457,10 @@ namespace TinyMVC.Modules.ADS {
             isAdsVisible = false;
         }
     #endif
+        
+        private void RewardShowFailed(Action onFailed) {
+            onFailed.Invoke();
+            isAdsVisible = false;
+        }
     }
 }
