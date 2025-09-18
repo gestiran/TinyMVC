@@ -3,6 +3,7 @@
     "displayName": "Tiny MVC",
     "author": {
         "name": "Derek Sliman",
+        "email": "lionext.studio@gmail.com",
         "url": "https://github.com/gestiran"
     },
     "version": "1.11.1",
@@ -18,7 +19,11 @@
         "boot"
     ],
     "license": "MIT",
-    "category": "MVC",
+    "category": "Utilities",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/gestiran/TinyMVC"
+    },
     "dependencies": {
         "com.unity.modules.uielements": "1.0.0",
         "com.unity.nuget.newtonsoft-json": "3.2.1",
