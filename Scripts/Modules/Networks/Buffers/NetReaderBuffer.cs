@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE.md for details.
 
 using System.Collections.Generic;
-using TinyMVC.ReactiveFields;
+using TinyReactive.Fields;
 
 namespace TinyMVC.Modules.Networks.Buffers {
     internal sealed class NetReaderBuffer {

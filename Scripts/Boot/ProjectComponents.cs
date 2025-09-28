@@ -3,8 +3,9 @@
 
 using System.Collections.Generic;
 using TinyMVC.Dependencies.Components;
-using TinyMVC.Loop;
 using TinyMVC.ReactiveFields;
+using TinyReactive;
+using TinyReactive.Fields;
 using UnityEngine;
 
 namespace TinyMVC.Boot {

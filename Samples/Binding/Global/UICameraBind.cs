@@ -3,9 +3,9 @@
 
 using TinyMVC.Boot;
 using TinyMVC.Boot.Binding;
-using TinyMVC.ReactiveFields;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Samples.Views.Global;
+using TinyReactive.Fields;
 using UnityEngine;
 
 namespace TinyMVC.Samples.Binding.Global {

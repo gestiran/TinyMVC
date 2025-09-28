@@ -3,10 +3,10 @@
 
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
-using TinyMVC.Loop;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
+using TinyReactive;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

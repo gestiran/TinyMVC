@@ -3,7 +3,8 @@
 
 using System.Collections.Generic;
 using TinyMVC.Dependencies.Components;
-using TinyMVC.ReactiveFields.Extensions;
+using TinyReactive.Extensions;
+using TinyReactive.Fields;
 
 namespace TinyMVC.ReactiveFields {
     internal sealed class ComponentListeners<TModel, TComponent> : IComponentListeners where TModel : Model where TComponent : ModelComponent {

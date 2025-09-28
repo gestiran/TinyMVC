@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using TinyReactive.Fields;
 
 #if UNITY_EDITOR
-using TinyMVC.ReactiveFields;
 using UnityEngine;
 #endif
 

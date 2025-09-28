@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Dependencies;
-using TinyMVC.Loop.Extensions;
+using TinyReactive.Extensions;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ModelsContext : IResolving {

@@ -3,7 +3,8 @@
     "rootNamespace": "TinyMVC",
     "references": [
         "UniTask",
-        "TinyUtilities.Runtime"
+        "TinyUtilities.Runtime",
+        "TinyReactive.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

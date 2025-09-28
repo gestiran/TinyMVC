@@ -3,6 +3,7 @@
     "rootNamespace": "TinyMVC",
     "references": [
         "GUID:1d8cf7cb5006f57428fd819399459569",
+        "GUID:52e8ae13a5f06b247affb7808bc8d3ff",
         "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f"
     ],
     "includePlatforms": [

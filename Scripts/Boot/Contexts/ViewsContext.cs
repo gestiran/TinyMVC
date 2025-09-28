@@ -9,6 +9,8 @@ using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
+using TinyReactive;
+using TinyReactive.Extensions;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 

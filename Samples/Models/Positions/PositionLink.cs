@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
-using TinyMVC.ReactiveFields;
+using TinyReactive.Fields;
 using UnityEngine;
 
 #if ODIN_INSPECTOR

@@ -3,6 +3,7 @@
     "rootNamespace": "TinyMVC",
     "references": [
         "TinyMVC.Runtime",
+        "TinyReactive.Runtime",
         "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],

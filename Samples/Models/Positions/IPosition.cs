@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE.md for details.
 
 using TinyMVC.Dependencies;
-using TinyMVC.ReactiveFields;
+using TinyReactive.Fields;
 using UnityEngine;
 
 namespace TinyMVC.Samples.Models.Positions {

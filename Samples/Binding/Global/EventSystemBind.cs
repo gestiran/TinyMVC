@@ -3,9 +3,9 @@
 
 using TinyMVC.Boot;
 using TinyMVC.Boot.Binding;
-using TinyMVC.ReactiveFields;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Samples.Views.Global;
+using TinyReactive.Fields;
 
 namespace TinyMVC.Samples.Binding.Global {
     public sealed class EventSystemBind : Binder<EventSystemModel> {

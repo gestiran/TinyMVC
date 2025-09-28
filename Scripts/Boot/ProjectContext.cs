@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using TinyMVC.Boot.Contexts;
-using TinyMVC.Loop;
+using TinyReactive;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

@@ -12,8 +12,8 @@ using NetworkTypes;
 using NetworkTypes.Commands;
 using NetworkTypes.Utilities;
 using TinyMVC.Modules.Networks.Buffers;
-using TinyMVC.ReactiveFields;
-using TinyMVC.ReactiveFields.Extensions;
+using TinyReactive.Extensions;
+using TinyReactive.Fields;
 using TinySerializer.Core.Misc;
 using UnityEngine;
 

@@ -8,6 +8,8 @@ using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
+using TinyReactive;
+using TinyReactive.Extensions;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;

@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using TinyMVC.Loop;
-using TinyMVC.ReactiveFields;
-using TinyMVC.ReactiveFields.Extensions;
+using TinyReactive;
+using TinyReactive.Extensions;
+using TinyReactive.Fields;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;

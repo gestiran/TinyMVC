@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE.md for details.
 
 using TinyMVC.Dependencies;
-using TinyMVC.ReactiveFields;
+using TinyReactive.Fields;
 
 namespace TinyMVC.Samples.Models.Global {
     public sealed class EventSystemModel : IDependency {

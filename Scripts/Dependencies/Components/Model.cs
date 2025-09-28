@@ -2,8 +2,8 @@
 // Licensed under the MIT License. See LICENSE.md for details.
 
 using System;
-using TinyMVC.Loop;
-using TinyMVC.ReactiveFields;
+using TinyReactive;
+using TinyReactive.Fields;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
