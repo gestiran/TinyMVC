@@ -1,36 +1,37 @@
 {
-    "name": "com.ges.tinymvc",
-    "displayName": "Tiny MVC",
-    "author": {
-        "name": "Derek Sliman",
-        "email": "lionext.studio@gmail.com",
-        "url": "https://github.com/gestiran"
-    },
-    "version": "1.11.1",
-    "unity": "2018.4",
-    "description": "Model View Controller initialization system.",
-    "keywords": [
-        "mvc",
-        "bootstrap",
-        "di",
-        "model",
-        "view",
-        "controller",
-        "boot"
-    ],
-    "license": "MIT",
-    "category": "Utilities",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/gestiran/TinyMVC"
-    },
-    "dependencies": {
-        "com.unity.modules.uielements": "1.0.0",
-        "com.unity.nuget.newtonsoft-json": "3.2.1",
-        "com.cysharp.unitask": "2.5.10",
-        "com.ges.tinyutilities": "1.0.15"
-    },
-    "publishConfig": {
-        "registry": "https://package.openupm.com"
-    }
+  "name": "com.ges.tinymvc",
+  "displayName": "Tiny MVC",
+  "author": {
+    "name": "Derek Sliman",
+    "email": "lionext.studio@gmail.com",
+    "url": "https://github.com/gestiran"
+  },
+  "version": "1.12.0",
+  "unity": "2018.4",
+  "description": "Model View Controller initialization system.",
+  "keywords": [
+    "mvc",
+    "bootstrap",
+    "di",
+    "model",
+    "view",
+    "controller",
+    "boot"
+  ],
+  "license": "MIT",
+  "category": "Utilities",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gestiran/TinyMVC"
+  },
+  "dependencies": {
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.cysharp.unitask": "2.5.10",
+    "com.ges.tinyutilities": "1.0.15",
+    "com.ges.tinyreactive": "1.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
+  }
 }
