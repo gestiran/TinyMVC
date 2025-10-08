@@ -108,17 +108,13 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Connect(View view, Action<ILoop> connectLoop, Action<IResolving> resolve) {
+        internal void Connect(View view, Action<ILoop> connectLoop) {
             if (view is IInit init) {
                 init.Init();
             }
             
-            if (view is IResolving resolving) {
-                resolve(resolving);
-                
-                if (view is IApplyResolving apply) {
-                    apply.ApplyResolving();
-                }
+            if (view is IApplyResolving apply) {
+                apply.ApplyResolving();
             }
             
             if (view is IBeginPlay beginPlay) {

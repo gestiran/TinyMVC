@@ -12,7 +12,7 @@ namespace TinyMVC.Controllers {
             string contextKey = ProjectContext.activeContext.key;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                context.Connect(system, controller, ResolveUtility.Resolve);
+                context.Connect(system, controller);
             }
             
             return controller;
@@ -20,7 +20,7 @@ namespace TinyMVC.Controllers {
         
         public static T2 Connect<T1, T2>(this T1 system, T2 controller, string contextKey) where T1 : IController where T2 : IController {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                context.Connect(system, controller, ResolveUtility.Resolve);
+                context.Connect(system, controller);
             }
             
             return controller;
@@ -31,7 +31,7 @@ namespace TinyMVC.Controllers {
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
-                    context.Connect(system, controllers[controllerId], ResolveUtility.Resolve);
+                    context.Connect(system, controllers[controllerId]);
                 }
             }
         }
@@ -39,7 +39,7 @@ namespace TinyMVC.Controllers {
         public static void Connect<T1>(this T1 system, List<IController> controllers, string contextKey) where T1 : IController {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
-                    context.Connect(system, controllers[controllerId], ResolveUtility.Resolve);
+                    context.Connect(system, controllers[controllerId]);
                 }
             }
         }
@@ -49,7 +49,7 @@ namespace TinyMVC.Controllers {
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
-                    context.Connect(system, controllers[controllerId], ResolveUtility.Resolve);
+                    context.Connect(system, controllers[controllerId]);
                 }
             }
         }
@@ -57,36 +57,33 @@ namespace TinyMVC.Controllers {
         public static void Connect<T1>(this T1 system, IController[] controllers, string contextKey) where T1 : IController {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
-                    context.Connect(system, controllers[controllerId], ResolveUtility.Resolve);
+                    context.Connect(system, controllers[controllerId]);
                 }
             }
         }
         
-        public static T2 Connect<T1, T2>(this T1 system, params IDependency[] dependencies) where T1 : IController where T2 : IController, IResolving, new() {
+        public static T2 Connect<T1, T2>(this T1 system, params IDependency[] dependencies) where T1 : IController where T2 : IController, new() {
             string contextKey = ProjectContext.activeContext.key;
             T2 controller = default;
-                
+            
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 DependencyContainer container = new DependencyContainer(dependencies);
                 ProjectContext.data.tempContainer = container;
                 controller = new T2();
-                
-                context.Connect(system, controller, resolving => ResolveUtility.Resolve(resolving, container));
+                context.Connect(system, controller);
             }
             
             return controller;
         }
         
-        public static T2 Connect<T1, T2>(this T1 system, string contextKey, params IDependency[] dependencies)
-            where T1 : IController where T2 : IController, IResolving, new() {
+        public static T2 Connect<T1, T2>(this T1 system, string contextKey, params IDependency[] dependencies) where T1 : IController where T2 : IController, new() {
             T2 controller = default;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 DependencyContainer container = new DependencyContainer(dependencies);
                 ProjectContext.data.tempContainer = container;
                 controller = new T2();
-                
-                context.Connect(system, controller, resolving => ResolveUtility.Resolve(resolving, container));
+                context.Connect(system, controller);
             }
             
             return controller;

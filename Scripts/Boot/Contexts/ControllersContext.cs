@@ -69,17 +69,13 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void Connect<T1, T2>(T2 system, T1 controller, Action<ILoop> connectLoop, Action<IResolving> resolve) where T1 : IController where T2 : IController {
+        internal void Connect<T1, T2>(T2 system, T1 controller, Action<ILoop> connectLoop) where T1 : IController where T2 : IController {
             if (controller is IInit init) {
                 init.Init();
             }
             
-            if (controller is IResolving resolving) {
-                resolve(resolving);
-                
-                if (controller is IApplyResolving apply) {
-                    apply.ApplyResolving();
-                }
+            if (controller is IApplyResolving apply) {
+                apply.ApplyResolving();
             }
             
             if (controller is IBeginPlay beginPlay) {

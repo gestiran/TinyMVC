@@ -78,7 +78,7 @@ namespace TinyMVC.Views {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 view.connectState = ConnectState.Connected;
                 _connections.Add(view);
-                context.Connect(view, ResolveUtility.Resolve);
+                context.Connect(view);
             }
             
             return view;
@@ -103,7 +103,7 @@ namespace TinyMVC.Views {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 views[viewId].connectState = ConnectState.Connected;
                 _connections.Add(views[viewId]);
-                context.Connect(views[viewId], resolving => ResolveUtility.Resolve(resolving, container));
+                context.Connect(views[viewId]);
             }
         }
         
@@ -115,28 +115,28 @@ namespace TinyMVC.Views {
             for (int viewId = 0; viewId < views.Length; viewId++) {
                 views[viewId].connectState = ConnectState.Connected;
                 _connections.Add(views[viewId]);
-                context.Connect(views[viewId], ResolveUtility.Resolve);
+                context.Connect(views[viewId]);
             }
         }
         
-        public T Connect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
+        public T Connect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View {
             return Connect(view, ProjectContext.activeContext.key, new DependencyContainer(dependency));
         }
         
-        public T Connect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
+        public T Connect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View {
             return Connect(view, ProjectContext.activeContext.key, new DependencyContainer(dependencies));
         }
         
-        public T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View, IResolving {
+        public T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View {
             return Connect(view, ProjectContext.activeContext.key, container);
         }
         
-        public T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View, IResolving {
+        public T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 ProjectContext.data.tempContainer = container;
                 view.connectState = ConnectState.Connected;
                 _connections.Add(view);
-                context.Connect(view, resolving => ResolveUtility.Resolve(resolving, container));
+                context.Connect(view);
             }
             
             return view;
@@ -272,7 +272,7 @@ namespace TinyMVC.Views {
             }
         }
         
-        public T Reconnect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View, IResolving {
+        public T Reconnect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View {
             if (view.connectState == ConnectState.Connected) {
                 Disconnect(view);
             }
@@ -280,7 +280,7 @@ namespace TinyMVC.Views {
             return Connect(view, dependency);
         }
         
-        public T Reconnect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View, IResolving {
+        public T Reconnect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View {
             if (view.connectState == ConnectState.Connected) {
                 Disconnect(view);
             }

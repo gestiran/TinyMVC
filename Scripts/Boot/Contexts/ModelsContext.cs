@@ -7,7 +7,7 @@ using TinyMVC.Dependencies;
 using TinyReactive.Extensions;
 
 namespace TinyMVC.Boot.Contexts {
-    public abstract class ModelsContext : IResolving {
+    public abstract class ModelsContext {
         internal readonly List<IDependency> dependenciesBinded;
         internal readonly List<IDependency> dependencies;
         internal string key;

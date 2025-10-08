@@ -49,8 +49,6 @@ namespace TinyMVC.Boot {
         }
         
         internal override async UniTask InitAsync() {
-            PreInitResolve();
-            
             await views.InitAsync();
             
             await Resolve();
@@ -79,25 +77,7 @@ namespace TinyMVC.Boot {
         
         protected abstract ParametersContext CreateParameters();
         
-        private void PreInitResolve() {
-            List<IResolving> resolvers = new List<IResolving>();
-            
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CheckAndAdd(resolvers);
-            }
-            
-            views.CheckAndAdd(resolvers);
-            
-            ResolveUtility.Resolve(resolvers);
-        }
-        
         private async UniTask Resolve() {
-            if (parameters is IResolving parametersResolving) {
-                ResolveUtility.Resolve(parametersResolving);
-            }
-            
-            TryResolveComponents();
-            
             List<IDependency> dependenciesParameters = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             List<IDependency> dependenciesViews = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
@@ -109,7 +89,6 @@ namespace TinyMVC.Boot {
             ProjectContext.data.Add(key, dependenciesParameters);
             DependencyContainer tempContainer = new DependencyContainer(dependenciesParameters);
             ProjectContext.data.tempContainer = tempContainer;
-            ResolveUtility.Resolve(models, tempContainer);
             
             views.GetDependencies(dependenciesViews);
             
@@ -124,24 +103,18 @@ namespace TinyMVC.Boot {
             
             tempContainer = new DependencyContainer(runtimeDependencies);
             ProjectContext.data.tempContainer = tempContainer;
-            ResolveUtility.Resolve(models, tempContainer);
             ResolveUtility.TryApply(models);
             
             models.Create();
             CreateModelsComponents(models.dependencies);
             ProjectContext.data.Add(key, models.dependencies);
             
-            List<IResolving> resolvers = new List<IResolving>();
-            
             controllers.Init();
             
             await controllers.InitAsync();
             
-            controllers.CheckAndAdd(resolvers);
-            views.CheckAndAdd(resolvers);
-            
-            ResolveUtility.Resolve(resolvers);
-            ResolveUtility.TryApply(resolvers);
+            ResolveUtility.TryApply(controllers.systems);
+            ResolveUtility.TryApply(views.mainViews);
         }
         
         private void InstantiateComponents() {
@@ -159,14 +132,6 @@ namespace TinyMVC.Boot {
         private void AddComponentsViews(List<View> mainViews) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
                 components[componentId].AddComponentsViews(mainViews);
-            }
-        }
-        
-        private void TryResolveComponents() {
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                if (components[componentId] is IResolving resolving) {
-                    ResolveUtility.Resolve(resolving);
-                }
             }
         }
         
@@ -188,9 +153,9 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal override void Connect(View view, Action<IResolving> resolve) => views.Connect(view, ConnectLoop, resolve);
+        internal override void Connect(View view) => views.Connect(view, ConnectLoop);
         
-        internal override void Connect<T1, T2>(T2 system, T1 controller, Action<IResolving> resolve) => controllers.Connect(system, controller, ConnectLoop, resolve);
+        internal override void Connect<T1, T2>(T2 system, T1 controller) => controllers.Connect(system, controller, ConnectLoop);
         
         internal override void Disconnect(View view) => views.Disconnect(view, DisconnectLoop);
         
@@ -311,9 +276,9 @@ namespace TinyMVC.Boot {
         
         internal abstract void Unload();
         
-        internal abstract void Connect(View view, Action<IResolving> resolve);
+        internal abstract void Connect(View view);
         
-        internal abstract void Connect<T1, T2>(T2 system, T1 controller, Action<IResolving> resolve) where T1 : IController where T2 : IController;
+        internal abstract void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;
         
         internal abstract void Disconnect(View view);
         

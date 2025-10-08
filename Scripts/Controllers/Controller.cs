@@ -22,7 +22,7 @@ namespace TinyMVC.Controllers {
             return controller;
         }
         
-        public static T Connect<T>(params IDependency[] dependencies) where T : IController, IResolving, new() {
+        public static T Connect<T>(params IDependency[] dependencies) where T : IController, new() {
             return _system.Connect<RootSystem, T>(dependencies);
         }
         

@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE.md for details.
 
 namespace TinyMVC.Dependencies {
-    public interface IApplyResolving : IResolving {
+    public interface IApplyResolving {
         public void ApplyResolving();
     }
 }
