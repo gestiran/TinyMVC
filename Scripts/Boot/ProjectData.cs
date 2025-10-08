@@ -62,6 +62,24 @@ namespace TinyMVC.Boot {
             }
         }
         
+        public void Remove<T>(T dependency) where T : IDependency => Remove(_GLOBAL_APPLICATION_CONTEXT, dependency);
+        
+        public void Remove<T>(string contextKey, T dependency) where T : IDependency {
+            Type type = dependency.GetType();
+            
+            if (tempContainer != null) {
+                tempContainer.dependencies.Remove(type);
+            }
+            
+            if (viewsContainer != null) {
+                viewsContainer.dependencies.Remove(type);
+            }
+            
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                container.dependencies.Remove(type);
+            }
+        }
+        
         public void Remove(string contextKey) {
             if (contexts.TryGetValue(contextKey, out DependencyContainer container) == false) {
                 return;
