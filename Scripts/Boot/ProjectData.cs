@@ -16,6 +16,7 @@ namespace TinyMVC.Boot {
         private readonly ProjectComponents _components;
         
         private const int _CAPACITY = 16;
+        private const string _GLOBAL_APPLICATION_CONTEXT = "GlobalApplicationContext";
         
     #if UNITY_EDITOR
         internal static event Action<string, DependencyContainer> onAdd;
@@ -25,6 +26,54 @@ namespace TinyMVC.Boot {
         internal ProjectData(ProjectComponents components) {
             contexts = new Dictionary<string, DependencyContainer>(_CAPACITY);
             _components = components;
+        }
+        
+        public void Add(List<IDependency> dependencies) => Add(_GLOBAL_APPLICATION_CONTEXT, dependencies);
+        
+        public void Add(string contextKey, List<IDependency> dependencies) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                foreach (IDependency dependency in dependencies) {
+                    container.Update(dependency);
+                }
+            } else {
+                container = new DependencyContainer(dependencies);
+                _components.all.Add(contextKey, new Dictionary<int, Model>());
+                contexts.Add(contextKey, container);
+                
+            #if UNITY_EDITOR
+                onAdd?.Invoke(contextKey, container);
+            #endif
+            }
+        }
+        
+        public void Add(IDependency dependencies) => Add(_GLOBAL_APPLICATION_CONTEXT, dependencies);
+        
+        public void Add(string contextKey, IDependency dependency) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
+                container.Update(dependency);
+            } else {
+                container = new DependencyContainer(dependency);
+                _components.all.Add(contextKey, new Dictionary<int, Model>());
+                contexts.Add(contextKey, container);
+                
+            #if UNITY_EDITOR
+                onAdd?.Invoke(contextKey, container);
+            #endif
+            }
+        }
+        
+        public void Remove(string contextKey) {
+            if (contexts.TryGetValue(contextKey, out DependencyContainer container) == false) {
+                return;
+            }
+            
+            container.Dispose();
+            _components.all.Remove(contextKey);
+            contexts.Remove(contextKey);
+            
+        #if UNITY_EDITOR
+            onRemove?.Invoke(contextKey);
+        #endif
         }
         
         public bool TryGetDependency<T>(out T dependency) where T : IDependency {
@@ -351,50 +400,6 @@ namespace TinyMVC.Boot {
                     currents.Add(hash);
                 }
             }
-        }
-        
-        internal void Add(string contextKey, List<IDependency> dependencies) {
-            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
-                foreach (IDependency dependency in dependencies) {
-                    container.Update(dependency);
-                }
-            } else {
-                container = new DependencyContainer(dependencies);
-                _components.all.Add(contextKey, new Dictionary<int, Model>());
-                contexts.Add(contextKey, container);
-                
-            #if UNITY_EDITOR
-                onAdd?.Invoke(contextKey, container);
-            #endif
-            }
-        }
-        
-        internal void Add(string contextKey, IDependency dependency) {
-            if (contexts.TryGetValue(contextKey, out DependencyContainer container)) {
-                container.Update(dependency);
-            } else {
-                container = new DependencyContainer(dependency);
-                _components.all.Add(contextKey, new Dictionary<int, Model>());
-                contexts.Add(contextKey, container);
-                
-            #if UNITY_EDITOR
-                onAdd?.Invoke(contextKey, container);
-            #endif
-            }
-        }
-        
-        internal void Remove(string contextKey) {
-            if (contexts.TryGetValue(contextKey, out DependencyContainer container) == false) {
-                return;
-            }
-            
-            container.Dispose();
-            _components.all.Remove(contextKey);
-            contexts.Remove(contextKey);
-            
-        #if UNITY_EDITOR
-            onRemove?.Invoke(contextKey);
-        #endif
         }
     }
 }
