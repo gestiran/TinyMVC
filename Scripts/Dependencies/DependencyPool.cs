@@ -71,6 +71,20 @@ namespace TinyMVC.Dependencies {
             set => _objects[index] = value;
         }
         
+        public void AddRange(T[] arr) {
+            T[] objects = new T[_objects.Length + arr.Length];
+            Array.Copy(_objects, 0, objects, 0, _objects.Length);
+            Array.Copy(arr, 0, objects, _objects.Length, arr.Length);
+            _objects = objects;
+        }
+        
+        public void AddRange(List<T> list) {
+            T[] objects = new T[_objects.Length + list.Count];
+            Array.Copy(_objects, 0, objects, 0, _objects.Length);
+            list.CopyTo(objects, _objects.Length);
+            _objects = objects;
+        }
+        
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         
         public IEnumerator<T> GetEnumerator() {
@@ -81,7 +95,6 @@ namespace TinyMVC.Dependencies {
         
         public bool MoveNext() {
             _currentId++;
-            
             return _currentId < _objects.Length;
         }
         
