@@ -169,8 +169,8 @@ namespace TinyMVC.Editor {
             }
         }
         
-        [MenuItem("Window/TinyMVC/ProjectContext", priority = 0)]
-        private static void OpenWindow() => GetWindow<ProjectContextWindow>("ProjectContext").Show();
+        [MenuItem("Window/Tiny MVC/Project Context", priority = 0)]
+        private static void OpenWindow() => GetWindow<ProjectContextWindow>("Project Context").Show();
         
         [OnInspectorInit]
         public void Init() {

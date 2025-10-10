@@ -13,7 +13,7 @@ namespace TinyMVC.Editor.Modules.Saving {
 
         private const string _STYLE_PATH = "Packages/com.ges.tinymvc/Style/ApplicationLevel/SaveModuleHierarchyStyle.uss";
         
-        [MenuItem("Window/TinyMVC/Save Hierarchy", priority = 0)]
+        [MenuItem("Window/Tiny MVC/Save Hierarchy", priority = 0)]
         private static void OpenWindow() => GetWindow<SaveModuleHierarchyWindow>("Save Hierarchy");
 
         private void CreateGUI() {
