@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using TinyUtilities.Extensions.Global;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -84,6 +85,16 @@ namespace TinyMVC.Dependencies {
             list.CopyTo(objects, _objects.Length);
             _objects = objects;
         }
+        
+        public int IndexOf(T item) {
+            if (_objects.TryIndexOf(item, out int index)) {
+                return index;
+            }
+            
+            return -1;
+        }
+        
+        public bool Contains(T element) => _objects.IsContain(element);
         
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         
