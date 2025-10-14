@@ -8,7 +8,7 @@ using TinyMVC.Samples.Views.Global;
 using TinyReactive.Fields;
 
 namespace TinyMVC.Samples.Binding.Global {
-    public sealed class EventSystemBind : Binder<EventSystemModel> {
+    public class EventSystemBind : Binder<EventSystemModel> {
         private readonly EventSystemView _view;
         
         public EventSystemBind() {

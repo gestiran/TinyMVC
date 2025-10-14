@@ -6,7 +6,7 @@ using TinyReactive.Fields;
 using UnityEngine;
 
 namespace TinyMVC.Samples.Models.Global {
-    public sealed class MainCameraModel : IPosition {
+    public class MainCameraModel : IPosition {
         public Observed<Vector3> position { get; set; }
         
         public Camera camera;

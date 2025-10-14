@@ -5,7 +5,7 @@ using TinyMVC.Dependencies;
 using TinyReactive.Fields;
 
 namespace TinyMVC.Samples.Models.Global {
-    public sealed class EventSystemModel : IDependency {
+    public class EventSystemModel : IDependency {
         public Observed<bool> isActive;
     }
 }

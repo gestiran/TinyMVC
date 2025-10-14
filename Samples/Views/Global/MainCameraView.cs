@@ -23,7 +23,7 @@ namespace TinyMVC.Samples.Views.Global {
 #endif
     [RequireComponent(typeof(Camera))]
     [DisallowMultipleComponent]
-    public sealed class MainCameraView : View, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
+    public class MainCameraView : View, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public Vector3 position => thisTransform.position;
         
     #if ODIN_INSPECTOR

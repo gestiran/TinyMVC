@@ -10,7 +10,7 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Samples.Models.Global {
-    public sealed class AudioListenerModel : IPosition {
+    public class AudioListenerModel : IPosition {
 #if ODIN_INSPECTOR
         [ShowInInspector]
  #endif

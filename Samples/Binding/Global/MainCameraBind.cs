@@ -9,7 +9,7 @@ using TinyReactive.Fields;
 using UnityEngine;
 
 namespace TinyMVC.Samples.Binding.Global {
-    public sealed class MainCameraBind : Binder<MainCameraModel> {
+    public class MainCameraBind : Binder<MainCameraModel> {
         private readonly MainCameraView _view;
         
         public MainCameraBind() {

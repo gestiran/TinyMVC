@@ -17,7 +17,7 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Samples.Views.Global {
     [RequireComponent(typeof(EventSystem))]
     [DisallowMultipleComponent]
-    public sealed class EventSystemView : View, IApplyResolving, IDependency, IApplyGenerated, IUnload, IDontDestroyOnLoad {
+    public class EventSystemView : View, IApplyResolving, IDependency, IApplyGenerated, IUnload, IDontDestroyOnLoad {
         public bool isActive => thisEventSystem.enabled;
         
     #if ODIN_INSPECTOR

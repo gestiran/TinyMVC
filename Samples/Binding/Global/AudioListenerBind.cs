@@ -9,7 +9,7 @@ using TinyReactive.Fields;
 using UnityEngine;
 
 namespace TinyMVC.Samples.Binding.Global {
-    public sealed class AudioListenerBind : Binder<AudioListenerModel> {
+    public class AudioListenerBind : Binder<AudioListenerModel> {
         private readonly AudioListenerView _view;
         
         public AudioListenerBind() {
