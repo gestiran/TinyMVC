@@ -314,9 +314,7 @@ namespace TinyMVC.Boot {
         
     #if UNITY_EDITOR
         
-        public virtual void Reset() {
-            UnityEditor.EditorUtility.SetDirty(gameObject);
-        }
+        public virtual void Reset() => UnityEditor.EditorUtility.SetDirty(gameObject);
         
         private void MarkRemoved() {
             try {
@@ -339,9 +337,9 @@ namespace TinyMVC.Boot {
         
     #endif
         
-        public bool Equals(SceneContext other) => other != null && key.Equals(other.key);
+        public bool Equals(SceneContext other) => other != null && key == other.key;
         
-        public override bool Equals(object obj) => obj is SceneContext other && key.Equals(other.key);
+        public override bool Equals(object obj) => obj is SceneContext other && key == other.key;
         
         // ReSharper disable once NonReadonlyMemberInGetHashCode
         public override int GetHashCode() => key != null ? key.GetHashCode() : gameObject.GetInstanceID();
