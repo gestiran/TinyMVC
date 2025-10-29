@@ -6,7 +6,7 @@
     "email": "lionext.studio@gmail.com",
     "url": "https://github.com/gestiran"
   },
-  "version": "1.13.8",
+  "version": "1.13.9",
   "unity": "2018.4",
   "description": "Model View Controller initialization system.",
   "keywords": [
@@ -28,8 +28,8 @@
     "com.unity.modules.uielements": "1.0.0",
     "com.unity.nuget.newtonsoft-json": "3.2.1",
     "com.cysharp.unitask": "2.5.10",
-    "com.ges.tinyutilities": "1.0.15",
-    "com.ges.tinyreactive": "1.0.0"
+    "com.ges.tinyutilities": "1.2.0",
+    "com.ges.tinyreactive": "1.0.2"
   },
   "publishConfig": {
     "registry": "https://package.openupm.com"
