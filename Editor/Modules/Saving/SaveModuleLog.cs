@@ -7,8 +7,13 @@ using System.IO;
 using TinyMVC.Modules.Saving;
 using UnityEditor;
 using UnityEngine;
+
+#if ODIN_SERIALIZATION
 using Sirenix.Serialization;
 using SerializationUtility = Sirenix.Serialization.SerializationUtility;
+#else
+using SerializationUtility = TinyMVC.Modules.Saving.SerializationUtility;
+#endif
 
 namespace TinyMVC.Editor.Modules.Saving {
     internal static class SaveModuleLog {

@@ -7,10 +7,13 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Sirenix.Serialization;
 using TinyMVC.Modules.Saving.Extensions;
 using TinyMVC.Modules.Saving.VirtualFiles;
 using UnityEngine;
+
+#if ODIN_SERIALIZATION
+using Sirenix.Serialization;
+#endif
 
 namespace TinyMVC.Modules.Saving {
     internal sealed class SaveHandler {

@@ -4,13 +4,20 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Sirenix.OdinInspector;
-using Sirenix.OdinInspector.Editor;
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Modules.Saving;
 using UnityEditor;
 using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+using Sirenix.OdinInspector.Editor;
+
+#else
+using TinyUtilities;
+using TinyUtilities.Editor;
+#endif
 
 namespace TinyMVC.Editor {
     internal sealed class ProjectContextWindow : OdinEditorWindow {
@@ -154,7 +161,7 @@ namespace TinyMVC.Editor {
             
             public void Dispose() {
                 if (_isFavorite) {
-                    _favorites.Remove(this);   
+                    _favorites.Remove(this);
                 }
             }
             
@@ -185,7 +192,7 @@ namespace TinyMVC.Editor {
             _save = new SaveHandler("Editor", "V1");
             
             if (EditorApplication.isPlaying) {
-                FillContexts();   
+                FillContexts();
             }
             
             ProjectData.onAdd += AddContext;

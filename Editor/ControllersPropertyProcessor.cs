@@ -3,13 +3,19 @@
 
 using System;
 using System.Reflection;
-using Sirenix.OdinInspector.Editor;
 using TinyMVC.Boot;
 using TinyMVC.Controllers;
 using TinyMVC.Loop;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector.Editor;
+
+#else
+using TinyUtilities.Editor;
+#endif
 
 namespace TinyMVC.Editor {
     public sealed class ControllersPropertyProcessor<T> : OdinValueDrawer<T> where T : IController {

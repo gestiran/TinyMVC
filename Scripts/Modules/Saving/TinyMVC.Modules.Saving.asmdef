@@ -15,6 +15,12 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "Sirenix.Serialization",
+            "expression": "1.0.0",
+            "define": "ODIN_SERIALIZATION"
+        }
+    ],
     "noEngineReferences": false
 }

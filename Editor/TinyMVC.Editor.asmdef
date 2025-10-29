@@ -4,7 +4,9 @@
     "references": [
         "GUID:1d8cf7cb5006f57428fd819399459569",
         "GUID:52e8ae13a5f06b247affb7808bc8d3ff",
-        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f"
+        "GUID:4e0a720b84c89124e9d810fcff94c92f",
+        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f",
+        "GUID:2c3c82a91ae9d6a4cad34876c6572ba8"
     ],
     "includePlatforms": [
         "Editor"
@@ -21,6 +23,17 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "Sirenix.OdinInspector",
+            "expression": "1.0.0",
+            "define": "ODIN_INSPECTOR"
+        },
+        {
+            "name": "Sirenix.OdinInspector.Editor",
+            "expression": "1.0.0",
+            "define": "ODIN_INSPECTOR"
+        }
+    ],
     "noEngineReferences": false
 }
