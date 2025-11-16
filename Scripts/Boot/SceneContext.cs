@@ -9,6 +9,7 @@ using TinyMVC.Loop;
 using TinyMVC.Views;
 using UnityEngine;
 using System;
+using System.Collections;
 using Cysharp.Threading.Tasks;
 using TinyReactive;
 
@@ -219,6 +220,11 @@ namespace TinyMVC.Boot {
         #endif
         }
         
+        private IEnumerator Start() {
+            yield return new WaitForEndOfFrame();
+            InitWindows();
+        }
+        
         private void FixedUpdate() {
             for (int tickId = 0; tickId < fixedTicks.Count; tickId++) {
                 try {
@@ -269,6 +275,8 @@ namespace TinyMVC.Boot {
         #endif
             ProjectContext.RemoveContext(this, gameObject.scene.buildIndex);
         }
+        
+        protected virtual void InitWindows() { }
         
         internal abstract void Create();
         
