@@ -13,18 +13,14 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Views {
-    public abstract class View : MonoBehaviour
 #if ODIN_INSPECTOR && ODIN_VALIDATOR
-                               , ISelfValidator
+    public abstract class View : MonoBehaviour, ISelfValidator
+#else
+    public abstract class View : MonoBehaviour
 #endif
     {
+        public View root { get; internal set; }
         public ConnectState connectState { get; internal set; }
-        
-    #if ODIN_INSPECTOR
-        [field: FoldoutGroup("Generated", 1000), ShowIn(PrefabKind.InstanceInScene | PrefabKind.InstanceInPrefab), ReadOnly]
-    #endif
-        [field: SerializeField]
-        public View parent { get; private set; }
         
         private readonly List<View> _connections = new List<View>();
         
@@ -62,20 +58,11 @@ namespace TinyMVC.Views {
             // Do nothing!
         }
         
-        [Obsolete("Can't disconnect nothing!", true)]
-        public void Disconnect() {
-            // Do nothing!
-        }
-        
-        [Obsolete("Can't disconnect nothing!", true)]
-        public void Disconnect(string contextKey) {
-            // Do nothing!
-        }
-        
         public T Connect<T>([NotNull] T view) where T : View => Connect(view, ProjectContext.activeContext.key);
         
         public T Connect<T>([NotNull] T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                view.root = this;
                 view.connectState = ConnectState.Connected;
                 _connections.Add(view);
                 context.Connect(view);
@@ -101,6 +88,7 @@ namespace TinyMVC.Views {
             ProjectContext.data.tempContainer = container;
             
             for (int viewId = 0; viewId < views.Length; viewId++) {
+                views[viewId].root = this;
                 views[viewId].connectState = ConnectState.Connected;
                 _connections.Add(views[viewId]);
                 context.Connect(views[viewId]);
@@ -113,6 +101,7 @@ namespace TinyMVC.Views {
             }
             
             for (int viewId = 0; viewId < views.Length; viewId++) {
+                views[viewId].root = this;
                 views[viewId].connectState = ConnectState.Connected;
                 _connections.Add(views[viewId]);
                 context.Connect(views[viewId]);
@@ -134,6 +123,7 @@ namespace TinyMVC.Views {
         public T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 ProjectContext.data.tempContainer = container;
+                view.root = this;
                 view.connectState = ConnectState.Connected;
                 _connections.Add(view);
                 context.Connect(view);
@@ -162,10 +152,27 @@ namespace TinyMVC.Views {
             return view;
         }
         
+        public void Disconnect() {
+            if (connectState == ConnectState.Disconnected) {
+                return;
+            }
+            
+            root.Disconnect(this);
+        }
+        
+        public void Disconnect(string contextKey) {
+            if (connectState == ConnectState.Disconnected) {
+                return;
+            }
+            
+            root.Disconnect(this, contextKey);
+        }
+        
         public T Disconnect<T>(T view) where T : View => Disconnect(view, ProjectContext.activeContext.key);
         
         public T Disconnect<T>(T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+                view.root = null;
                 view.connectState = ConnectState.Disconnected;
                 _connections.Remove(view);
                 context.Disconnect(view);
@@ -179,6 +186,7 @@ namespace TinyMVC.Views {
         public void Disconnect<T>(string contextKey, [NotNull] params T[] views) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int viewId = 0; viewId < views.Length; viewId++) {
+                    views[viewId].root = null;
                     views[viewId].connectState = ConnectState.Disconnected;
                     _connections.Remove(views[viewId]);
                     context.Disconnect(views[viewId]);
@@ -205,6 +213,7 @@ namespace TinyMVC.Views {
                 }
                 
                 for (int connectionId = 0; connectionId < pool.Count; connectionId++) {
+                    pool[connectionId].root = null;
                     pool[connectionId].connectState = ConnectState.Disconnected;
                     _connections.Remove(pool[connectionId]);
                     context.Disconnect(pool[connectionId]);
@@ -231,6 +240,7 @@ namespace TinyMVC.Views {
                 }
                 
                 for (int connectionId = 0; connectionId < pool.Count; connectionId++) {
+                    pool[connectionId].root = null;
                     pool[connectionId].connectState = ConnectState.Disconnected;
                     _connections.Remove(pool[connectionId]);
                     context.Disconnect(pool[connectionId]);
@@ -247,6 +257,7 @@ namespace TinyMVC.Views {
                 for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
                     View view = _connections[connectionId];
                     
+                    view.root = null;
                     view.connectState = ConnectState.Disconnected;
                     context.Disconnect(view);
                 }
@@ -264,6 +275,7 @@ namespace TinyMVC.Views {
                 for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
                     View view = _connections[connectionId];
                     
+                    view.root = null;
                     view.connectState = ConnectState.Disconnected;
                     context.Disconnect(view);
                 }
@@ -311,53 +323,12 @@ namespace TinyMVC.Views {
         }
         
     #if ODIN_INSPECTOR && ODIN_VALIDATOR
-        public virtual void Validate(SelfValidationResult result) {
-        #if UNITY_EDITOR
-            if (parent != null) {
-                View actualParent = GetActualParent();
-                
-                try {
-                    if (actualParent.GetInstanceID() != parent.GetInstanceID()) {
-                        result.AddError("Invalid parent data!").WithFix("Find actual parent", FixParent);
-                    }
-                } catch (NullReferenceException) {
-                    result.AddError("Invalid parent data!").WithFix("Find actual parent", FixParent);
-                }
-            }
-        #endif
-        }
+        public virtual void Validate(SelfValidationResult result) { }
     #endif
         
     #if UNITY_EDITOR
         
-        public virtual void Reset() {
-            parent = GetActualParent();
-            UnityEditor.EditorUtility.SetDirty(this);
-        }
-        
-        private void FixParent() {
-            parent = GetActualParent();
-            UnityEditor.EditorUtility.SetDirty(this);
-        }
-        
-        private View GetActualParent() {
-            int current = gameObject.GetInstanceID();
-            View[] parents = GetComponentsInParent<View>(true);
-            
-            for (int i = 0; i < parents.Length; i++) {
-                if (parents[i] == null) {
-                    continue;
-                }
-                
-                if (parents[i].gameObject.GetInstanceID() == current) {
-                    continue;
-                }
-                
-                return parents[i];
-            }
-            
-            return null;
-        }
+        public virtual void Reset() => UnityEditor.EditorUtility.SetDirty(this);
         
     #endif
     }
