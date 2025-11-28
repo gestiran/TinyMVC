@@ -1,13 +1,14 @@
 ﻿// Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
+using TinyMVC.Boot;
 using TinyMVC.Dependencies;
+using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using UnityEngine;
 
 #if URP_RENDER_PIPELINE
-using TinyMVC.Boot;
 using TinyMVC.Samples.Models.Global;
 #endif
 
@@ -16,16 +17,15 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Samples.Views.Global {
-    [RequireComponent(typeof(Camera))]
     [DisallowMultipleComponent]
-    public sealed class UICameraView : View, IApplyResolving, IDependency, IApplyGenerated, IDontDestroyOnLoad {
+    [RequireComponent(typeof(Camera))]
+    public class UICameraView : View, IApplyResolving, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public Vector3 position => thisTransform.position;
         
-    #if ODIN_INSPECTOR
-        [field: ChildGameObjectsOnly(IncludeInactive = true), Required]
+    #if URP_RENDER_PIPELINE
+        [SerializeField]
+        protected bool _autoAddToStack;
     #endif
-        [field: SerializeField]
-        public Camera inputCamera { get; private set; }
         
     #if ODIN_INSPECTOR
         [field: BoxGroup("Generated"), Required, ReadOnly]
@@ -39,10 +39,14 @@ namespace TinyMVC.Samples.Views.Global {
         [field: SerializeField]
         public Camera thisCamera { get; private set; }
         
-        public void ApplyResolving() {
+        protected MainCameraModel _camera;
+        
+        public virtual void ApplyResolving() {
+            ProjectContext.data.Get(out _camera);
+            
         #if URP_RENDER_PIPELINE
-            if (ProjectContext.data.Get(out MainCameraModel mainCamera)) {
-                mainCamera.addToStack.Send(inputCamera, thisCamera);
+            if (_autoAddToStack) {
+                _camera.addToStack.Send(thisCamera);
             }
         #endif
         }
@@ -53,7 +57,6 @@ namespace TinyMVC.Samples.Views.Global {
         public override void Reset() {
             thisTransform = transform;
             thisCamera = GetComponent<Camera>();
-            
             base.Reset();
         }
         
