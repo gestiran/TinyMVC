@@ -25,7 +25,7 @@
         },
         {
             "name": "com.ges.services.windows",
-            "expression": "1.0.0",
+            "expression": "1.0.34",
             "define": "TINY_SERVICES_WINDOWS"
         }
     ],
