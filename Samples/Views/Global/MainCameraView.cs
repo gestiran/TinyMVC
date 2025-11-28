@@ -3,6 +3,7 @@
 
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
+using TinyMVC.Loop;
 using TinyMVC.Samples.Models.Global;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
@@ -21,29 +22,41 @@ namespace TinyMVC.Samples.Views.Global {
 #if URP_RENDER_PIPELINE
     [RequireComponent(typeof(UniversalAdditionalCameraData))]
 #endif
-    [RequireComponent(typeof(Camera))]
     [DisallowMultipleComponent]
-    public class MainCameraView : View, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
+    [RequireComponent(typeof(Camera))]
+    public sealed class MainCameraView : View, IInit, IApplyResolving, IUnload, IDependency, IApplyGenerated, IDontDestroyOnLoad {
         public Vector3 position => thisTransform.position;
         
     #if ODIN_INSPECTOR
-        [field: FoldoutGroup("Generated"), Required, ReadOnly]
+        [field: ChildGameObjectsOnly]
+    #endif
+        [field: SerializeField]
+        public UICameraView uiCamera { get; private set; }
+        
+    #if ODIN_INSPECTOR
+        [field: BoxGroup("Generated"), Required, ReadOnly]
     #endif
         [field: SerializeField]
         public Camera thisCamera { get; private set; }
         
     #if ODIN_INSPECTOR
-        [field: FoldoutGroup("Generated"), Required, ReadOnly]
+        [field: BoxGroup("Generated"), Required, ReadOnly]
     #endif
         [field: SerializeField]
         public Transform thisTransform { get; private set; }
         
     #if URP_RENDER_PIPELINE
-        [field: SerializeField, FoldoutGroup("Generated"), Required, ReadOnly]
+        [field: SerializeField, BoxGroup("Generated"), Required, ReadOnly]
         public UniversalAdditionalCameraData thisCameraData { get; private set; }
     #endif
         
         private MainCameraModel _model;
+        
+        public void Init() {
+            if (uiCamera != null) {
+                Insert(uiCamera);   
+            }
+        }
         
         public void ApplyResolving() {
             ProjectContext.data.Get(out _model);

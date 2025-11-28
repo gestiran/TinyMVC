@@ -21,7 +21,7 @@ namespace TinyMVC.Samples.Views.Global {
         public bool isActive => thisEventSystem.enabled;
         
     #if ODIN_INSPECTOR
-        [field: FoldoutGroup("Generated"), Required, ReadOnly]
+        [field: BoxGroup("Generated"), Required, ReadOnly]
     #endif
         [field: SerializeField]
         public EventSystem thisEventSystem { get; private set; }

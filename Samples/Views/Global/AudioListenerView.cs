@@ -14,28 +14,28 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Samples.Views.Global {
-    [RequireComponent(typeof(AudioListener))]
     [DisallowMultipleComponent]
-    public class AudioListenerView : View, IApplyResolving, IApplyGenerated, IUnload, IDontDestroyOnLoad, IDependency {
+    [RequireComponent(typeof(AudioListener))]
+    public sealed class AudioListenerView : View, IApplyResolving, IApplyGenerated, IUnload, IDontDestroyOnLoad, IDependency {
         public bool isActive => thisAudioListener.enabled;
         public Vector3 position => thisTransform.position;
         public AudioVelocityUpdateMode velocityUpdateMode => thisAudioListener.velocityUpdateMode;
         
     #if ODIN_INSPECTOR
-        [field: FoldoutGroup("Generated"), Required]
+        [field: BoxGroup("Generated"), Required]
     #endif
         [field: SerializeField]
         public AudioListener thisAudioListener { get; private set; }
         
     #if ODIN_INSPECTOR
-        [field: FoldoutGroup("Generated"), Required]
+        [field: BoxGroup("Generated"), Required]
     #endif
         [field: SerializeField]
         public Transform thisTransform { get; private set; }
         
-        protected AudioListenerModel _model;
+        private AudioListenerModel _model;
         
-        public virtual void ApplyResolving() {
+        public void ApplyResolving() {
             ProjectContext.data.Get(out _model);
             
             ChangePosition(_model.position.value);
@@ -47,7 +47,7 @@ namespace TinyMVC.Samples.Views.Global {
             _model.velocityUpdateMode.AddListener(ChangeVelocityUpdateMode);
         }
         
-        public virtual void Unload() {
+        public void Unload() {
             _model.position.RemoveListener(ChangePosition);
             _model.isActive.RemoveListener(ChangeActiveState);
             _model.velocityUpdateMode.RemoveListener(ChangeVelocityUpdateMode);
