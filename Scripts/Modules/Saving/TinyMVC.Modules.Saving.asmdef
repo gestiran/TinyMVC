@@ -2,7 +2,7 @@
     "name": "TinyMVC.Modules.Saving",
     "rootNamespace": "TinyMVC",
     "references": [
-        "GUID:58c74cb7d7df1a17dba51822087c325e",
+        "GUID:52e8ae13a5f06b247affb7808bc8d3ff",
         "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
     "includePlatforms": [],
