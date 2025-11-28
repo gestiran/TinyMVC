@@ -4,13 +4,17 @@
 using System.Collections.Generic;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Dependencies;
+using TinyReactive;
 using TinyReactive.Extensions;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ModelsContext {
+        protected UnloadPool _unload { get; private set; }
+        
+        internal string key;
+        
         internal readonly List<IDependency> dependenciesBinded;
         internal readonly List<IDependency> dependencies;
-        internal string key;
         
         public sealed class EmptyContext : ModelsContext {
             internal EmptyContext() { }
@@ -26,6 +30,8 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         public static EmptyContext Empty() => new EmptyContext();
+        
+        internal void ConnectUnload(UnloadPool unload) => _unload = unload;
         
         internal void CreateBinders(string contextKey) {
             key = contextKey;
@@ -44,6 +50,7 @@ namespace TinyMVC.Boot.Contexts {
                 return;
             }
             
+            binder.ConnectUnload(_unload);
             IDependency dependency = binder.GetDependency();
             ProjectContext.data.Add(key, dependency);
             dependenciesBinded.Add(dependency);
@@ -54,6 +61,7 @@ namespace TinyMVC.Boot.Contexts {
                 return;
             }
             
+            binderSystem.ConnectUnload(_unload);
             binderSystem.Connect(this);
         }
         
@@ -62,6 +70,7 @@ namespace TinyMVC.Boot.Contexts {
                 return;
             }
             
+            binder.ConnectUnload(_unload);
             binder.BindInternal();
         }
         

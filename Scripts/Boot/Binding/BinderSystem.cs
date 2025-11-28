@@ -3,10 +3,12 @@
 
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Dependencies;
+using TinyReactive;
 
 namespace TinyMVC.Boot.Binding {
     public abstract class BinderSystem {
         private ModelsContext _context;
+        protected UnloadPool _unload { get; private set; }
         
         internal void Connect(ModelsContext context) {
             _context = context;
@@ -20,6 +22,7 @@ namespace TinyMVC.Boot.Binding {
                 return;
             }
             
+            binder.ConnectUnload(_unload);
             IDependency dependency = binder.GetDependency();
             ProjectContext.data.Add(_context.key, dependency);
             _context.dependenciesBinded.Add(dependency);
@@ -30,7 +33,10 @@ namespace TinyMVC.Boot.Binding {
                 return;
             }
             
+            binder.ConnectUnload(_unload);
             binder.BindInternal();
         }
+        
+        internal void ConnectUnload(UnloadPool unload) => _unload = unload;
     }
 }

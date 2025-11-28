@@ -3,12 +3,14 @@
 
 using System;
 using TinyMVC.Dependencies;
+using TinyReactive;
 
 namespace TinyMVC.Boot.Binding {
     public abstract class Binder : IBinder {
         public abstract IDependency GetDependency();
         
         protected string _key { get; private set; }
+        protected UnloadPool _unload { get; private set; }
         
         internal string keyValue {
             get => _key;
@@ -20,6 +22,8 @@ namespace TinyMVC.Boot.Binding {
         protected Binder(string key = null) => _key = key;
         
         internal abstract Type GetBindType();
+        
+        internal void ConnectUnload(UnloadPool unload) => _unload = unload;
     }
     
     public abstract class Binder<T> : Binder where T : IDependency, new() {

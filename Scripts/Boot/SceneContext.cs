@@ -34,6 +34,9 @@ namespace TinyMVC.Boot {
             models = CreateModels();
             parameters = CreateParameters();
             
+            controllers.ConnectUnload(unload);
+            models.ConnectUnload(unload);
+            
             views.Instantiate();
             InstantiateComponents();
             

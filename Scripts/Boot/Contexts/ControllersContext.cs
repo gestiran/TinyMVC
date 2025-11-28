@@ -10,6 +10,7 @@ using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
 using TinyReactive;
 using TinyReactive.Extensions;
+using TinyReactive.Fields;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR
 using Sirenix.OdinInspector;
@@ -17,6 +18,8 @@ using Sirenix.OdinInspector;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ControllersContext : IController {
+        protected UnloadPool _unload { get; private set; }
+        
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ShowInInspector]
     #endif
@@ -27,7 +30,7 @@ namespace TinyMVC.Boot.Contexts {
     #endif
         private readonly Dictionary<string, List<IController>> _controllers;
         
-        private Action _lazyInit;
+        private List<ActionListener> _initLazyList;
         
         private static EmptyContext _empty;
         
@@ -40,6 +43,7 @@ namespace TinyMVC.Boot.Contexts {
         protected ControllersContext() {
             systems = new List<IController>();
             _controllers = new Dictionary<string, List<IController>>();
+            _initLazyList = new List<ActionListener>();
         }
         
         public static EmptyContext Empty() {
@@ -50,11 +54,16 @@ namespace TinyMVC.Boot.Contexts {
             return _empty;
         }
         
+        internal void ConnectUnload(UnloadPool unload) => _unload = unload;
+        
         internal void CreateControllers() => Create();
         
         internal void Init() {
-            _lazyInit?.Invoke();
-            _lazyInit = null;
+            foreach (ActionListener listener in _initLazyList) {
+                listener.Invoke();
+            }
+            
+            _initLazyList = null;
         }
         
         internal async UniTask InitAsync() => await systems.TryInitAsync();
@@ -141,7 +150,7 @@ namespace TinyMVC.Boot.Contexts {
             systems.TryUnload();
         }
         
-        protected void Add<T>() where T : IController, new() => _lazyInit += () => systems.Add(new T());
+        protected void Add<T>() where T : IController, new() => _initLazyList.Add(() => systems.Add(new T()));
         
         private void DisconnectNR<T1, T2>(T2 system, T1 controller, Action<ILoop> disconnectLoop) where T1 : IController where T2 : IController {
             Disconnect(system, controller, disconnectLoop);
