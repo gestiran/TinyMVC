@@ -3,8 +3,8 @@
   "displayName": "Tiny MVC",
   "author": {
     "name": "Derek Sliman",
-    "email": "lionext.studio@gmail.com",
-    "url": "https://github.com/gestiran"
+    "url": "https://github.com/gestiran",
+    "email": "lionext.studio@gmail.com"
   },
   "version": "1.13.18",
   "unity": "2018.4",
@@ -33,5 +33,6 @@
   },
   "publishConfig": {
     "registry": "https://package.openupm.com"
-  }
+  },
+  "licensesUrl": "https://github.com/gestiran/TinyMVC/blob/main/LICENSE.md"
 }
