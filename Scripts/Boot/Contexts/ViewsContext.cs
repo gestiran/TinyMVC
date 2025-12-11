@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
@@ -181,24 +182,30 @@ namespace TinyMVC.Boot.Contexts {
     #if UNITY_EDITOR
         
         public virtual void Reset() {
-            View[] views = UnityObject.FindObjectsOfType<View>(true);
+            List<View> views = UnityObject.FindObjectsOfType<View>(true).ToList();
             List<View> generated = new List<View>();
             
-            for (int viewId = 0; viewId < views.Length; viewId++) {
+            views.Sort(CompareViewsByPriority);
+            
+            for (int viewId = 0; viewId < views.Count; viewId++) {
                 if (views[viewId] is IGeneratedContext) {
                     generated.Add(views[viewId]);
                 }
                 
                 if (views[viewId] is IApplyGenerated target) {
                     target.Reset();
-                    UnityEditor.EditorUtility.SetDirty(views[viewId].gameObject);
                 } else if (views[viewId] is IApplyGeneratedContext targetContext) {
                     targetContext.Reset();
-                    UnityEditor.EditorUtility.SetDirty(views[viewId].gameObject);
                 }
             }
             
             _generated = generated.ToArray();
+        }
+        
+        protected int CompareViewsByPriority(View first, View second) {
+            int firstPriority = first is IGeneratedPriority customFirstPriority ? customFirstPriority.priority : 0;
+            int secondPriority = second is IGeneratedPriority customSecondPriority ? customSecondPriority.priority : 0;
+            return secondPriority - firstPriority;
         }
         
     #endif
