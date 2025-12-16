@@ -1,21 +1,19 @@
 ﻿// Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
-using System.Collections.Generic;
 using TinyMVC.Dependencies.Components;
-using TinyReactive.Extensions;
 using TinyReactive.Fields;
 
 namespace TinyMVC.ReactiveFields {
     internal sealed class ComponentListeners<TModel, TComponent> : IComponentListeners where TModel : Model where TComponent : ModelComponent {
-        private readonly List<ActionListener<TModel, TComponent>> _addListeners;
-        private readonly List<ActionListener<TModel, TComponent>> _removeListeners;
+        private readonly LazyList<ActionListener<TModel, TComponent>> _addListeners;
+        private readonly LazyList<ActionListener<TModel, TComponent>> _removeListeners;
         
         private const int _CAPACITY = 8;
         
         public ComponentListeners() {
-            _addListeners = new List<ActionListener<TModel, TComponent>>(_CAPACITY);
-            _removeListeners = new List<ActionListener<TModel, TComponent>>(_CAPACITY);
+            _addListeners = new LazyList<ActionListener<TModel, TComponent>>(_CAPACITY);
+            _removeListeners = new LazyList<ActionListener<TModel, TComponent>>(_CAPACITY);
         }
         
         public void AddOnAddListener(ActionListener<TModel, TComponent> listener) => _addListeners.Add(listener);
@@ -28,13 +26,29 @@ namespace TinyMVC.ReactiveFields {
         
         public void TryInvokeAdd(Model model, ModelComponent component) {
             if (model is TModel targetModel && component is TComponent targetComponent) {
-                _addListeners.Invoke(targetModel, targetComponent);
+                if (_addListeners.isDirty) {
+                    _addListeners.Apply();
+                }
+                
+                if (_addListeners.Count > 0) {
+                    foreach (ActionListener<TModel, TComponent> listener in _addListeners) {
+                        listener.Invoke(targetModel, targetComponent);
+                    }
+                }
             }
         }
         
         public void TryInvokeRemove(Model model, ModelComponent component) {
             if (model is TModel targetModel && component is TComponent targetComponent) {
-                _removeListeners.Invoke(targetModel, targetComponent);
+                if (_removeListeners.isDirty) {
+                    _removeListeners.Apply();
+                }
+                
+                if (_removeListeners.Count > 0) {
+                    foreach (ActionListener<TModel, TComponent> listener in _removeListeners) {
+                        listener.Invoke(targetModel, targetComponent);
+                    }
+                }
             }
         }
     }

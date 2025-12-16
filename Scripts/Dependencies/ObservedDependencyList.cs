@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TinyReactive;
-using TinyReactive.Extensions;
 using TinyReactive.Fields;
 using TinyUtilities;
 using UnityEngine;
@@ -23,21 +22,21 @@ namespace TinyMVC.Dependencies {
     [HideLabel, ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
     public sealed class ObservedDependencyList<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
-        public int count => _value.Count;
-        public T Current => _value[_currentId];
-        object IEnumerator.Current => _value[_currentId];
+        public int count => _list.Count;
+        public T Current => _list[_currentId];
+        object IEnumerator.Current => _list[_currentId];
         
-        private readonly List<ActionListener> _onAdd;
-        private readonly List<ActionListener<T>> _onAddWithValue;
-        private readonly List<ActionListener> _onRemove;
-        private readonly List<ActionListener<T>> _onRemoveWithValue;
-        private readonly List<ActionListener> _onClear;
+        private readonly LazyList<ActionListener> _onAdd;
+        private readonly LazyList<ActionListener<T>> _onAddWithValue;
+        private readonly LazyList<ActionListener> _onRemove;
+        private readonly LazyList<ActionListener<T>> _onRemoveWithValue;
+        private readonly LazyList<ActionListener> _onClear;
         
     #if ODIN_INSPECTOR && UNITY_EDITOR
         [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, DraggableItems = false, ListElementLabelName = "@ToString()")]
         [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, Searchable]
     #endif
-        private List<T> _value;
+        private List<T> _list;
         
         private int _currentId;
         private bool _lock;
@@ -49,17 +48,17 @@ namespace TinyMVC.Dependencies {
         public ObservedDependencyList(T[] value, int capacity = Observed.CAPACITY) : this(value.ToList(), capacity) { }
         
         public ObservedDependencyList([NotNull] DependencyPool<T> pool, int capacity = Observed.CAPACITY) {
-            _value = new List<T>(pool.length);
+            _list = new List<T>(pool.length);
             
             for (int valueId = 0; valueId < pool.length; valueId++) {
-                _value.Add(pool[valueId]);
+                _list.Add(pool[valueId]);
             }
             
-            _onAdd = new List<ActionListener>(capacity);
-            _onAddWithValue = new List<ActionListener<T>>(capacity);
-            _onRemove = new List<ActionListener>(capacity);
-            _onRemoveWithValue = new List<ActionListener<T>>(capacity);
-            _onClear = new List<ActionListener>(capacity);
+            _onAdd = new LazyList<ActionListener>(capacity);
+            _onAddWithValue = new LazyList<ActionListener<T>>(capacity);
+            _onRemove = new LazyList<ActionListener>(capacity);
+            _onRemoveWithValue = new LazyList<ActionListener<T>>(capacity);
+            _onClear = new LazyList<ActionListener>(capacity);
             _currentId = -1;
         }
         
@@ -70,40 +69,74 @@ namespace TinyMVC.Dependencies {
                 length += pools[poolId].length;
             }
             
-            _value = new List<T>(length);
+            _list = new List<T>(length);
             
             for (int poolId = 0; poolId < pools.Length; poolId++) {
-                _value.AddRange(pools[poolId]);
+                _list.AddRange(pools[poolId]);
             }
             
-            _onAdd = new List<ActionListener>(Observed.CAPACITY);
-            _onAddWithValue = new List<ActionListener<T>>(Observed.CAPACITY);
-            _onRemove = new List<ActionListener>(Observed.CAPACITY);
-            _onRemoveWithValue = new List<ActionListener<T>>(Observed.CAPACITY);
-            _onClear = new List<ActionListener>(Observed.CAPACITY);
+            _onAdd = new LazyList<ActionListener>(Observed.CAPACITY);
+            _onAddWithValue = new LazyList<ActionListener<T>>(Observed.CAPACITY);
+            _onRemove = new LazyList<ActionListener>(Observed.CAPACITY);
+            _onRemoveWithValue = new LazyList<ActionListener<T>>(Observed.CAPACITY);
+            _onClear = new LazyList<ActionListener>(Observed.CAPACITY);
             _currentId = -1;
         }
         
         public ObservedDependencyList(List<T> value, int capacity = Observed.CAPACITY) {
-            _value = value;
-            _onAdd = new List<ActionListener>(capacity);
-            _onAddWithValue = new List<ActionListener<T>>(capacity);
-            _onRemove = new List<ActionListener>(capacity);
-            _onRemoveWithValue = new List<ActionListener<T>>(capacity);
-            _onClear = new List<ActionListener>(capacity);
+            _list = value;
+            _onAdd = new LazyList<ActionListener>(capacity);
+            _onAddWithValue = new LazyList<ActionListener<T>>(capacity);
+            _onRemove = new LazyList<ActionListener>(capacity);
+            _onRemoveWithValue = new LazyList<ActionListener<T>>(capacity);
+            _onClear = new LazyList<ActionListener>(capacity);
             _currentId = -1;
         }
         
         public T this[int index] {
-            get => _value[index];
+            get => _list[index];
             set {
-                _onRemove.Invoke();
-                _onRemoveWithValue.Invoke(_value[index]);
+                if (_onRemove.isDirty) {
+                    _onRemove.Apply();
+                }
                 
-                _value[index] = value;
+                if (_onRemoveWithValue.isDirty) {
+                    _onRemoveWithValue.Apply();
+                }
                 
-                _onAdd.Invoke();
-                _onAddWithValue.Invoke(value);
+                if (_onRemove.Count > 0) {
+                    foreach (ActionListener listener in _onRemove) {
+                        listener.Invoke();
+                    }
+                }
+                
+                if (_onRemoveWithValue.Count > 0) {
+                    foreach (ActionListener<T> listener in _onRemoveWithValue) {
+                        listener.Invoke(_list[index]);
+                    }
+                }
+                
+                _list[index] = value;
+                
+                if (_onAdd.isDirty) {
+                    _onAdd.Apply();
+                }
+                
+                if (_onAddWithValue.isDirty) {
+                    _onAddWithValue.Apply();
+                }
+                
+                if (_onAdd.Count > 0) {
+                    foreach (ActionListener listener in _onAdd) {
+                        listener.Invoke();
+                    }
+                }
+                
+                if (_onAddWithValue.Count > 0) {
+                    foreach (ActionListener<T> listener in _onAddWithValue) {
+                        listener.Invoke(value);
+                    }
+                }
             }
         }
         
@@ -113,17 +146,53 @@ namespace TinyMVC.Dependencies {
         }
         
         public void Add([NotNull] params T[] values) {
-            _value.AddRange(values);
+            _list.AddRange(values);
             
-            _onAdd.Invoke();
-            _onAddWithValue.Invoke(values);
+            if (_onAdd.isDirty) {
+                _onAdd.Apply();
+            }
+            
+            if (_onAddWithValue.isDirty) {
+                _onAddWithValue.Apply();
+            }
+            
+            if (_onAdd.Count > 0) {
+                foreach (ActionListener listener in _onAdd) {
+                    listener.Invoke();
+                }
+            }
+            
+            if (_onAddWithValue.Count > 0) {
+                foreach (T value in values) {
+                    foreach (ActionListener<T> listener in _onAddWithValue) {
+                        listener.Invoke(value);
+                    }
+                }
+            }
         }
         
         public void Add([NotNull] T value) {
-            _value.Add(value);
+            _list.Add(value);
             
-            _onAdd.Invoke();
-            _onAddWithValue.Invoke(value);
+            if (_onAdd.isDirty) {
+                _onAdd.Apply();
+            }
+            
+            if (_onAddWithValue.isDirty) {
+                _onAddWithValue.Apply();
+            }
+            
+            if (_onAdd.Count > 0) {
+                foreach (ActionListener listener in _onAdd) {
+                    listener.Invoke();
+                }
+            }
+            
+            if (_onAddWithValue.Count > 0) {
+                foreach (ActionListener<T> listener in _onAddWithValue) {
+                    listener.Invoke(value);
+                }
+            }
         }
         
         [Obsolete("Can`t use without parameters!", true)]
@@ -148,7 +217,7 @@ namespace TinyMVC.Dependencies {
             }
             
             _lock = true;
-            _value.AddRange(values);
+            _list.AddRange(values);
             DateTime now = DateTime.Now;
             
             for (int i = _onAdd.Count - 1; i >= 0; i--) {
@@ -199,7 +268,7 @@ namespace TinyMVC.Dependencies {
             }
             
             _lock = true;
-            _value.Add(value);
+            _list.Add(value);
             DateTime now = DateTime.Now;
             
             for (int i = _onAdd.Count - 1; i >= 0; i--) {
@@ -241,23 +310,65 @@ namespace TinyMVC.Dependencies {
         }
         
         public void Remove([NotNull] params T[] values) {
-            for (int i = values.Length - 1; i >= 0; i--) {
-                _value.Remove(values[i]);
+            if (_onRemove.isDirty) {
+                _onRemove.Apply();
             }
             
-            _onRemove.Invoke();
-            _onRemoveWithValue.Invoke(values);
+            if (_onRemoveWithValue.isDirty) {
+                _onRemoveWithValue.Apply();
+            }
+            
+            foreach (T value in values) {
+                int index = _list.IndexOf(value);
+                
+                if (index >= 0) {
+                    if (_onRemove.Count > 0) {
+                        foreach (ActionListener listener in _onRemove) {
+                            listener.Invoke();
+                        }
+                    }
+                    
+                    if (_onRemoveWithValue.Count > 0) {
+                        foreach (ActionListener<T> listener in _onRemoveWithValue) {
+                            listener.Invoke(value);
+                        }
+                    }
+                    
+                    _list.RemoveAt(index);
+                }
+            }
         }
         
-        public void Remove([NotNull] T value) {
-            _value.Remove(value);
+        public bool Remove([NotNull] T value) {
+            int index = _list.IndexOf(value);
             
-            _onRemove.Invoke();
-            _onRemoveWithValue.Invoke(value);
-            
-            if (value is IDisposable disposable) {
-                disposable.Dispose();
+            if (index >= 0) {
+                if (_onRemove.isDirty) {
+                    _onRemove.Apply();
+                }
+                
+                if (_onRemoveWithValue.isDirty) {
+                    _onRemoveWithValue.Apply();
+                }
+                
+                if (_onRemove.Count > 0) {
+                    foreach (ActionListener listener in _onRemove) {
+                        listener.Invoke();
+                    }
+                }
+                
+                if (_onRemoveWithValue.Count > 0) {
+                    foreach (ActionListener<T> listener in _onRemoveWithValue) {
+                        listener.Invoke(value);
+                    }
+                }
+                
+                _list.RemoveAt(index);
+                
+                return true;
             }
+            
+            return false;
         }
         
         [Obsolete("Can`t use without parameters!", true)]
@@ -284,7 +395,7 @@ namespace TinyMVC.Dependencies {
             _lock = true;
             
             for (int i = values.Length - 1; i >= 0; i--) {
-                _value.Remove(values[i]);
+                _list.Remove(values[i]);
             }
             
             DateTime now = DateTime.Now;
@@ -337,7 +448,7 @@ namespace TinyMVC.Dependencies {
             }
             
             _lock = true;
-            _value.Remove(value);
+            _list.Remove(value);
             DateTime now = DateTime.Now;
             
             for (int i = _onRemove.Count - 1; i >= 0; i--) {
@@ -374,19 +485,47 @@ namespace TinyMVC.Dependencies {
         }
         
         public void Clear() {
-            _value.Clear();
-            _onClear.Invoke();
+            if (_onClear.isDirty) {
+                _onClear.Apply();
+            }
+            
+            if (_onClear.Count > 0) {
+                foreach (ActionListener listener in _onClear) {
+                    listener.Invoke();
+                }
+            }
+            
+            _list.Clear();
         }
         
-        public int IndexOf(T element) => _value.IndexOf(element);
+        public int IndexOf(T element) => _list.IndexOf(element);
         
-        public bool Contains(T element) => _value.Contains(element);
+        public bool Contains(T element) => _list.Contains(element);
         
         public void RemoveAt(int id) {
-            T element = _value[id];
-            _value.RemoveAt(id);
-            _onRemove.Invoke();
-            _onRemoveWithValue.Invoke(element);
+            T element = _list[id];
+            
+            if (_onRemove.isDirty) {
+                _onRemove.Apply();
+            }
+            
+            if (_onRemoveWithValue.isDirty) {
+                _onRemoveWithValue.Apply();
+            }
+            
+            if (_onRemove.Count > 0) {
+                foreach (ActionListener listener in _onRemove) {
+                    listener.Invoke();
+                }
+            }
+            
+            if (_onRemoveWithValue.Count > 0) {
+                foreach (ActionListener<T> listener in _onRemoveWithValue) {
+                    listener.Invoke(element);
+                }
+            }
+            
+            _list.RemoveAt(id);
         }
         
         // Resharper disable Unity.ExpensiveCode
@@ -451,14 +590,14 @@ namespace TinyMVC.Dependencies {
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         
         public IEnumerator<T> GetEnumerator() {
-            foreach (T value in _value) {
+            foreach (T value in _list) {
                 yield return value;
             }
         }
         
         public bool MoveNext() {
             _currentId++;
-            return _currentId < _value.Count;
+            return _currentId < _list.Count;
         }
         
         public void Reset() => _currentId = -1;
@@ -466,13 +605,13 @@ namespace TinyMVC.Dependencies {
         public void Dispose() {
             Reset();
             
-            foreach (T obj in _value) {
+            foreach (T obj in _list) {
                 if (obj is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
             
-            _value = null;
+            _list = null;
             _onAdd.Clear();
             _onAddWithValue.Clear();
             _onRemove.Clear();

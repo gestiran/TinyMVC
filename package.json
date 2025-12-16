@@ -28,8 +28,8 @@
     "com.unity.modules.uielements": "1.0.0",
     "com.unity.nuget.newtonsoft-json": "3.2.1",
     "com.cysharp.unitask": "2.5.10",
-    "com.ges.tinyutilities": "1.2.2",
-    "com.ges.tinyreactive": "1.0.6"
+    "com.ges.tinyutilities": "1.2.8",
+    "com.ges.tinyreactive": "1.1.0"
   },
   "publishConfig": {
     "registry": "https://package.openupm.com"
