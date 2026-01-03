@@ -50,6 +50,7 @@ namespace TinyMVC.Views {
         protected virtual void OnViewsChanged() { }
         
     #if ODIN_INSPECTOR
+        
         // ReSharper disable once UnusedMember.Local
         internal void ListGUI() {
             if (Sirenix.Utilities.Editor.SirenixEditorGUI.ToolbarButton(Sirenix.Utilities.Editor.EditorIcons.Refresh)) {

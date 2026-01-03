@@ -30,7 +30,7 @@ namespace TinyMVC.Boot.Contexts {
     #endif
         private readonly Dictionary<string, List<IController>> _controllers;
         
-        private List<ActionListener> _initLazyList;
+        internal List<ActionListener> initLazyList;
         
         private static EmptyContext _empty;
         
@@ -43,7 +43,7 @@ namespace TinyMVC.Boot.Contexts {
         protected ControllersContext() {
             systems = new List<IController>();
             _controllers = new Dictionary<string, List<IController>>();
-            _initLazyList = new List<ActionListener>();
+            initLazyList = new List<ActionListener>();
         }
         
         public static EmptyContext Empty() {
@@ -59,11 +59,11 @@ namespace TinyMVC.Boot.Contexts {
         internal void CreateControllers() => Create();
         
         internal void Init() {
-            foreach (ActionListener listener in _initLazyList) {
+            foreach (ActionListener listener in initLazyList) {
                 listener.Invoke();
             }
             
-            _initLazyList = null;
+            initLazyList = null;
         }
         
         internal async UniTask InitAsync() => await systems.TryInitAsync();
@@ -150,7 +150,7 @@ namespace TinyMVC.Boot.Contexts {
             systems.TryUnload();
         }
         
-        protected void Add<T>() where T : IController, new() => _initLazyList.Add(() => systems.Add(new T()));
+        protected void Add<T>() where T : IController, new() => initLazyList.Add(() => systems.Add(new T()));
         
         private void DisconnectNR<T1, T2>(T2 system, T1 controller, Action<ILoop> disconnectLoop) where T1 : IController where T2 : IController {
             Disconnect(system, controller, disconnectLoop);

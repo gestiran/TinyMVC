@@ -21,8 +21,8 @@ namespace TinyMVC.Dependencies {
         object IEnumerator.Current => _objects[_currentId];
         
     #if ODIN_INSPECTOR
-        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, IsReadOnly = true, ListElementLabelName = "@ToString()"), Searchable]
-        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox, LabelText("@ToString()")]
+        [ListDrawerSettings(HideAddButton = true, HideRemoveButton = true, IsReadOnly = true, ListElementLabelName = "@ToString()")]
+        [ShowInInspector, HideInEditorMode, HideReferenceObjectPicker, HideDuplicateReferenceBox, LabelText("@ToString()"), Searchable]
     #endif
         private T[] _objects;
         

@@ -12,6 +12,7 @@ using System;
 using System.Collections;
 using Cysharp.Threading.Tasks;
 using TinyReactive;
+using TinyReactive.Fields;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -41,7 +42,7 @@ namespace TinyMVC.Boot {
             InstantiateComponents();
             
             controllers.CreateControllers();
-            CreateComponentsControllers(controllers.systems);
+            CreateComponentsControllers(controllers.systems, controllers.initLazyList);
             
             views.CreateViews();
             AddComponentsViews(views.mainViews);
@@ -127,9 +128,9 @@ namespace TinyMVC.Boot {
             }
         }
         
-        private void CreateComponentsControllers(List<IController> systems) {
+        private void CreateComponentsControllers(List<IController> systems, List<ActionListener> initSystemsLazy) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CreateControllersInternal(systems);
+                components[componentId].CreateControllersInternal(systems, initSystemsLazy);
             }
         }
         

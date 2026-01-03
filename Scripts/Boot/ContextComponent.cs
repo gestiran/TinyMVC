@@ -7,6 +7,7 @@ using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Views;
+using TinyReactive.Fields;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
@@ -24,6 +25,7 @@ namespace TinyMVC.Boot {
         
         private View[] _instances;
         private List<IController> _systems;
+        private List<ActionListener> _initSystemsLazy;
         private ModelsContext _models;
         private List<IDependency> _parameters;
         
@@ -42,8 +44,9 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal void CreateControllersInternal(List<IController> systems) {
+        internal void CreateControllersInternal(List<IController> systems, List<ActionListener> initSystemsLazy) {
             _systems = systems;
+            _initSystemsLazy = initSystemsLazy;
             CreateControllers();
         }
         
@@ -85,9 +88,7 @@ namespace TinyMVC.Boot {
             // Empty
         }
         
-        protected void Add<T>() where T : IController, new() => _systems.Add(new T());
-        
-        protected void Add<T>(T controller) where T : IController => _systems.Add(controller);
+        protected void Add<T>() where T : IController, new() => _initSystemsLazy.Add(() => _systems.Add(new T()));
         
         protected void AddBinder<T>(T binder) where T : Binder {
             if (binder is IBindConditions conditions && conditions.IsNeedBinding() == false) {
