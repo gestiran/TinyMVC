@@ -104,16 +104,12 @@ namespace TinyMVC.Dependencies {
                     _onRemoveWithValue.Apply();
                 }
                 
-                if (_onRemove.Count > 0) {
-                    foreach (ActionListener listener in _onRemove) {
-                        listener.Invoke();
-                    }
+                for (int i = 0; i < _onRemove.count; i++) {
+                    _onRemove[i].Invoke();
                 }
                 
-                if (_onRemoveWithValue.Count > 0) {
-                    foreach (ActionListener<T> listener in _onRemoveWithValue) {
-                        listener.Invoke(_list[index]);
-                    }
+                for (int i = 0; i < _onRemoveWithValue.count; i++) {
+                    _onRemoveWithValue[i].Invoke(_list[index]);
                 }
                 
                 _list[index] = value;
@@ -126,16 +122,12 @@ namespace TinyMVC.Dependencies {
                     _onAddWithValue.Apply();
                 }
                 
-                if (_onAdd.Count > 0) {
-                    foreach (ActionListener listener in _onAdd) {
-                        listener.Invoke();
-                    }
+                for (int i = 0; i < _onAdd.count; i++) {
+                    _onAdd[i].Invoke();
                 }
                 
-                if (_onAddWithValue.Count > 0) {
-                    foreach (ActionListener<T> listener in _onAddWithValue) {
-                        listener.Invoke(value);
-                    }
+                for (int i = 0; i < _onAddWithValue.count; i++) {
+                    _onAddWithValue[i].Invoke(value);
                 }
             }
         }
@@ -156,17 +148,15 @@ namespace TinyMVC.Dependencies {
                 _onAddWithValue.Apply();
             }
             
-            if (_onAdd.Count > 0) {
-                foreach (ActionListener listener in _onAdd) {
-                    listener.Invoke();
-                }
+            for (int i = 0; i < _onAdd.count; i++) {
+                _onAdd[i].Invoke();
             }
             
-            if (_onAddWithValue.Count > 0) {
-                foreach (T value in values) {
-                    foreach (ActionListener<T> listener in _onAddWithValue) {
-                        listener.Invoke(value);
-                    }
+            for (int valueId = 0; valueId < values.Length; valueId++) {
+                T value = values[valueId];
+                
+                for (int i = 0; i < _onAddWithValue.count; i++) {
+                    _onAddWithValue[i].Invoke(value);
                 }
             }
         }
@@ -182,16 +172,12 @@ namespace TinyMVC.Dependencies {
                 _onAddWithValue.Apply();
             }
             
-            if (_onAdd.Count > 0) {
-                foreach (ActionListener listener in _onAdd) {
-                    listener.Invoke();
-                }
+            for (int i = 0; i < _onAdd.count; i++) {
+                _onAdd[i].Invoke();
             }
             
-            if (_onAddWithValue.Count > 0) {
-                foreach (ActionListener<T> listener in _onAddWithValue) {
-                    listener.Invoke(value);
-                }
+            for (int i = 0; i < _onAddWithValue.count; i++) {
+                _onAddWithValue[i].Invoke(value);
             }
         }
         
@@ -220,7 +206,7 @@ namespace TinyMVC.Dependencies {
             _list.AddRange(values);
             DateTime now = DateTime.Now;
             
-            for (int i = _onAdd.Count - 1; i >= 0; i--) {
+            for (int i = _onAdd.count - 1; i >= 0; i--) {
                 _onAdd[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -235,7 +221,7 @@ namespace TinyMVC.Dependencies {
                 now = DateTime.Now;
             }
             
-            for (int i = _onAddWithValue.Count - 1; i >= 0; i--) {
+            for (int i = _onAddWithValue.count - 1; i >= 0; i--) {
                 for (int j = 0; j < values.Length; j++) {
                     _onAddWithValue[i].Invoke(values[j]);
                 }
@@ -271,7 +257,7 @@ namespace TinyMVC.Dependencies {
             _list.Add(value);
             DateTime now = DateTime.Now;
             
-            for (int i = _onAdd.Count - 1; i >= 0; i--) {
+            for (int i = _onAdd.count - 1; i >= 0; i--) {
                 _onAdd[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -286,7 +272,7 @@ namespace TinyMVC.Dependencies {
                 now = DateTime.Now;
             }
             
-            for (int i = _onAddWithValue.Count - 1; i >= 0; i--) {
+            for (int i = _onAddWithValue.count - 1; i >= 0; i--) {
                 _onAddWithValue[i].Invoke(value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -322,16 +308,12 @@ namespace TinyMVC.Dependencies {
                 int index = _list.IndexOf(value);
                 
                 if (index >= 0) {
-                    if (_onRemove.Count > 0) {
-                        foreach (ActionListener listener in _onRemove) {
-                            listener.Invoke();
-                        }
+                    for (int i = 0; i < _onRemove.count; i++) {
+                        _onRemove[i].Invoke();
                     }
                     
-                    if (_onRemoveWithValue.Count > 0) {
-                        foreach (ActionListener<T> listener in _onRemoveWithValue) {
-                            listener.Invoke(value);
-                        }
+                    for (int i = 0; i < _onRemoveWithValue.count; i++) {
+                        _onRemoveWithValue[i].Invoke(value);
                     }
                     
                     _list.RemoveAt(index);
@@ -351,16 +333,12 @@ namespace TinyMVC.Dependencies {
                     _onRemoveWithValue.Apply();
                 }
                 
-                if (_onRemove.Count > 0) {
-                    foreach (ActionListener listener in _onRemove) {
-                        listener.Invoke();
-                    }
+                for (int i = 0; i < _onRemove.count; i++) {
+                    _onRemove[i].Invoke();
                 }
                 
-                if (_onRemoveWithValue.Count > 0) {
-                    foreach (ActionListener<T> listener in _onRemoveWithValue) {
-                        listener.Invoke(value);
-                    }
+                for (int i = 0; i < _onRemoveWithValue.count; i++) {
+                    _onRemoveWithValue[i].Invoke(value);
                 }
                 
                 _list.RemoveAt(index);
@@ -400,7 +378,7 @@ namespace TinyMVC.Dependencies {
             
             DateTime now = DateTime.Now;
             
-            for (int i = _onRemove.Count - 1; i >= 0; i--) {
+            for (int i = _onRemove.count - 1; i >= 0; i--) {
                 _onRemove[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -415,7 +393,7 @@ namespace TinyMVC.Dependencies {
                 now = DateTime.Now;
             }
             
-            for (int i = _onRemoveWithValue.Count - 1; i >= 0; i--) {
+            for (int i = _onRemoveWithValue.count - 1; i >= 0; i--) {
                 for (int j = 0; j < values.Length; j++) {
                     _onRemoveWithValue[i].Invoke(values[j]);
                 }
@@ -451,7 +429,7 @@ namespace TinyMVC.Dependencies {
             _list.Remove(value);
             DateTime now = DateTime.Now;
             
-            for (int i = _onRemove.Count - 1; i >= 0; i--) {
+            for (int i = _onRemove.count - 1; i >= 0; i--) {
                 _onRemove[i].Invoke();
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -466,7 +444,7 @@ namespace TinyMVC.Dependencies {
                 now = DateTime.Now;
             }
             
-            for (int i = _onRemoveWithValue.Count - 1; i >= 0; i--) {
+            for (int i = _onRemoveWithValue.count - 1; i >= 0; i--) {
                 _onRemoveWithValue[i].Invoke(value);
                 
                 if (DateTime.Now.Subtract(now).TotalMilliseconds < anr) {
@@ -489,10 +467,8 @@ namespace TinyMVC.Dependencies {
                 _onClear.Apply();
             }
             
-            if (_onClear.Count > 0) {
-                foreach (ActionListener listener in _onClear) {
-                    listener.Invoke();
-                }
+            for (int i = 0; i < _onClear.count; i++) {
+                _onClear[i].Invoke();
             }
             
             _list.Clear();
@@ -513,16 +489,12 @@ namespace TinyMVC.Dependencies {
                 _onRemoveWithValue.Apply();
             }
             
-            if (_onRemove.Count > 0) {
-                foreach (ActionListener listener in _onRemove) {
-                    listener.Invoke();
-                }
+            for (int i = 0; i < _onRemove.count; i++) {
+                _onRemove[i].Invoke();
             }
             
-            if (_onRemoveWithValue.Count > 0) {
-                foreach (ActionListener<T> listener in _onRemoveWithValue) {
-                    listener.Invoke(element);
-                }
+            for (int i = 0; i < _onRemoveWithValue.count; i++) {
+                _onRemoveWithValue[i].Invoke(element);
             }
             
             _list.RemoveAt(id);
