@@ -58,7 +58,7 @@ namespace TinyMVC.Views {
             // Do nothing!
         }
         
-        public T Connect<T>([NotNull] T view) where T : View => Connect(view, ProjectContext.activeContext.key);
+        public T Connect<T>([NotNull] T view) where T : View => Connect(view, ProjectContext.scene.key);
         
         public T Connect<T>([NotNull] T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -72,11 +72,11 @@ namespace TinyMVC.Views {
         }
         
         public void Connect<T>([NotNull] params T[] views) where T : View {
-            Connect(ProjectContext.activeContext.key, views);
+            Connect(ProjectContext.scene.key, views);
         }
         
         public void Connect<T>([NotNull] T[] views, [NotNull] params IDependency[] dependencies) where T : View {
-            Connect(views, ProjectContext.activeContext.key, dependencies);
+            Connect(views, ProjectContext.scene.key, dependencies);
         }
         
         public void Connect<T>([NotNull] T[] views, string contextKey, [NotNull] params IDependency[] dependencies) where T : View {
@@ -109,15 +109,15 @@ namespace TinyMVC.Views {
         }
         
         public T Connect<T>([NotNull] T view, [NotNull] IDependency dependency) where T : View {
-            return Connect(view, ProjectContext.activeContext.key, new DependencyContainer(dependency));
+            return Connect(view, ProjectContext.scene.key, new DependencyContainer(dependency));
         }
         
         public T Connect<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View {
-            return Connect(view, ProjectContext.activeContext.key, new DependencyContainer(dependencies));
+            return Connect(view, ProjectContext.scene.key, new DependencyContainer(dependencies));
         }
         
         public T Connect<T>([NotNull] T view, [NotNull] DependencyContainer container) where T : View {
-            return Connect(view, ProjectContext.activeContext.key, container);
+            return Connect(view, ProjectContext.scene.key, container);
         }
         
         public T Connect<T>([NotNull] T view, string contextKey, [NotNull] DependencyContainer container) where T : View {
@@ -134,10 +134,10 @@ namespace TinyMVC.Views {
         
         public T Insert<T>([NotNull] T view, [NotNull] params IDependency[] dependencies) where T : View {
             ProjectContext.data.tempContainer = new DependencyContainer(dependencies);
-            return Insert(view, ProjectContext.activeContext.key);
+            return Insert(view, ProjectContext.scene.key);
         }
         
-        public T Insert<T>([NotNull] T view) where T : View => Insert(view, ProjectContext.activeContext.key);
+        public T Insert<T>([NotNull] T view) where T : View => Insert(view, ProjectContext.scene.key);
         
         public T Insert<T>([NotNull] T view, string contextKey, [NotNull] params IDependency[] dependencies) where T : View {
             ProjectContext.data.tempContainer = new DependencyContainer(dependencies);
@@ -168,7 +168,7 @@ namespace TinyMVC.Views {
             root.Disconnect(this, contextKey);
         }
         
-        public T Disconnect<T>(T view) where T : View => Disconnect(view, ProjectContext.activeContext.key);
+        public T Disconnect<T>(T view) where T : View => Disconnect(view, ProjectContext.scene.key);
         
         public T Disconnect<T>(T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -181,7 +181,7 @@ namespace TinyMVC.Views {
             return view;
         }
         
-        public void Disconnect<T>([NotNull] params T[] views) where T : View => Disconnect(ProjectContext.activeContext.key, views);
+        public void Disconnect<T>([NotNull] params T[] views) where T : View => Disconnect(ProjectContext.scene.key, views);
         
         public void Disconnect<T>(string contextKey, [NotNull] params T[] views) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -199,7 +199,7 @@ namespace TinyMVC.Views {
                 return;
             }
             
-            if (ProjectContext.TryGetContext(ProjectContext.activeContext.key, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(ProjectContext.scene.key, out SceneContext context)) {
                 List<View> pool = new List<View>();
                 
                 for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
@@ -253,7 +253,7 @@ namespace TinyMVC.Views {
                 return;
             }
             
-            if (ProjectContext.TryGetContext(ProjectContext.activeContext.key, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(ProjectContext.scene.key, out SceneContext context)) {
                 for (int connectionId = 0; connectionId < _connections.Count; connectionId++) {
                     View view = _connections[connectionId];
                     

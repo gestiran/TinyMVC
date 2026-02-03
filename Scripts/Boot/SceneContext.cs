@@ -29,14 +29,14 @@ namespace TinyMVC.Boot {
         private const int _DEPENDENCIES_CAPACITY = 64;
         
         internal override void Create() {
-            unload = new UnloadPool();
+            unloadInternal = new UnloadPool();
             
             controllers = CreateControllers();
             models = CreateModels();
             parameters = CreateParameters();
             
-            controllers.ConnectUnload(unload);
-            models.ConnectUnload(unload);
+            controllers.ConnectUnload(unloadInternal);
+            models.ConnectUnload(unloadInternal);
             
             views.Instantiate();
             InstantiateComponents();
@@ -71,6 +71,7 @@ namespace TinyMVC.Boot {
         }
         
         internal override void Unload() {
+            base.Unload();
             controllers.Unload();
             views.Unload();
             models.Unload();
@@ -182,7 +183,7 @@ namespace TinyMVC.Boot {
     }
     
     [DefaultExecutionOrder(-50)]
-    public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext> {
+    public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext>, IUnloadLink {
         public string key { get; private set; }
         
         public ViewsContext views { get => viewsInternal; internal set => viewsInternal = value; }
@@ -206,9 +207,7 @@ namespace TinyMVC.Boot {
         
         internal ModelsContext models;
         internal ParametersContext parameters;
-        internal UnloadPool unload;
-        
-        private bool _isRemoved;
+        internal UnloadPool unloadInternal;
         
         private void Awake() {
             key = gameObject.name;
@@ -260,12 +259,14 @@ namespace TinyMVC.Boot {
         }
         
         private void OnDestroy() {
-            if (_isRemoved) {
+            if (unloadInternal.isUnloaded) {
                 return;
             }
             
             Remove();
         }
+        
+        public T Add<T>(T unload) where T : IUnload => unloadInternal.Add(unload);
         
         internal void Remove() {
             fixedTicks.Clear();
@@ -273,7 +274,6 @@ namespace TinyMVC.Boot {
             lateTicks.Clear();
             StopAllCoroutines();
             
-            _isRemoved = true;
         #if UNITY_EDITOR
             Application.quitting -= MarkRemoved;
         #endif
@@ -282,11 +282,11 @@ namespace TinyMVC.Boot {
         
         protected virtual void InitWindows() { }
         
+        internal virtual void Unload() => unloadInternal.Unload();
+        
         internal abstract void Create();
         
         internal abstract UniTask InitAsync();
-        
-        internal abstract void Unload();
         
         internal abstract void Connect(View view);
         
@@ -343,7 +343,9 @@ namespace TinyMVC.Boot {
                 // Do nothing, app closed
             }
             
-            _isRemoved = true;
+            unloadInternal.Clear();
+            unloadInternal.Unload();
+            
             Application.quitting -= MarkRemoved;
         }
         

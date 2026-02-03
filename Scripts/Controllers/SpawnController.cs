@@ -7,7 +7,7 @@ using TinyMVC.Views;
 
 namespace TinyMVC.Controllers {
     public abstract class SpawnController : IController {
-        protected T Spawn<T>([NotNull] T view) where T : View => Spawn(view, ProjectContext.activeContext.key);
+        protected T Spawn<T>([NotNull] T view) where T : View => Spawn(view, ProjectContext.scene.key);
         
         protected T Spawn<T>([NotNull] T view, string contextKey) where T : View {
             if (view.connectState == View.ConnectState.Connected) {

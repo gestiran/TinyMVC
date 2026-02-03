@@ -9,7 +9,7 @@ using TinyMVC.Views;
 namespace TinyMVC.Controllers {
     public static class ControllerExtension {
         public static T2 Connect<T1, T2>(this T1 system, T2 controller) where T1 : IController where T2 : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 context.Connect(system, controller);
@@ -27,7 +27,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Connect<T1>(this T1 system, List<IController> controllers) where T1 : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
@@ -45,7 +45,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Connect<T1>(this T1 system, IController[] controllers) where T1 : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
@@ -63,7 +63,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static T2 Connect<T1, T2>(this T1 system, params IDependency[] dependencies) where T1 : IController where T2 : IController, new() {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             T2 controller = default;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -94,7 +94,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Disconnect<T1, T2>(this T1 system, T2 controller) where T1 : IController where T2 : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 context.Disconnect(system, controller);
@@ -102,7 +102,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Disconnect<T1>(this T1 system, List<IController> controllers) where T1 : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
@@ -120,7 +120,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Disconnect<T1>(this T1 system, IController[] controllers) where T1 : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
@@ -144,7 +144,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void UpdateConnections(this IController system) {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             string systemName = system.GetType().Name;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -157,7 +157,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void UpdateConnections<T>(this IController system) where T : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             string systemName = system.GetType().Name;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -170,7 +170,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void DisconnectAll(this IController system) {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             string systemName = system.GetType().Name;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
@@ -191,7 +191,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void DisconnectAll<T>(this IController system) where T : IController {
-            string contextKey = ProjectContext.activeContext.key;
+            string contextKey = ProjectContext.scene.key;
             string systemName = system.GetType().Name;
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {

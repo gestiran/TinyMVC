@@ -121,7 +121,7 @@ namespace TinyMVC.Boot {
         }
         
         internal void Add<TModel, TComponent>(TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
-            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<int, Model> data)) {
+            if (all.TryGetValue(ProjectContext.scene.key, out Dictionary<int, Model> data)) {
                 data.TryAdd(model.GetHashCode(), model);
                 
                 foreach (IComponentListeners listeners in _listeners.Values) {
@@ -131,7 +131,7 @@ namespace TinyMVC.Boot {
         }
         
         internal void Remove<TModel, TComponent>(TModel model, TComponent component) where TModel : Model where TComponent : ModelComponent {
-            if (all.TryGetValue(ProjectContext.activeContext.key, out Dictionary<int, Model> data)) {
+            if (all.TryGetValue(ProjectContext.scene.key, out Dictionary<int, Model> data)) {
                 int key = model.GetHashCode();
                 
                 if (data.TryGetValue(key, out Model target)) {

@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using TinyMVC.Boot.Contexts;
-using TinyReactive;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,7 +11,7 @@ namespace TinyMVC.Boot {
     public static class ProjectContext {
         public static ProjectComponents components { get; private set; }
         public static ProjectData data { get; private set; }
-        public static SceneContext activeContext { get; private set; }
+        public static SceneContext scene { get; private set; }
         
         private static Dictionary<string, SceneContext> _contexts;
         private static Dictionary<int, List<SceneContext>> _sceneContexts;
@@ -105,18 +104,6 @@ namespace TinyMVC.Boot {
             } while (loading.isDone == false);
         }
         
-        public static bool TryGetGlobalUnload(out UnloadPool unload) => TryGetGlobalUnload(activeContext.key, out unload);
-        
-        public static bool TryGetGlobalUnload(string contextKey, out UnloadPool unload) {
-            if (_contexts.TryGetValue(contextKey, out SceneContext context)) {
-                unload = context.unload;
-                return true;
-            }
-            
-            unload = null;
-            return false;
-        }
-        
     #if UNITY_EDITOR
         
         public static void LoadScene_Editor(string path, LoadSceneMode mode = LoadSceneMode.Single) {
@@ -149,7 +136,7 @@ namespace TinyMVC.Boot {
                 _sceneContexts.Add(sceneId, new List<SceneContext>() { context });
             }
             
-            activeContext = context;
+            scene = context;
             context.Create();
             await context.InitAsync();
         }
@@ -166,7 +153,6 @@ namespace TinyMVC.Boot {
             }
             
             context.Unload();
-            context.unload.Unload();
             
             _contexts.Remove(context.key);
             data.Remove(context.key);

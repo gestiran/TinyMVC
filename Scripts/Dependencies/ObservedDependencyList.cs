@@ -501,63 +501,98 @@ namespace TinyMVC.Dependencies {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener listener) => _onAdd.Add(listener);
+        public ObservedDependencyList<T> AddOnAddListener(ActionListener listener) {
+            _onAdd.Add(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener listener, UnloadPool unload) {
+        public ObservedDependencyList<T> AddOnAddListener<TUnload>(ActionListener listener, TUnload unload) where TUnload : IUnloadLink {
             _onAdd.Add(listener);
             unload.Add(new UnloadAction(() => _onAdd.Remove(listener)));
+            return this;
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener<T> listener) => _onAddWithValue.Add(listener);
+        public ObservedDependencyList<T> AddOnAddListener(ActionListener<T> listener) {
+            _onAddWithValue.Add(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener<T> listener, UnloadPool unload) {
+        public ObservedDependencyList<T> AddOnAddListener<TUnload>(ActionListener<T> listener, TUnload unload) where TUnload : IUnloadLink {
             _onAddWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onAddWithValue.Remove(listener)));
+            return this;
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener listener) => _onAdd.Remove(listener);
+        public ObservedDependencyList<T> RemoveOnAddListener(ActionListener listener) {
+            _onAdd.Remove(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener<T> listener) => _onAddWithValue.Remove(listener);
+        public ObservedDependencyList<T> RemoveOnAddListener(ActionListener<T> listener) {
+            _onAddWithValue.Remove(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener listener) => _onRemove.Add(listener);
+        public ObservedDependencyList<T> AddOnRemoveListener(ActionListener listener) {
+            _onRemove.Add(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) {
+        public ObservedDependencyList<T> AddOnRemoveListener<TUnload>(ActionListener listener, TUnload unload) where TUnload : IUnloadLink {
             _onRemove.Add(listener);
             unload.Add(new UnloadAction(() => _onRemove.Remove(listener)));
+            return this;
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener<T> listener) => _onRemoveWithValue.Add(listener);
+        public ObservedDependencyList<T> AddOnRemoveListener(ActionListener<T> listener) {
+            _onRemoveWithValue.Add(listener);
+            return this;
+        }
         
-        public void AddOnRemoveListener(ActionListener<T> listener, UnloadPool unload) {
+        public ObservedDependencyList<T> AddOnRemoveListener<TUnload>(ActionListener<T> listener, TUnload unload) where TUnload : IUnloadLink {
             _onRemoveWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(listener)));
+            return this;
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener listener) => _onRemove.Remove(listener);
+        public ObservedDependencyList<T> RemoveOnRemoveListener(ActionListener listener) {
+            _onRemove.Remove(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener<T> listener) => _onRemoveWithValue.Remove(listener);
+        public ObservedDependencyList<T> RemoveOnRemoveListener(ActionListener<T> listener) {
+            _onRemoveWithValue.Remove(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnClearListener(ActionListener listener) => _onClear.Add(listener);
+        public ObservedDependencyList<T> AddOnClearListener(ActionListener listener) {
+            _onClear.Add(listener);
+            return this;
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnClearListener(ActionListener listener, UnloadPool unload) {
+        public ObservedDependencyList<T> AddOnClearListener<TUnload>(ActionListener listener, TUnload unload) where TUnload : IUnloadLink {
             _onClear.Add(listener);
             unload.Add(new UnloadAction(() => _onClear.Remove(listener)));
+            return this;
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnClearListener(ActionListener listener) => _onClear.Remove(listener);
+        public ObservedDependencyList<T> RemoveOnClearListener(ActionListener listener) {
+            _onClear.Remove(listener);
+            return this;
+        }
         
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         
