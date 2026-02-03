@@ -10,9 +10,11 @@ using TinyMVC.Views;
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using TinyReactive;
 using TinyReactive.Fields;
+using TinyUtilities.Extensions.Global;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -30,6 +32,7 @@ namespace TinyMVC.Boot {
         
         internal override void Create() {
             unloadInternal = new UnloadPool();
+            cancellationInternal = cancellationInternal.Create();
             
             controllers = CreateControllers();
             models = CreateModels();
@@ -185,6 +188,7 @@ namespace TinyMVC.Boot {
     [DefaultExecutionOrder(-50)]
     public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext>, IUnloadLink {
         public string key { get; private set; }
+        public CancellationToken cancellation => cancellationInternal.Token;
         
         public ViewsContext views { get => viewsInternal; internal set => viewsInternal = value; }
         
@@ -208,6 +212,7 @@ namespace TinyMVC.Boot {
         internal ModelsContext models;
         internal ParametersContext parameters;
         internal UnloadPool unloadInternal;
+        internal CancellationTokenSource cancellationInternal;
         
         private void Awake() {
             key = gameObject.name;
@@ -282,7 +287,10 @@ namespace TinyMVC.Boot {
         
         protected virtual void InitWindows() { }
         
-        internal virtual void Unload() => unloadInternal.Unload();
+        internal virtual void Unload() {
+            unloadInternal.Unload();
+            cancellationInternal = cancellationInternal.Reset();
+        }
         
         internal abstract void Create();
         

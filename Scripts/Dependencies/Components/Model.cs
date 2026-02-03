@@ -31,40 +31,64 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener listener) => components.AddOnAddListener(listener);
+        public void AddOnAddListener(ActionListener listener) {
+            components.AddOnAddListener(listener);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener listener, UnloadPool unload) => components.AddOnAddListener(listener, unload);
+        public void AddOnAddListener<TUnload>(ActionListener listener, TUnload unload) where TUnload : IUnloadLink {
+            components.AddOnAddListener(listener, unload);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener<ModelComponent> listener) => components.AddOnAddListener(listener);
+        public void AddOnAddListener(ActionListener<ModelComponent> listener) {
+            components.AddOnAddListener(listener);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnAddListener(ActionListener<ModelComponent> listener, UnloadPool unload) => components.AddOnAddListener(listener, unload);
+        public void AddOnAddListener<TUnload>(ActionListener<ModelComponent> listener, TUnload unload) where TUnload : IUnloadLink {
+            components.AddOnAddListener(listener, unload);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener listener) => components.RemoveOnAddListener(listener);
+        public void RemoveOnAddListener(ActionListener listener) {
+            components.RemoveOnAddListener(listener);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnAddListener(ActionListener<ModelComponent> listener) => components.RemoveOnAddListener(listener);
+        public void RemoveOnAddListener(ActionListener<ModelComponent> listener) {
+            components.RemoveOnAddListener(listener);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener listener) => components.AddOnRemoveListener(listener);
+        public void AddOnRemoveListener(ActionListener listener) {
+            components.AddOnRemoveListener(listener);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener listener, UnloadPool unload) => components.AddOnRemoveListener(listener, unload);
+        public void AddOnRemoveListener<TUnload>(ActionListener listener, TUnload unload) where TUnload : IUnloadLink {
+            components.AddOnRemoveListener(listener, unload);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener<ModelComponent> listener) => components.AddOnRemoveListener(listener);
+        public void AddOnRemoveListener(ActionListener<ModelComponent> listener) {
+            components.AddOnRemoveListener(listener);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void AddOnRemoveListener(ActionListener<ModelComponent> listener, UnloadPool unload) => components.AddOnRemoveListener(listener, unload);
+        public void AddOnRemoveListener<TUnload>(ActionListener<ModelComponent> listener, TUnload unload) where TUnload : IUnloadLink {
+            components.AddOnRemoveListener(listener, unload);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener listener) => components.RemoveOnRemoveListener(listener);
+        public void RemoveOnRemoveListener(ActionListener listener) {
+            components.RemoveOnRemoveListener(listener);
+        }
         
         // Resharper disable Unity.ExpensiveCode
-        public void RemoveOnRemoveListener(ActionListener<ModelComponent> listener) => components.RemoveOnRemoveListener(listener);
+        public void RemoveOnRemoveListener(ActionListener<ModelComponent> listener) {
+            components.RemoveOnRemoveListener(listener);
+        }
         
     #if UNITY_EDITOR
         
