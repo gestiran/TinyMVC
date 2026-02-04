@@ -113,6 +113,10 @@ namespace TinyMVC.Boot.Contexts {
                 unload.Unload();
             }
             
+            if (ProjectContext.scene.unloads.Remove(controller, out UnloadPool globalUnload)) {
+                globalUnload.Unload();
+            }
+            
             if (_controllers.TryGetValue(system.GetType().Name, out List<IController> controllers)) {
                 if (_controllers.TryGetValue(controller.GetType().Name, out List<IController> subControllers)) {
                     for (int controllerId = 0; controllerId < subControllers.Count; controllerId++) {

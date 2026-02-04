@@ -197,6 +197,7 @@ namespace TinyMVC.Boot {
         internal List<IFixedTick> fixedTicks { get; private set; }
         internal List<ITick> ticks { get; private set; }
         internal List<ILateTick> lateTicks { get; private set; }
+        internal Dictionary<IController, UnloadPool> unloads { get; private set; }
         
     #if ODIN_INSPECTOR
         [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
@@ -220,6 +221,7 @@ namespace TinyMVC.Boot {
             fixedTicks = new List<IFixedTick>();
             ticks = new List<ITick>();
             lateTicks = new List<ILateTick>();
+            unloads = new Dictionary<IController, UnloadPool>();
             
             ProjectContext.AddContext(this, gameObject.scene.buildIndex);
             
@@ -289,6 +291,14 @@ namespace TinyMVC.Boot {
         
         internal virtual void Unload() {
             unloadInternal.Unload();
+            
+            foreach (UnloadPool unload in unloads.Values) {
+                if (unload.isUnloaded == false) {
+                    unload.Unload();
+                }
+            }
+            
+            unloads.Clear();
             cancellationInternal = cancellationInternal.Reset();
         }
         

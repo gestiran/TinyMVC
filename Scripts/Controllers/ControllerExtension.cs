@@ -2,9 +2,11 @@
 // Licensed under the MIT License. See LICENSE.md for details.
 
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
 using TinyMVC.Views;
+using TinyReactive;
 
 namespace TinyMVC.Controllers {
     public static class ControllerExtension {
@@ -209,6 +211,20 @@ namespace TinyMVC.Controllers {
                     context.Disconnect(system, controller);
                 }
             }
+        }
+        
+        [Pure]
+        public static UnloadPool UnloadPool<T>(this T controller) where T : IController => controller.UnloadPool(ProjectContext.scene);
+        
+        [Pure]
+        public static UnloadPool UnloadPool<T>(this T controller, SceneContext context) where T : IController {
+            if (context.unloads.TryGetValue(controller, out UnloadPool pool)) {
+                return pool;
+            }
+            
+            pool = new UnloadPool();
+            context.unloads.Add(controller, pool);
+            return pool;
         }
     }
 }
