@@ -527,6 +527,30 @@ namespace TinyMVC.Dependencies {
         }
         
         // Resharper disable Unity.ExpensiveCode
+        public ObservedDependencyList<T> AddOnAddListenerValue<TV>(ActionListener listener, IUnloadLink unload) where TV : T {
+            AddOnAddListener(v =>
+            {
+                if (v is TV) {
+                    listener.Invoke();
+                }
+            }, unload);
+            
+            return this;
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        public ObservedDependencyList<T> AddOnAddListenerValue<TV>(ActionListener<TV> listener, IUnloadLink unload) where TV : T {
+            AddOnAddListener(v =>
+            {
+                if (v is TV target) {
+                    listener.Invoke(target);
+                }
+            }, unload);
+            
+            return this;
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
         public ObservedDependencyList<T> RemoveOnAddListener(ActionListener listener) {
             _onAdd.Remove(listener);
             return this;
@@ -560,6 +584,30 @@ namespace TinyMVC.Dependencies {
         public ObservedDependencyList<T> AddOnRemoveListener<TUnload>(ActionListener<T> listener, TUnload unload) where TUnload : IUnloadLink {
             _onRemoveWithValue.Add(listener);
             unload.Add(new UnloadAction(() => _onRemoveWithValue.Remove(listener)));
+            return this;
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        public ObservedDependencyList<T> AddOnRemoveListenerValue<TV>(ActionListener listener, IUnloadLink unload) where TV : T {
+            AddOnRemoveListener(v =>
+            {
+                if (v is TV) {
+                    listener.Invoke();
+                }
+            }, unload);
+            
+            return this;
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        public ObservedDependencyList<T> AddOnRemoveListenerValue<TV>(ActionListener<TV> listener, IUnloadLink unload) where TV : T {
+            AddOnRemoveListener(v =>
+            {
+                if (v is TV target) {
+                    listener.Invoke(target);
+                }
+            }, unload);
+            
             return this;
         }
         

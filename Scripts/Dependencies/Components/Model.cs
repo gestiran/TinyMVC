@@ -51,6 +51,16 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         // Resharper disable Unity.ExpensiveCode
+        public void AddOnAddListener<T>(ActionListener listener, IUnloadLink unload) where T : ModelComponent {
+            components.AddOnAddListenerValue<T>(listener, unload);
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        public void AddOnAddListener<T>(ActionListener<T> listener, IUnloadLink unload) where T : ModelComponent {
+            components.AddOnAddListenerValue<T>(listener, unload);
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
         public void RemoveOnAddListener(ActionListener listener) {
             components.RemoveOnAddListener(listener);
         }
@@ -78,6 +88,16 @@ namespace TinyMVC.Dependencies.Components {
         // Resharper disable Unity.ExpensiveCode
         public void AddOnRemoveListener<TUnload>(ActionListener<ModelComponent> listener, TUnload unload) where TUnload : IUnloadLink {
             components.AddOnRemoveListener(listener, unload);
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        public void AddOnRemoveListener<T>(ActionListener listener, IUnloadLink unload) where T : ModelComponent {
+            components.AddOnRemoveListenerValue<T>(listener, unload);
+        }
+        
+        // Resharper disable Unity.ExpensiveCode
+        public void AddOnRemoveListener<T>(ActionListener<T> listener, IUnloadLink unload) where T : ModelComponent {
+            components.AddOnRemoveListenerValue<T>(listener, unload);
         }
         
         // Resharper disable Unity.ExpensiveCode
