@@ -12,6 +12,7 @@ using System;
 using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using TinyMVC.Parameters;
 using TinyReactive;
 using TinyReactive.Fields;
 using TinyUtilities.Extensions.Global;
@@ -222,6 +223,12 @@ namespace TinyMVC.Boot {
             ticks = new List<ITick>();
             lateTicks = new List<ILateTick>();
             unloads = new Dictionary<IController, UnloadPool>();
+            
+        #if UNITY_EDITOR
+            if (TinyMVCParameters.LoadFromResources().isEnableAutoReload) {
+                Reset();
+            }
+        #endif
             
             ProjectContext.AddContext(this, gameObject.scene.buildIndex);
             

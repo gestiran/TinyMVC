@@ -1,11 +1,15 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Dependencies;
 using TinyReactive;
 using TinyReactive.Extensions;
+using UnityEngine;
+using Binder = TinyMVC.Boot.Binding.Binder;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ModelsContext {
@@ -36,6 +40,14 @@ namespace TinyMVC.Boot.Contexts {
         internal void CreateBinders(string contextKey) {
             key = contextKey;
             Bind();
+            
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            
+            for (int i = 0; i < assemblies.Length; i++) {
+                foreach (RegisterBinderAttribute attribute in assemblies[i].GetCustomAttributes<RegisterBinderAttribute>()) {
+                    Debug.LogError($"Create: {attribute.binderType.Name} :: {attribute.priority}");
+                }
+            }
         }
         
         internal void Create() => Create(dependencies);
