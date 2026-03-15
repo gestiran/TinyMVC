@@ -4,12 +4,12 @@
 using System;
 using TinyMVC.Dependencies;
 using TinyReactive;
+using UnityEngine;
 
 namespace TinyMVC.Boot.Binding {
     /// <summary> The (internal API) factory responsible for initializing and loading models. </summary>
     public abstract class Binder : IBinder {
-        public abstract IDependency GetDependency();
-        
+        /// <summary> Unique model identifier required for save-load. </summary>
         protected string _key { get; private set; }
         
         /// <summary> Reference to the unload method, by default will be called when the current scene is unloaded. </summary>
@@ -60,12 +60,21 @@ namespace TinyMVC.Boot.Binding {
         /// <summary> Creates and initializes the model. </summary>
         /// <returns> The model is ready for work. </returns>
         public override IDependency GetDependency() {
-            T model = new T();
-            BindInternal(model);
-            Bind(model);
-            return model;
+            if (_isCreated) {
+                Debug.LogError($"{GetType().Name} - Self created!");
+                return _model;
+            }
+            
+            _isCreated = true;
+            
+            _model = new T();
+            BindInternal(_model);
+            Bind(_model);
+            return _model;
         }
         
+        /// <summary> Get the type of the model being created. </summary>
+        /// <returns> Type of model being created. </returns>
         internal override Type GetBindType() => typeof(T);
         
         /// <summary> Creates and initializes the model. </summary>

@@ -114,9 +114,13 @@ namespace TinyMVC.Dependencies {
         public void Dispose() {
             Reset();
             
-            if (_objects.Length > 0 && _objects[0] is IDisposable) {
-                foreach (T obj in _objects) {
-                    (obj as IDisposable).Dispose();
+            if (_objects.Length > 0 && _objects[0] is IDisposable first) {
+                first.Dispose();
+                
+                for (int objId = 1; objId < _objects.Length; objId++) {
+                    if (_objects[objId] is IDisposable other) {
+                        other.Dispose();
+                    }
                 }
             }
             

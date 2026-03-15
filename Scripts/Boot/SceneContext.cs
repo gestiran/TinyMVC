@@ -12,6 +12,7 @@ using System;
 using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using TinyMVC.Dependencies.Extensions;
 using TinyMVC.Parameters;
 using TinyReactive;
 using TinyReactive.Fields;
@@ -113,7 +114,7 @@ namespace TinyMVC.Boot {
             
             tempContainer = new DependencyContainer(runtimeDependencies);
             ProjectContext.data.tempContainer = tempContainer;
-            ResolveUtility.TryApply(models);
+            models.TryApplyResolving();
             
             models.Create();
             CreateModelsComponents(models.dependencies);
@@ -123,8 +124,8 @@ namespace TinyMVC.Boot {
             
             await controllers.InitAsync();
             
-            ResolveUtility.TryApply(controllers.systems);
-            ResolveUtility.TryApply(views.mainViews);
+            controllers.systems.TryApplyResolving();
+            views.mainViews.TryApplyResolving();
         }
         
         private void InstantiateComponents() {

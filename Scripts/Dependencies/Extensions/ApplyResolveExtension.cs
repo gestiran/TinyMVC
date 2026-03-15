@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TinyMVC.Boot;
 
 namespace TinyMVC.Dependencies.Extensions {
@@ -12,6 +13,18 @@ namespace TinyMVC.Dependencies.Extensions {
             DependencyContainer container = new DependencyContainer(dependencies);
             ProjectContext.data.tempContainer = container;
             target.ApplyResolving();
+        }
+        
+        internal static void TryApplyResolving<T>(this List<T> targets) {
+            for (int targetId = 0; targetId < targets.Count; targetId++) {
+                TryApplyResolving(targets[targetId]);
+            }
+        }
+        
+        internal static void TryApplyResolving<T>(this T target) {
+            if (target is IApplyResolving applyResolving) {
+                applyResolving.ApplyResolving();
+            }
         }
     }
 }
