@@ -1,7 +1,7 @@
-﻿# ProjectContextWindow.cs
+﻿# [`ProjectContextWindow`](Editor/ProjectContextWindow.cs)
 
 An extension for the Editor.
 
-Inherits from `OdinEditorWindow` in the Odin Inspector plugin.
+Inherits from `OdinEditorWindow` from the [OdinInspector](https://odininspector.com/) plugin.
 
-Displays a window listing fields of type `IController` in the Inspector window via `ControllersPropertyProcessor<T>`.
+Displays a window listing fields of type [`IController`](Documentation~/Scripts/Controllers/IController.md) in the Unity Inspector window via [`ControllersPropertyProcessor<T>`](Documentation~/Editor/ControllersPropertyProcessor.md).

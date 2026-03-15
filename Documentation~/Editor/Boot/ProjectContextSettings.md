@@ -1,8 +1,8 @@
-# ProjectContextSettings.cs
+# [`ProjectContextSettings`](Editor/Boot/ProjectContextSettings.cs)
 
 An extension for the Editor.
 
-Provides a `SettingsProvider` for the `ProjectSettings` window.
+Provides a `UnityEditor.SettingsProvider` for the `ProjectSettings` window.
 
 Allows you to edit additional settings via:
-- `AutoGenerateModule` - automatically generates the `SceneContext`.
+- [`AutoGenerateModule`](Documentation~/Editor/Boot/AutoGenerate/AutoGenerateModule.md) - automatically generates the [`SceneContext`](Documentation~/Scripts/Boot/SceneContext.md).
