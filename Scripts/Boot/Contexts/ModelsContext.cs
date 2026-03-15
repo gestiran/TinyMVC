@@ -41,13 +41,13 @@ namespace TinyMVC.Boot.Contexts {
             key = contextKey;
             Bind();
             
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            
-            for (int i = 0; i < assemblies.Length; i++) {
-                foreach (RegisterBinderAttribute attribute in assemblies[i].GetCustomAttributes<RegisterBinderAttribute>()) {
-                    Debug.LogError($"Create: {attribute.binderType.Name} :: {attribute.priority}");
-                }
-            }
+            // Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            //
+            // for (int i = 0; i < assemblies.Length; i++) {
+            //     foreach (RegisterBinderAttribute attribute in assemblies[i].GetCustomAttributes<RegisterBinderAttribute>()) {
+            //         Debug.LogError($"Create: {attribute.binderType.Name} :: {attribute.priority}");
+            //     }
+            // }
         }
         
         internal void Create() => Create(dependencies);
