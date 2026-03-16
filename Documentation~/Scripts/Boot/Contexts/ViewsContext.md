@@ -3,8 +3,8 @@
 This is a container for the scene's [`View`](/Documentation~/Scripts/Views/View.md).
 
 Stores components inside:
-1. `_assets` - manually added components
-2. `_generated` - for objects automatically found in the scene
+- `_assets` - manually added components
+- `_generated` - for objects automatically found in the scene
 
 In the Editor, it provides the Unity `Reset` method to automatically search for objects with the [`IGeneratedContext`](/Documentation~/Scripts/Views/Generated/IGeneratedContext.md) interface, sort them by [`IGeneratedPriority`](/Documentation~/Scripts/Views/Generated/IGeneratedPriority.md), and populate the `_generated` array.
 

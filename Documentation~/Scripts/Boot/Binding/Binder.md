@@ -11,3 +11,5 @@ Implements a pattern for creating an instance of a model of type `T`, ensuring s
 Extension is possible via [`BinderExtension`](/Documentation~/Scripts/Boot/Binding/BinderExtension.md).
 
 There is a separate [`ActorBinder`](/Documentation~/Scripts/Boot/Binding/ActorBinder.md) for initializing [`Actor`](/Documentation~/Scripts/Dependencies/Components/Actor.md) models with auto-binding to [`View`](/Documentation~/Scripts/Views/View.md).
+
+Used in [`BinderSystem`](/Documentation~/Scripts/Boot/Binding/BinderSystem.md) and [`ModelsContext`](/Documentation~/Scripts/Boot/Contexts/ModelsContext.md).
