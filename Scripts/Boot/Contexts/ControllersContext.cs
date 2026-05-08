@@ -30,7 +30,7 @@ namespace TinyMVC.Boot.Contexts {
     #endif
         private readonly Dictionary<string, List<IController>> _controllers;
         
-        internal List<ActionListener> initLazyList;
+        internal List<ActionListener> initLazyList { get; private set; }
         
         private static EmptyContext _empty;
         
@@ -58,7 +58,11 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void CreateControllers() => Create();
         
-        internal void Init() {
+        public void Init() {
+            if (initLazyList == null) {
+                return;
+            }
+            
             foreach (ActionListener listener in initLazyList) {
                 listener.Invoke();
             }
