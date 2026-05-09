@@ -274,6 +274,19 @@ namespace TinyMVC.Boot {
         }
         
         private void OnDestroy() {
+            if (unloadInternal == null) {
+            #if UNITY_EDITOR
+                
+                if (key == null) {
+                    key = GetType().Name;
+                }
+                
+                Debug.LogError($"SceneContext.OnDestroy - Invalid context {key} unload, GameObject disabled!");
+                
+            #endif
+                return;
+            }
+            
             if (unloadInternal.isUnloaded) {
                 return;
             }
@@ -298,7 +311,11 @@ namespace TinyMVC.Boot {
         protected virtual void InitWindows() { }
         
         internal virtual void Unload() {
-            unloadInternal.Unload();
+            try {
+                unloadInternal.Unload();
+            } catch (Exception exception) {
+                Debug.LogError(new Exception("SceneContext.Unload with exception!", exception));
+            }
             
             foreach (UnloadPool unload in unloads.Values) {
                 if (unload.isUnloaded == false) {
