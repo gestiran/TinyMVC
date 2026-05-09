@@ -30,7 +30,7 @@ namespace TinyMVC.Boot {
         public static async UniTask LoadScene(int sceneBuildIndex, bool clearAssets = false) {
             int currentSceneId = SceneManager.GetActiveScene().buildIndex;
             
-            RemoveContexts(currentSceneId);
+            await RemoveContexts(currentSceneId);
             
             await UniTask.Delay(_LOAD_ITERATION, true);
             
@@ -158,7 +158,7 @@ namespace TinyMVC.Boot {
             data.Remove(context.key);
         }
         
-        private static void RemoveContexts(int sceneBuildIndex) {
+        private static async UniTask RemoveContexts(int sceneBuildIndex) {
             if (_sceneContexts.TryGetValue(sceneBuildIndex, out List<SceneContext> contexts) == false) {
                 return;
             }
@@ -166,7 +166,7 @@ namespace TinyMVC.Boot {
             SceneContext[] contextsArray = contexts.ToArray();
             
             for (int contextId = 0; contextId < contextsArray.Length; contextId++) {
-                contextsArray[contextId].Remove();
+                await contextsArray[contextId].Remove();
             }
             
             contexts.Clear();

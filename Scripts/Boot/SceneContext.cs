@@ -73,6 +73,8 @@ namespace TinyMVC.Boot {
             views.CheckAndAdd(fixedTicks);
             views.CheckAndAdd(ticks);
             views.CheckAndAdd(lateTicks);
+            
+            InitializationComplete();
         }
         
         internal override void Unload() {
@@ -217,6 +219,10 @@ namespace TinyMVC.Boot {
         internal UnloadPool unloadInternal;
         internal CancellationTokenSource cancellationInternal;
         
+        private bool _isInitializationComplete;
+        
+        private const float _CHECK_INITIALIZATION_TIMEOUT = 5f;
+        
         private void Awake() {
             key = gameObject.name;
             
@@ -238,10 +244,7 @@ namespace TinyMVC.Boot {
         #endif
         }
         
-        private IEnumerator Start() {
-            yield return new WaitForEndOfFrame();
-            InitWindows();
-        }
+        private void Start() => StartCoroutine(InitWindowsProcess());
         
         private void FixedUpdate() {
             for (int tickId = 0; tickId < fixedTicks.Count; tickId++) {
@@ -278,7 +281,7 @@ namespace TinyMVC.Boot {
             #if UNITY_EDITOR
                 
                 if (key == null) {
-                    key = GetType().Name;
+                    key = $"t:{GetType().Name}";
                 }
                 
                 Debug.LogError($"SceneContext.OnDestroy - Invalid context {key} unload, GameObject disabled!");
@@ -291,12 +294,30 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            Remove();
+            Remove().Forget();
+        }
+        
+        private IEnumerator InitWindowsProcess() {
+            yield return new WaitForEndOfFrame();
+            
+            try {
+                InitWindows();
+            } catch (Exception exception) {
+                Debug.LogError(new Exception("SceneContext.InitWindows with exception!", exception));
+            }
         }
         
         public T Add<T>(T unload) where T : IUnload => unloadInternal.Add(unload);
         
-        internal void Remove() {
+        internal async UniTask Remove() {
+            for (float t = 0; t < _CHECK_INITIALIZATION_TIMEOUT; t += Time.unscaledDeltaTime) {
+                if (_isInitializationComplete) {
+                    break;
+                }
+                
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+            
             fixedTicks.Clear();
             ticks.Clear();
             lateTicks.Clear();
@@ -309,6 +330,8 @@ namespace TinyMVC.Boot {
         }
         
         protected virtual void InitWindows() { }
+        
+        internal void InitializationComplete() => _isInitializationComplete = true;
         
         internal virtual void Unload() {
             try {
