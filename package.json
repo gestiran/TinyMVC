@@ -1,38 +1,38 @@
 {
-  "name": "com.ges.tinymvc",
-  "displayName": "Tiny MVC",
-  "author": {
-    "name": "Derek Sliman",
-    "url": "https://github.com/gestiran",
-    "email": "lionext.studio@gmail.com"
-  },
-  "version": "1.16.4",
-  "unity": "2018.4",
-  "description": "Model View Controller initialization system.",
-  "keywords": [
-    "mvc",
-    "bootstrap",
-    "di",
-    "model",
-    "view",
-    "controller",
-    "boot"
-  ],
-  "license": "MIT",
-  "category": "Utilities",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/gestiran/TinyMVC"
-  },
-  "dependencies": {
-    "com.unity.modules.uielements": "1.0.0",
-    "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.cysharp.unitask": "2.5.10",
-    "com.ges.tinyutilities": "1.2.26",
-    "com.ges.tinyreactive": "1.2.8"
-  },
-  "publishConfig": {
-    "registry": "https://package.openupm.com"
-  },
-  "licensesUrl": "https://github.com/gestiran/TinyMVC/blob/main/LICENSE.md"
+    "name": "com.ges.tinymvc",
+    "displayName": "Tiny MVC",
+    "author": {
+        "name": "Derek Sliman",
+        "url": "https://github.com/gestiran",
+        "email": "lionext.studio@gmail.com"
+    },
+    "version": "1.16.4",
+    "unity": "2018.4",
+    "description": "Model View Controller initialization system.",
+    "keywords": [
+        "mvc",
+        "bootstrap",
+        "di",
+        "model",
+        "view",
+        "controller",
+        "boot"
+    ],
+    "license": "MIT",
+    "category": "Utilities",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/gestiran/TinyMVC"
+    },
+    "dependencies": {
+        "com.unity.modules.uielements": "1.0.0",
+        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.cysharp.unitask": "2.5.10",
+        "com.ges.tinyutilities": "1.2.29",
+        "com.ges.tinyreactive": "1.3.0"
+    },
+    "publishConfig": {
+        "registry": "https://package.openupm.com"
+    },
+    "licensesUrl": "https://github.com/gestiran/TinyMVC/blob/main/LICENSE.md"
 }
