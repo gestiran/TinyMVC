@@ -21,8 +21,9 @@ namespace TinyMVC.Dependencies {
 #if ODIN_INSPECTOR && UNITY_EDITOR
     [HideLabel, ShowInInspector, HideReferenceObjectPicker, HideDuplicateReferenceBox]
 #endif
-    public sealed class ObservedDependencyList<T> : IEnumerable<T>, IEnumerator<T>, IDependency where T : IDependency {
-        public int count => _list.Count;
+    public sealed class ObservedDependencyList<T> : IList<T>, IEnumerator<T>, IDependency where T : IDependency {
+        public int Count => _list.Count;
+        public bool IsReadOnly => false;
         public T Current => _list[_currentId];
         object IEnumerator.Current => _list[_currentId];
         
@@ -321,6 +322,8 @@ namespace TinyMVC.Dependencies {
             }
         }
         
+        public void CopyTo(T[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
+        
         public bool Remove([NotNull] T value) {
             int index = _list.IndexOf(value);
             
@@ -475,6 +478,26 @@ namespace TinyMVC.Dependencies {
         }
         
         public int IndexOf(T element) => _list.IndexOf(element);
+        
+        public void Insert(int index, T item) {
+            _list.Insert(index, item);
+            
+            if (_onAdd.isDirty) {
+                _onAdd.Apply();
+            }
+            
+            if (_onAddWithValue.isDirty) {
+                _onAddWithValue.Apply();
+            }
+            
+            for (int i = 0; i < _onAdd.count; i++) {
+                _onAdd[i].Invoke();
+            }
+            
+            for (int i = 0; i < _onAddWithValue.count; i++) {
+                _onAddWithValue[i].Invoke(item);
+            }
+        }
         
         public bool Contains(T element) => _list.Contains(element);
         
