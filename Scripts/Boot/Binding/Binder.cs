@@ -81,6 +81,13 @@ namespace TinyMVC.Boot.Binding {
         /// <returns> The model is ready for work. </returns>
         public T Bind() => (T)GetDependency();
         
+        public T ReBind() {
+            Reset();
+            return Bind();
+        }
+        
+        public void Reset() => _isCreated = false;
+        
         /// <summary> Initializes the model parameters. </summary>
         /// <param name="model"> Model reference after <see cref="TinyMVC.Boot.Binding.Binder{T}.BindInternal">internal bind</see> process. </param>
         protected abstract void Bind(T model);
