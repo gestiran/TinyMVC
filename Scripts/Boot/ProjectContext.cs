@@ -16,7 +16,6 @@ namespace TinyMVC.Boot {
         private static Dictionary<string, SceneContext> _contexts;
         private static Dictionary<int, List<SceneContext>> _sceneContexts;
         
-        private const int _NULL_SCENE_ID = 1;
         private const int _LOAD_ITERATION = 250;
         
         public static IEnumerable<SceneContext> Contexts() {
@@ -35,16 +34,7 @@ namespace TinyMVC.Boot {
             await UniTask.Delay(_LOAD_ITERATION, true);
             
             if (currentSceneId == sceneBuildIndex || clearAssets) {
-                AsyncOperation loadNull = SceneManager.LoadSceneAsync(_NULL_SCENE_ID, LoadSceneMode.Additive);
-                
-                if (loadNull == null) {
-                    Debug.LogError("Unity internal load scene error!");
-                    return;
-                }
-                
-                do {
-                    await UniTask.Delay(_LOAD_ITERATION, true);
-                } while (loadNull.isDone == false);
+                SceneManager.CreateScene("Null");
                 
                 AsyncOperation unloadCurrent = SceneManager.UnloadSceneAsync(currentSceneId);
                 
