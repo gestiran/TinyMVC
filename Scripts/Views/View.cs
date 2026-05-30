@@ -216,6 +216,7 @@ namespace TinyMVC.Views {
                     pool[connectionId].root = null;
                     pool[connectionId].connectState = ConnectState.Disconnected;
                     _connections.Remove(pool[connectionId]);
+                    pool[connectionId].DisconnectAll<T>();
                     context.Disconnect(pool[connectionId]);
                 }
             }
@@ -243,6 +244,7 @@ namespace TinyMVC.Views {
                     pool[connectionId].root = null;
                     pool[connectionId].connectState = ConnectState.Disconnected;
                     _connections.Remove(pool[connectionId]);
+                    pool[connectionId].DisconnectAll<T>(contextKey);
                     context.Disconnect(pool[connectionId]);
                 }
             }
@@ -259,6 +261,7 @@ namespace TinyMVC.Views {
                     
                     view.root = null;
                     view.connectState = ConnectState.Disconnected;
+                    view.DisconnectAll();
                     context.Disconnect(view);
                 }
                 
@@ -277,6 +280,7 @@ namespace TinyMVC.Views {
                     
                     view.root = null;
                     view.connectState = ConnectState.Disconnected;
+                    view.DisconnectAll(contextKey);
                     context.Disconnect(view);
                 }
                 
