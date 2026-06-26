@@ -7,7 +7,7 @@ using System.Reflection;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Dependencies;
 using TinyReactive;
-using TinyReactive.Extensions;
+using TinyReactive.Fields;
 using UnityEngine;
 using Binder = TinyMVC.Boot.Binding.Binder;
 

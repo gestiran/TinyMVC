@@ -9,7 +9,6 @@ using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
 using TinyReactive;
-using TinyReactive.Extensions;
 using TinyReactive.Fields;
 
 #if ODIN_INSPECTOR && UNITY_EDITOR

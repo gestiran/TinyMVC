@@ -11,7 +11,7 @@ using TinyMVC.Loop.Extensions;
 using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using TinyReactive;
-using TinyReactive.Extensions;
+using TinyReactive.Fields;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
