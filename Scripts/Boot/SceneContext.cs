@@ -16,7 +16,7 @@ using TinyMVC.Dependencies.Extensions;
 using TinyMVC.Parameters;
 using TinyReactive;
 using TinyReactive.Fields;
-using TinyUtilities.Extensions.Global;
+using TinyUtilities.Extensions;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;

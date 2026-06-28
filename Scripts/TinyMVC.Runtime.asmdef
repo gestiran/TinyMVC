@@ -2,15 +2,16 @@
     "name": "TinyMVC.Runtime",
     "rootNamespace": "TinyMVC",
     "references": [
-        "UniTask",
         "TinyUtilities.Runtime",
-        "TinyReactive.Runtime"
+        "TinyReactive.Runtime",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
+        "com.ges.tinyutilities.dll",
         "Sirenix.OdinInspector.Attributes.dll",
         "Sirenix.Serialization.dll",
         "Sirenix.Serialization.Config.dll",

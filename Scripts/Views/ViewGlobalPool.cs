@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TinyMVC.Views.Extensions;
-using TinyUtilities.Unity;
+using TinyUtilities;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;

@@ -5,7 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using TinyUtilities.Extensions.Global;
+using TinyUtilities.Extensions;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
