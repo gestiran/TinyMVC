@@ -7,8 +7,8 @@ namespace TinyMVC.Modules.Saving.Reactive.Handlers {
         
         public void Save(T value, string key, params string[] group);
         
-        public T Load(T defaultValue, string key);
+        public bool TryLoad(T defaultValue, out T value, string key);
         
-        public T Load(T defaultValue, string key, params string[] group);
+        public bool TryLoad(T defaultValue, out T value, string key, params string[] group);
     }
 }

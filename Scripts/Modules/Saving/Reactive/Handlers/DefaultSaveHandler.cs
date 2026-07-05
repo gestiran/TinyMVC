@@ -13,8 +13,22 @@ namespace TinyMVC.Modules.Saving.Reactive.Handlers {
         
         public void Save(T value, string key, params string[] group) => SaveService.Save(value, key, group);
         
-        public T Load(T defaultValue, string key) => SaveService.Load(defaultValue, key);
+        public bool TryLoad(T defaultValue, out T value, string key) {
+            if (SaveService.TryLoad(out value, key)) {
+                return true;
+            }
+            
+            value = defaultValue;
+            return false;
+        }
         
-        public T Load(T defaultValue, string key, params string[] group) => SaveService.Load(defaultValue, key, group);
+        public bool TryLoad(T defaultValue, out T value, string key, params string[] group) {
+            if (SaveService.TryLoad(out value, key, group)) {
+                return true;
+            }
+            
+            value = defaultValue;
+            return false;
+        }
     }
 }

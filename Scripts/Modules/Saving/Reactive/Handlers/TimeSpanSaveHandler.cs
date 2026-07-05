@@ -15,8 +15,24 @@ namespace TinyMVC.Modules.Saving.Reactive.Handlers {
         
         public void Save(TimeSpan value, string key, params string[] group) => SaveService.Save(value.Ticks, key, group);
         
-        public TimeSpan Load(TimeSpan defaultValue, string key) => new TimeSpan(SaveService.Load(defaultValue.Ticks, key));
+        public bool TryLoad(TimeSpan defaultValue, out TimeSpan value, string key) {
+            if (SaveService.TryLoad(out long savedTicks, key)) {
+                value = new TimeSpan(savedTicks);
+                return true;
+            }
+            
+            value = defaultValue;
+            return false;
+        }
         
-        public TimeSpan Load(TimeSpan defaultValue, string key, params string[] group) => new TimeSpan(SaveService.Load(defaultValue.Ticks, key, group));
+        public bool TryLoad(TimeSpan defaultValue, out TimeSpan value, string key, params string[] group) {
+            if (SaveService.TryLoad(out long savedTicks, key, group)) {
+                value = new TimeSpan(savedTicks);
+                return true;
+            }
+            
+            value = defaultValue;
+            return false;
+        }
     }
 }

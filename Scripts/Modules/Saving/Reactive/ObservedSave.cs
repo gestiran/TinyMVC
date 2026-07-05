@@ -7,6 +7,8 @@ using TinyReactive.Fields;
 
 namespace TinyMVC.Modules.Saving.Reactive {
     public class ObservedSave<T> : Observed<T> {
+        public bool has { get; private set; }
+        
         private ActionListener<T> _save;
         
         public ObservedSave(string key) : this(EmptyValidate, default, DefaultSaveHandler<T>.instance, key) { }
@@ -20,7 +22,8 @@ namespace TinyMVC.Modules.Saving.Reactive {
         public ObservedSave(T defaultValue, ISaveHandler<T> handler, string key) : this(EmptyValidate, defaultValue, handler, key) { }
         
         public ObservedSave(Func<T, T> validate, T defaultValue, ISaveHandler<T> handler, string key) : base(defaultValue) {
-            _value = validate.Invoke(handler.Load(defaultValue, key));
+            has = handler.TryLoad(defaultValue, out T loaded, key);
+            value = validate.Invoke(loaded);
             _save = newValue => handler.Save(newValue, key);
         }
         
@@ -35,13 +38,15 @@ namespace TinyMVC.Modules.Saving.Reactive {
         public ObservedSave(T defaultValue, ISaveHandler<T> handler, string key, params string[] group) : this(EmptyValidate, defaultValue, handler, key, group) { }
         
         public ObservedSave(Func<T, T> validate, T defaultValue, ISaveHandler<T> handler, string key, params string[] group) : base(defaultValue) {
-            _value = validate.Invoke(handler.Load(defaultValue, key, group));
+            has = handler.TryLoad(defaultValue, out T loaded, key, group);
+            value = validate.Invoke(loaded);
             _save = newValue => handler.Save(newValue, key, group);
         }
         
         public override void Set(T newValue) {
             base.Set(newValue);
             _save.Invoke(newValue);
+            has = true;
         }
         
         public override void Unload() {
