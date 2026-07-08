@@ -3,7 +3,8 @@
     "rootNamespace": "TinyMVC",
     "references": [
         "GUID:58c74cb7d7df1a17dba51822087c325e",
-        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f"
+        "GUID:1cb56dd61fddbfa3bb4f75e78d580f7f",
+        "GUID:aaa14cf47702d2c47bead0fc7b809b22"
     ],
     "includePlatforms": [
         "Editor"
@@ -12,8 +13,12 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
+        "com.ges.tinyreactive.dll",
         "Sirenix.Serialization.dll",
-        "Sirenix.Serialization.Config.dll"
+        "Sirenix.Serialization.Config.dll",
+        "Sirenix.OdinInspector.Attributes.dll",
+        "Sirenix.OdinInspector.Editor.dll",
+        "Sirenix.Utilities.Editor.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
