@@ -135,7 +135,7 @@ namespace TinyMVC.Boot {
                 int key = model.GetHashCode();
                 
                 if (data.TryGetValue(key, out Model target)) {
-                    if (target.components.count == 0) {
+                    if (target.components.Count == 0) {
                         data.Remove(key);
                     }
                     
@@ -151,7 +151,7 @@ namespace TinyMVC.Boot {
             
             foreach (Dictionary<int, Model> data in all.Values) {
                 foreach (Model model in data.Values) {
-                    foreach (ModelComponent component in model.components.root.Values) {
+                    foreach (ModelComponent component in model.components.Values) {
                         if (component is T other) {
                             temp.Add(new ComponentLink<T>(model, other));
                         }
@@ -169,7 +169,7 @@ namespace TinyMVC.Boot {
             
             if (all.TryGetValue(contextKey, out Dictionary<int, Model> data)) {
                 foreach (Model model in data.Values) {
-                    foreach (ModelComponent component in model.components.root.Values) {
+                    foreach (ModelComponent component in model.components.Values) {
                         if (component is T other) {
                             temp.Add(new ComponentLink<T>(model, other));
                         }

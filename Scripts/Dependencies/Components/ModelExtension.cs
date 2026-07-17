@@ -42,7 +42,8 @@ namespace TinyMVC.Dependencies.Components {
             return false;
         }
         
-        public static void RemoveComponents<TModel, TComponent>(this TModel model, TComponent components) where TModel : Model where TComponent : IEnumerable<ModelComponent> {
+        public static void RemoveComponents<TModel, TComponent>(this TModel model, TComponent components)
+            where TModel : Model where TComponent : IEnumerable<ModelComponent> {
             foreach (ModelComponent component in components) {
                 string key = component.GetType().FullName;
                 
@@ -54,7 +55,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public static bool IsHaveComponent<T>(this Model model) {
-            foreach (ModelComponent other in model.components.root.Values) {
+            foreach (ModelComponent other in model.components.Values) {
                 if (other is T) {
                     return true;
                 }
@@ -64,7 +65,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public static bool IsHaveComponent<T>(this Model model, T component) {
-            foreach (ModelComponent other in model.components.root.Values) {
+            foreach (ModelComponent other in model.components.Values) {
                 if (other.Equals(component)) {
                     return true;
                 }
@@ -74,7 +75,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public static bool TryGetComponent<T>(this Model model, out T component) {
-            foreach (ModelComponent other in model.components.root.Values) {
+            foreach (ModelComponent other in model.components.Values) {
                 if (other is T target) {
                     component = target;
                     return true;
@@ -86,7 +87,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public static IEnumerable<T> ForEach<T>(this Model model) {
-            foreach (ModelComponent component in model.components.ForEachValues()) {
+            foreach (ModelComponent component in model.components.Values) {
                 if (component is T target) {
                     yield return target;
                 }
@@ -94,7 +95,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public static IEnumerable<(T1, T2)> ForEach<T1, T2>(this Model model) {
-            IEnumerable<ModelComponent> values = model.components.ForEachValues();
+            IEnumerable<ModelComponent> values = model.components.Values;
             
             foreach (ModelComponent component in values) {
                 if (component is not T1 target1) {
@@ -110,7 +111,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public static IEnumerable<(T1, T2, T3)> ForEach<T1, T2, T3>(this Model model) {
-            IEnumerable<ModelComponent> values = model.components.ForEachValues();
+            IEnumerable<ModelComponent> values = model.components.Values;
             
             foreach (ModelComponent component in values) {
                 if (component is not T1 target1) {
@@ -130,7 +131,7 @@ namespace TinyMVC.Dependencies.Components {
         }
         
         public static IEnumerable<(T1, T2, T3, T4)> ForEach<T1, T2, T3, T4>(this Model model) {
-            IEnumerable<ModelComponent> values = model.components.ForEachValues();
+            IEnumerable<ModelComponent> values = model.components.Values;
             
             foreach (ModelComponent component in values) {
                 if (component is not T1 target1) {

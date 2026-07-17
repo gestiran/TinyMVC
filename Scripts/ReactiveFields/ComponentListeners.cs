@@ -30,7 +30,7 @@ namespace TinyMVC.ReactiveFields {
                     _addListeners.Apply();
                 }
                 
-                for (int i = 0; i < _addListeners.count; i++) {
+                for (int i = 0; i < _addListeners.Count; i++) {
                     _addListeners[i].Invoke(targetModel, targetComponent);
                 }
             }
@@ -42,7 +42,7 @@ namespace TinyMVC.ReactiveFields {
                     _removeListeners.Apply();
                 }
                 
-                for (int i = 0; i < _removeListeners.count; i++) {
+                for (int i = 0; i < _removeListeners.Count; i++) {
                     _removeListeners[i].Invoke(targetModel, targetComponent);
                 }
             }
