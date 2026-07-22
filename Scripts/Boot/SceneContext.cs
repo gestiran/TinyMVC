@@ -409,9 +409,7 @@ namespace TinyMVC.Boot {
                 // Do nothing, app closed
             }
             
-            unloadInternal.Clear();
-            unloadInternal.Unload();
-            
+            unloadInternal = unloadInternal.Recreate();
             Application.quitting -= MarkRemoved;
         }
         
