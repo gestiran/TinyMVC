@@ -11,12 +11,16 @@ namespace TinyMVC.Modules.Saving.Reactive.Handlers {
         
         private DateTimeSaveHandler() { }
         
-        public void Save(DateTime value, string key) => SaveService.Save(value.Ticks, key);
+        public void Save(DateTime value, string key) {
+            DefaultSaveHandler<long>.instance.Save(value.Ticks, key);
+        }
         
-        public void Save(DateTime value, string key, params string[] group) => SaveService.Save(value.Ticks, key, group);
+        public void Save(DateTime value, string key, params string[] group) {
+            DefaultSaveHandler<long>.instance.Save(value.Ticks, key, group);
+        }
         
         public bool TryLoad(DateTime defaultValue, out DateTime value, string key) {
-            if (SaveService.TryLoad(out long savedTicks, key)) {
+            if (DefaultSaveHandler<long>.instance.TryLoad(defaultValue.Ticks, out long savedTicks, key)) {
                 value = new DateTime(savedTicks);
                 return true;
             }
@@ -26,7 +30,7 @@ namespace TinyMVC.Modules.Saving.Reactive.Handlers {
         }
         
         public bool TryLoad(DateTime defaultValue, out DateTime value, string key, params string[] group) {
-            if (SaveService.TryLoad(out long savedTicks, key, group)) {
+            if (DefaultSaveHandler<long>.instance.TryLoad(defaultValue.Ticks, out long savedTicks, key, group)) {
                 value = new DateTime(savedTicks);
                 return true;
             }
