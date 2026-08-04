@@ -3,6 +3,7 @@
     "rootNamespace": "TinyMVC",
     "references": [
         "TinyMVC.Runtime",
+        "TinyReactive.Core",
         "TinyServices.Windows.Runtime",
         "Unity.RenderPipelines.Universal.Runtime"
     ],
@@ -11,7 +12,6 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "com.ges.tinyreactive.dll",
         "Sirenix.OdinInspector.Attributes.dll",
         "Sirenix.Serialization.dll"
     ],
