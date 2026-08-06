@@ -2,6 +2,7 @@
     "name": "TinyMVC.Runtime",
     "rootNamespace": "TinyMVC",
     "references": [
+        "TinyMVC.Core",
         "TinyUtilities.Core",
         "TinyUtilities.Runtime",
         "TinyReactive.Core",

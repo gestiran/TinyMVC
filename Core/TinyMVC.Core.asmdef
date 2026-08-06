@@ -1,0 +1,17 @@
+{
+    "name": "TinyMVC.Core",
+    "rootNamespace": "TinyMVC",
+    "references": [
+        "TinyUtilities.Core",
+        "TinyReactive.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

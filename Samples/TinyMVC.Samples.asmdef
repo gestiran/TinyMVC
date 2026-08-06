@@ -2,6 +2,7 @@
     "name": "TinyMVC.Samples",
     "rootNamespace": "TinyMVC",
     "references": [
+        "TinyMVC.Core",
         "TinyMVC.Runtime",
         "TinyReactive.Core",
         "TinyServices.Windows.Runtime",

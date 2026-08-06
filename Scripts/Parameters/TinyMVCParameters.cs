@@ -25,10 +25,12 @@ namespace TinyMVC.Parameters {
         }
         
     #if UNITY_EDITOR
+        
         internal void ChangeAutoReload(bool value) {
             isEnableAutoReload = value;
             EditorUtility.SetDirty(this);
         }
+        
     #endif
     }
 }

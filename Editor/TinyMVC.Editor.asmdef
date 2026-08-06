@@ -2,6 +2,7 @@
     "name": "TinyMVC.Editor",
     "rootNamespace": "TinyMVC",
     "references": [
+        "TinyMVC.Core",
         "TinyMVC.Runtime",
         "TinyMVC.Modules.Saving",
         "TinyUtilities.Core",
