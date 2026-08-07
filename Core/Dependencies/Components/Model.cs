@@ -5,18 +5,8 @@ using System;
 using TinyReactive;
 using TinyReactive.Fields;
 
-#if ODIN_INSPECTOR && UNITY_EDITOR
-using Sirenix.OdinInspector;
-#endif
-
 namespace TinyMVC.Dependencies.Components {
-#if ODIN_INSPECTOR && UNITY_EDITOR
-    [HideReferenceObjectPicker, HideDuplicateReferenceBox]
-#endif
     public abstract class Model : IDependency, IEquatable<Model> {
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, HideLabel]
-    #endif
         internal readonly ObservedDictionary<string, ModelComponent> components;
         
         private readonly int _id;
@@ -109,13 +99,6 @@ namespace TinyMVC.Dependencies.Components {
         public void RemoveOnRemoveListener(ActionListener<ModelComponent> listener) {
             components.RemoveOnRemoveListener(listener);
         }
-        
-    #if UNITY_EDITOR
-        
-        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Reset_Editor() => _globalId = 0;
-        
-    #endif
         
         public bool Equals(Model other) => other != null && other._id == _id;
         

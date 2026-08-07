@@ -8,7 +8,7 @@ using Sirenix.OdinInspector.Editor;
 using TinyMVC.Controllers;
 
 namespace TinyMVC.Editor.Controllers {
-    public sealed class IControllerAttributeProcessor : OdinAttributeProcessor<IController> {
+    internal sealed class IControllerAttributeProcessor : OdinAttributeProcessor<IController> {
         public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes) {
             attributes.Add(new InlinePropertyAttribute());
             attributes.Add(new HideReferenceObjectPickerAttribute());

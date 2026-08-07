@@ -9,7 +9,7 @@ using Sirenix.OdinInspector.Editor;
 using TinyMVC.Dependencies;
 
 namespace TinyMVC.Editor.Dependencies {
-    public sealed class DependencyPoolAttributeProcessor<T> : OdinAttributeProcessor<DependencyPool<T>> where T : IDependency {
+    internal sealed class DependencyPoolAttributeProcessor<T> : OdinAttributeProcessor<DependencyPool<T>> where T : IDependency {
         public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes) {
             attributes.Add(new HideLabelAttribute());
             attributes.Add(new HideReferenceObjectPickerAttribute());

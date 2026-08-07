@@ -8,7 +8,7 @@ using Sirenix.OdinInspector.Editor;
 using TinyMVC.Dependencies;
 
 namespace TinyMVC.Editor.Dependencies {
-    public sealed class IDependencyAttributeProcessor : OdinAttributeProcessor<IDependency> {
+    internal sealed class IDependencyAttributeProcessor : OdinAttributeProcessor<IDependency> {
         public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes) {
             attributes.Add(new HideReferenceObjectPickerAttribute());
             attributes.Add(new HideDuplicateReferenceBoxAttribute());

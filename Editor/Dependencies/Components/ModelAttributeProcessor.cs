@@ -3,17 +3,23 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using TinyMVC.Dependencies.Components;
 
 namespace TinyMVC.Editor.Dependencies.Components {
-    internal sealed class ModelComponentAttributeProcessor : OdinAttributeProcessor<ModelComponent> {
+    internal sealed class ModelAttributeProcessor : OdinAttributeProcessor<Model> {
         public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes) {
-            attributes.Add(new HideLabelAttribute());
             attributes.Add(new HideReferenceObjectPickerAttribute());
             attributes.Add(new HideDuplicateReferenceBoxAttribute());
-            attributes.Add(new ShowInInspectorAttribute());
+        }
+        
+        public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes) {
+            if (member.Name == "components") {
+                attributes.Add(new ShowInInspectorAttribute());
+                attributes.Add(new HideLabelAttribute());
+            }
         }
     }
 }

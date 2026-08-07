@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 using TinyMVC.Dependencies;
-using UnityEngine;
+using TinyUtilities.Logger;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ParametersContext {
@@ -25,15 +25,11 @@ namespace TinyMVC.Boot.Contexts {
         
         protected abstract void Create();
         
-        protected void Add<T>(T dependency) where T : ScriptableObject, IDependency {
-        #if UNITY_EDITOR
-            
+        protected void Add<T>(T dependency) where T : IDependency {
             if (dependency == null) {
-                Debug.LogError($"Can't find {typeof(T).Name} parameter");
+                DebugUtility.LogError($"Can't find {typeof(T).Name} parameter");
                 return;
             }
-            
-        #endif
             
             all.Add(dependency);
         }
