@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
+#if ODIN_INSPECTOR
 using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
@@ -15,3 +16,4 @@ namespace TinyMVC.Editor.Dependencies {
         }
     }
 }
+#endif

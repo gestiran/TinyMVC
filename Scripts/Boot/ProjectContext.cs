@@ -11,20 +11,30 @@ namespace TinyMVC.Boot {
     public static class ProjectContext {
         public static ProjectComponents components { get; private set; }
         public static ProjectData data { get; private set; }
-        public static SceneContext scene { get; private set; }
+        public static IContext scene { get; private set; }
         
-        private static Dictionary<string, SceneContext> _contexts;
-        private static Dictionary<int, List<SceneContext>> _sceneContexts;
+        private static Dictionary<string, IContext> _contexts;
+        private static Dictionary<int, List<IContext>> _sceneContexts;
         
         private const int _LOAD_ITERATION = 250;
         
-        public static IEnumerable<SceneContext> Contexts() {
-            foreach (SceneContext context in _contexts.Values) {
+        public static IEnumerable<IContext> Contexts() {
+            foreach (IContext context in _contexts.Values) {
                 yield return context;
             }
         }
         
-        public static bool TryGetContext(string contextKey, out SceneContext context) => _contexts.TryGetValue(contextKey, out context);
+        public static bool TryGetContext(string contextKey, out IContext context) => _contexts.TryGetValue(contextKey, out context);
+        
+        public static bool TryGetContext(string contextKey, out SceneContext context) {
+            if (_contexts.TryGetValue(contextKey, out IContext current) && current is SceneContext target) {
+                context = target;
+                return true;
+            }
+            
+            context = null;
+            return false;
+        }
         
         public static async UniTask LoadScene(int sceneBuildIndex, bool clearAssets = false) {
             int currentSceneId = SceneManager.GetActiveScene().buildIndex;
@@ -109,21 +119,21 @@ namespace TinyMVC.Boot {
             components = new ProjectComponents();
             data = new ProjectData(components);
             
-            _contexts = new Dictionary<string, SceneContext>();
-            _sceneContexts = new Dictionary<int, List<SceneContext>>();
+            _contexts = new Dictionary<string, IContext>();
+            _sceneContexts = new Dictionary<int, List<IContext>>();
         }
         
-        internal static async void AddContext<T>(T context, int sceneId) where T : SceneContext {
+        internal static async void AddContext<T>(T context, int sceneId) where T : IContext {
             if (_contexts.TryAdd(context.key, context) == false) {
                 return;
             }
             
-            if (_sceneContexts.TryGetValue(sceneId, out List<SceneContext> list)) {
+            if (_sceneContexts.TryGetValue(sceneId, out List<IContext> list)) {
                 if (list.Contains(context) == false) {
                     list.Add(context);
                 }
             } else {
-                _sceneContexts.Add(sceneId, new List<SceneContext>() { context });
+                _sceneContexts.Add(sceneId, new List<IContext>() { context });
             }
             
             scene = context;
@@ -136,7 +146,7 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            if (_sceneContexts.TryGetValue(sceneId, out List<SceneContext> list)) {
+            if (_sceneContexts.TryGetValue(sceneId, out List<IContext> list)) {
                 if (list.Contains(context)) {
                     list.Remove(context);
                 }
@@ -149,11 +159,11 @@ namespace TinyMVC.Boot {
         }
         
         private static async UniTask RemoveContexts(int sceneBuildIndex) {
-            if (_sceneContexts.TryGetValue(sceneBuildIndex, out List<SceneContext> contexts) == false) {
+            if (_sceneContexts.TryGetValue(sceneBuildIndex, out List<IContext> contexts) == false) {
                 return;
             }
             
-            SceneContext[] contextsArray = contexts.ToArray();
+            IContext[] contextsArray = contexts.ToArray();
             
             for (int contextId = 0; contextId < contextsArray.Length; contextId++) {
                 await contextsArray[contextId].Remove();

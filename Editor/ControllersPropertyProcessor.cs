@@ -12,7 +12,6 @@ using UnityEngine.SceneManagement;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector.Editor;
-
 #else
 using TinyUtilities.Editor;
 #endif

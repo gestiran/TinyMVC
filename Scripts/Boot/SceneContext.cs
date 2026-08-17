@@ -11,12 +11,14 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Threading;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using TinyMVC.Dependencies.Extensions;
 using TinyMVC.Parameters;
 using TinyReactive;
 using TinyReactive.Fields;
 using TinyUtilities.Extensions;
+using TinyUtilities.Logger;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -58,7 +60,7 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal override async UniTask InitAsync() {
+        internal override async Task InitAsync() {
             await views.InitAsync();
             
             await Resolve();
@@ -190,9 +192,11 @@ namespace TinyMVC.Boot {
     }
     
     [DefaultExecutionOrder(-50)]
-    public abstract class SceneContext : MonoBehaviour, IEquatable<SceneContext>, IUnloadLink {
+    public abstract class SceneContext : MonoBehaviour, IContext, IEquatable<SceneContext> {
         public string key { get; private set; }
         public CancellationToken cancellation => cancellationInternal.Token;
+        
+        Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
         
         public ViewsContext views { get => viewsInternal; internal set => viewsInternal = value; }
         
@@ -201,12 +205,12 @@ namespace TinyMVC.Boot {
         internal List<IFixedTick> fixedTicks { get; private set; }
         internal List<ITick> ticks { get; private set; }
         internal List<ILateTick> lateTicks { get; private set; }
-        internal Dictionary<IController, UnloadPool> unloads { get; private set; }
+        
         
     #if ODIN_INSPECTOR
-        [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
+        [field: ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
     #endif
-        internal ControllersContext controllers;
+        public ControllersContext controllers { get; set; }
         
     #if ODIN_INSPECTOR
         [PropertyOrder(10), InlineEditor(InlineEditorObjectFieldModes.Foldout), HideInPlayMode, Required]
@@ -220,6 +224,7 @@ namespace TinyMVC.Boot {
         internal CancellationTokenSource cancellationInternal;
         
         private bool _isInitializationComplete;
+        private Dictionary<IController, UnloadPool> _unloads;
         
         private const float _CHECK_INITIALIZATION_TIMEOUT = 5f;
         
@@ -229,7 +234,7 @@ namespace TinyMVC.Boot {
             fixedTicks = new List<IFixedTick>();
             ticks = new List<ITick>();
             lateTicks = new List<ILateTick>();
-            unloads = new Dictionary<IController, UnloadPool>();
+            _unloads = new Dictionary<IController, UnloadPool>();
             
         #if UNITY_EDITOR
             if (TinyMVCParameters.LoadFromResources().isEnableAutoReload) {
@@ -251,7 +256,7 @@ namespace TinyMVC.Boot {
                 try {
                     fixedTicks[tickId].FixedTick();
                 } catch (Exception exception) {
-                    Debug.LogError(exception);
+                    DebugUtility.LogError(exception);
                 }
             }
         }
@@ -261,7 +266,7 @@ namespace TinyMVC.Boot {
                 try {
                     ticks[tickId].Tick();
                 } catch (Exception exception) {
-                    Debug.LogError(exception);
+                    DebugUtility.LogError(exception);
                 }
             }
         }
@@ -271,7 +276,7 @@ namespace TinyMVC.Boot {
                 try {
                     lateTicks[tickId].LateTick();
                 } catch (Exception exception) {
-                    Debug.LogError(exception);
+                    DebugUtility.LogError(exception);
                 }
             }
         }
@@ -284,7 +289,7 @@ namespace TinyMVC.Boot {
                     key = $"t:{GetType().Name}";
                 }
                 
-                Debug.LogError($"SceneContext.OnDestroy - Invalid context {key} unload, GameObject disabled!");
+                DebugUtility.LogError($"SceneContext.OnDestroy - Invalid context {key} unload, GameObject disabled!");
                 
             #endif
                 return;
@@ -294,7 +299,7 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            Remove().Forget();
+            Remove().AsUniTask().Forget();
         }
         
         private IEnumerator InitWindowsProcess() {
@@ -303,31 +308,11 @@ namespace TinyMVC.Boot {
             try {
                 InitWindows();
             } catch (Exception exception) {
-                Debug.LogError(new Exception("SceneContext.InitWindows with exception!", exception));
+                DebugUtility.LogError(new Exception("SceneContext.InitWindows with exception!", exception));
             }
         }
         
         public T Add<T>(T unload) where T : IUnload => unloadInternal.Add(unload);
-        
-        internal async UniTask Remove() {
-            for (float t = 0; t < _CHECK_INITIALIZATION_TIMEOUT; t += Time.unscaledDeltaTime) {
-                if (_isInitializationComplete) {
-                    break;
-                }
-                
-                await UniTask.Yield(PlayerLoopTiming.Update);
-            }
-            
-            fixedTicks.Clear();
-            ticks.Clear();
-            lateTicks.Clear();
-            StopAllCoroutines();
-            
-        #if UNITY_EDITOR
-            Application.quitting -= MarkRemoved;
-        #endif
-            ProjectContext.RemoveContext(this, gameObject.scene.buildIndex);
-        }
         
         protected virtual void InitWindows() { }
         
@@ -337,30 +322,40 @@ namespace TinyMVC.Boot {
             try {
                 unloadInternal.Unload();
             } catch (Exception exception) {
-                Debug.LogError(new Exception("SceneContext.Unload with exception!", exception));
+                DebugUtility.LogError(new Exception("SceneContext.Unload with exception!", exception));
             }
             
-            foreach (UnloadPool unload in unloads.Values) {
+            foreach (UnloadPool unload in _unloads.Values) {
                 if (unload.isUnloaded == false) {
                     unload.Unload();
                 }
             }
             
-            unloads.Clear();
+            _unloads.Clear();
             cancellationInternal = cancellationInternal.Reset();
         }
         
+        void IContext.Create() => Create();
+        
+        Task IContext.InitAsync() => InitAsync();
+        
+        Task IContext.Remove() => Remove();
+        
+        void IContext.Connect<T1, T2>(T2 system, T1 controller) => Connect(system, controller);
+        
+        void IContext.Disconnect<T1, T2>(T2 system, T1 controller) => Disconnect(system, controller);
+        
         internal abstract void Create();
         
-        internal abstract UniTask InitAsync();
-        
-        internal abstract void Connect(View view);
+        internal abstract Task InitAsync();
         
         internal abstract void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;
         
-        internal abstract void Disconnect(View view);
-        
         internal abstract void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;
+        
+        internal abstract void Connect(View view);
+        
+        internal abstract void Disconnect(View view);
         
         internal void ConnectLoop(ILoop loop) {
             if (loop is IFixedTick fixedTick) {
@@ -388,6 +383,26 @@ namespace TinyMVC.Boot {
             if (loop is ILateTick lateTick) {
                 lateTicks.Remove(lateTick);
             }
+        }
+        
+        private async Task Remove() {
+            for (float t = 0; t < _CHECK_INITIALIZATION_TIMEOUT; t += Time.unscaledDeltaTime) {
+                if (_isInitializationComplete) {
+                    break;
+                }
+                
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+            
+            fixedTicks.Clear();
+            ticks.Clear();
+            lateTicks.Clear();
+            StopAllCoroutines();
+            
+        #if UNITY_EDITOR
+            Application.quitting -= MarkRemoved;
+        #endif
+            ProjectContext.RemoveContext(this, gameObject.scene.buildIndex);
         }
         
     #if UNITY_EDITOR

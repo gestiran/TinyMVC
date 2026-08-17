@@ -11,22 +11,12 @@ using TinyMVC.Loop.Extensions;
 using TinyReactive;
 using TinyReactive.Fields;
 
-#if ODIN_INSPECTOR && UNITY_EDITOR
-using Sirenix.OdinInspector;
-#endif
-
 namespace TinyMVC.Boot.Contexts {
     public abstract class ControllersContext : IController {
         protected UnloadPool _unload { get; private set; }
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector]
-    #endif
         internal readonly List<IController> systems;
         
-    #if ODIN_INSPECTOR && UNITY_EDITOR
-        [ShowInInspector, DictionaryDrawerSettings(DisplayMode = DictionaryDisplayOptions.ExpandedFoldout, KeyLabel = "Group", ValueLabel = "Controllers")]
-    #endif
         private readonly Dictionary<string, List<IController>> _controllers;
         
         internal List<ActionListener> initLazyList { get; private set; }

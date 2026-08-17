@@ -6,7 +6,7 @@ using TinyMVC.Dependencies.Components;
 using TinyMVC.ReactiveFields;
 using TinyReactive;
 using TinyReactive.Fields;
-using UnityEngine;
+using TinyUtilities.Logger;
 
 namespace TinyMVC.Boot {
     public sealed class ProjectComponents {
@@ -27,7 +27,7 @@ namespace TinyMVC.Boot {
                 if (value is ComponentListeners<TModel, TComponent> target) {
                     target.AddOnAddListener(listener);
                 } else {
-                    Debug.LogError($"ProjectComponents.AddOnAddListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
+                    DebugUtility.LogError($"ProjectComponents.AddOnAddListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
                 }
             } else {
                 ComponentListeners<TModel, TComponent> target = new ComponentListeners<TModel, TComponent>();
@@ -44,7 +44,7 @@ namespace TinyMVC.Boot {
                     target.AddOnAddListener(listener);
                     unload.Add(new UnloadAction(() => target.RemoveOnAddListener(listener)));
                 } else {
-                    Debug.LogError($"ProjectComponents.AddOnAddListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
+                    DebugUtility.LogError($"ProjectComponents.AddOnAddListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
                 }
             } else {
                 ComponentListeners<TModel, TComponent> target = new ComponentListeners<TModel, TComponent>();
@@ -61,7 +61,7 @@ namespace TinyMVC.Boot {
                 if (value is ComponentListeners<TModel, TComponent> target) {
                     target.RemoveOnAddListener(listener);
                 } else {
-                    Debug.LogError($"ProjectComponents.RemoveOnAddListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
+                    DebugUtility.LogError($"ProjectComponents.RemoveOnAddListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
                 }
             } else {
                 ComponentListeners<TModel, TComponent> target = new ComponentListeners<TModel, TComponent>();
@@ -77,7 +77,7 @@ namespace TinyMVC.Boot {
                 if (value is ComponentListeners<TModel, TComponent> target) {
                     target.AddOnRemoveListener(listener);
                 } else {
-                    Debug.LogError($"ProjectComponents.AddOnRemoveListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
+                    DebugUtility.LogError($"ProjectComponents.AddOnRemoveListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
                 }
             } else {
                 ComponentListeners<TModel, TComponent> target = new ComponentListeners<TModel, TComponent>();
@@ -94,7 +94,7 @@ namespace TinyMVC.Boot {
                     target.AddOnRemoveListener(listener);
                     unload.Add(new UnloadAction(() => target.RemoveOnRemoveListener(listener)));
                 } else {
-                    Debug.LogError($"ProjectComponents.AddOnRemoveListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
+                    DebugUtility.LogError($"ProjectComponents.AddOnRemoveListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
                 }
             } else {
                 ComponentListeners<TModel, TComponent> target = new ComponentListeners<TModel, TComponent>();
@@ -111,7 +111,7 @@ namespace TinyMVC.Boot {
                 if (value is ComponentListeners<TModel, TComponent> target) {
                     target.RemoveOnRemoveListener(listener);
                 } else {
-                    Debug.LogError($"ProjectComponents.RemoveOnRemoveListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
+                    DebugUtility.LogError($"ProjectComponents.RemoveOnRemoveListener<{typeof(TModel)}, {typeof(TComponent)}> - Invalid listeners!");
                 }
             } else {
                 ComponentListeners<TModel, TComponent> target = new ComponentListeners<TModel, TComponent>();

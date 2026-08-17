@@ -13,7 +13,7 @@ namespace TinyMVC.Controllers {
         public static T2 Connect<T1, T2>(this T1 system, T2 controller) where T1 : IController where T2 : IController {
             string contextKey = ProjectContext.scene.key;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 context.Connect(system, controller);
             }
             
@@ -21,7 +21,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static T2 Connect<T1, T2>(this T1 system, T2 controller, string contextKey) where T1 : IController where T2 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 context.Connect(system, controller);
             }
             
@@ -31,7 +31,7 @@ namespace TinyMVC.Controllers {
         public static void Connect<T1>(this T1 system, List<IController> controllers) where T1 : IController {
             string contextKey = ProjectContext.scene.key;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
                     context.Connect(system, controllers[controllerId]);
                 }
@@ -39,7 +39,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Connect<T1>(this T1 system, List<IController> controllers, string contextKey) where T1 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
                     context.Connect(system, controllers[controllerId]);
                 }
@@ -49,7 +49,7 @@ namespace TinyMVC.Controllers {
         public static void Connect<T1>(this T1 system, IController[] controllers) where T1 : IController {
             string contextKey = ProjectContext.scene.key;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
                     context.Connect(system, controllers[controllerId]);
                 }
@@ -57,7 +57,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Connect<T1>(this T1 system, IController[] controllers, string contextKey) where T1 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
                     context.Connect(system, controllers[controllerId]);
                 }
@@ -68,7 +68,7 @@ namespace TinyMVC.Controllers {
             string contextKey = ProjectContext.scene.key;
             T2 controller = default;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 DependencyContainer container = new DependencyContainer(dependencies);
                 ProjectContext.data.tempContainer = container;
                 controller = new T2();
@@ -81,7 +81,7 @@ namespace TinyMVC.Controllers {
         public static T2 Connect<T1, T2>(this T1 system, string contextKey, params IDependency[] dependencies) where T1 : IController where T2 : IController, new() {
             T2 controller = default;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 DependencyContainer container = new DependencyContainer(dependencies);
                 ProjectContext.data.tempContainer = container;
                 controller = new T2();
@@ -98,7 +98,7 @@ namespace TinyMVC.Controllers {
         public static void Disconnect<T1, T2>(this T1 system, T2 controller) where T1 : IController where T2 : IController {
             string contextKey = ProjectContext.scene.key;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 context.Disconnect(system, controller);
             }
         }
@@ -106,7 +106,7 @@ namespace TinyMVC.Controllers {
         public static void Disconnect<T1>(this T1 system, List<IController> controllers) where T1 : IController {
             string contextKey = ProjectContext.scene.key;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
                     context.Disconnect(system, controllers[controllerId]);
                 }
@@ -114,7 +114,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Disconnect<T1>(this T1 system, List<IController> controllers, string contextKey) where T1 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Count; controllerId++) {
                     context.Disconnect(system, controllers[controllerId]);
                 }
@@ -124,7 +124,7 @@ namespace TinyMVC.Controllers {
         public static void Disconnect<T1>(this T1 system, IController[] controllers) where T1 : IController {
             string contextKey = ProjectContext.scene.key;
             
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
                     context.Disconnect(system, controllers[controllerId]);
                 }
@@ -132,7 +132,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Disconnect<T1>(this T1 system, IController[] controllers, string contextKey) where T1 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 for (int controllerId = 0; controllerId < controllers.Length; controllerId++) {
                     context.Disconnect(system, controllers[controllerId]);
                 }
@@ -140,7 +140,7 @@ namespace TinyMVC.Controllers {
         }
         
         public static void Disconnect<T1, T2>(this T1 system, T2 controller, string contextKey) where T1 : IController where T2 : IController {
-            if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 context.Disconnect(system, controller);
             }
         }
@@ -217,7 +217,7 @@ namespace TinyMVC.Controllers {
         public static UnloadPool UnloadPool<T>(this T controller) where T : IController => controller.UnloadPool(ProjectContext.scene);
         
         [Pure]
-        public static UnloadPool UnloadPool<T>(this T controller, SceneContext context) where T : IController {
+        public static UnloadPool UnloadPool<T>(this T controller, IContext context) where T : IController {
             if (context.unloads.TryGetValue(controller, out UnloadPool pool)) {
                 return pool;
             }

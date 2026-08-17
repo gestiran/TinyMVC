@@ -13,7 +13,6 @@ using UnityEngine;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-
 #else
 using TinyUtilities;
 using TinyUtilities.Editor;
