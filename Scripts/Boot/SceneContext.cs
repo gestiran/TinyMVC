@@ -128,10 +128,10 @@ namespace TinyMVC.Boot {
             }
             
             if (this is IGlobalContext) {
-                ((IUnload)this).Unload();
                 return;
             }
             
+            ((IUnload)this).Unload();
             RunRemove();
         }
         

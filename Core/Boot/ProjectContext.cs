@@ -63,8 +63,6 @@ namespace TinyMVC.Boot {
         }
         
         internal static void RemoveContext<T>(T context, int sceneId) where T : class, IContext {
-            // Global contexts are immortal: the platform host (SceneContext) filters them out before this point.
-            
             if (_sceneContexts.TryGetValue(sceneId, out List<IContext> list)) {
                 if (list.Contains(context)) {
                     list.Remove(context);

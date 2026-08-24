@@ -61,9 +61,7 @@ namespace TinyMVC.Boot.Extensions {
                 Task initialization = context.initialization;
                 
                 if (await Task.WhenAny(initialization, Task.Delay(TimeSpan.FromSeconds(_CHECK_INITIALIZATION_TIMEOUT))) != initialization) {
-                    DebugUtility.LogException(
-                        new TimeoutException(
-                            $"Context '{context.key}' did not finish initialization within {_CHECK_INITIALIZATION_TIMEOUT}s! Force unloading."));
+                    DebugUtility.LogException(new TimeoutException($"Context '{context.key}' did not finish initialization! Force unloading."));
                 }
             }
             
