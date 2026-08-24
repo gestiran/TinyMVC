@@ -14,9 +14,9 @@ using Sirenix.OdinInspector;
 
 namespace TinyMVC.Views {
 #if ODIN_INSPECTOR && ODIN_VALIDATOR
-    public abstract class View : MonoBehaviour, ISelfValidator
+    public abstract class View : MonoBehaviour, IView, ISelfValidator
 #else
-    public abstract class View : MonoBehaviour
+    public abstract class View : MonoBehaviour, IView
 #endif
     {
         public View root { get; internal set; }
@@ -24,10 +24,9 @@ namespace TinyMVC.Views {
         
         private readonly List<View> _connections = new List<View>();
         
-        public enum ConnectState : byte {
-            Disconnected,
-            Connected
-        }
+        IView IView.root { get => root; set => root = value as View; }
+        
+        ConnectState IView.connectState { get => connectState; set => connectState = value; }
         
         protected void InitSingle(ref bool token, Action init) {
             if (token) {

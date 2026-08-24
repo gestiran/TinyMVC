@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
@@ -24,7 +24,7 @@ namespace TinyMVC.Boot.Contexts {
     [InlineProperty, HideLabel]
 #endif
     [Serializable]
-    public abstract class ViewsContext {
+    public abstract class ViewsContext : IViewsContext {
     #if ODIN_INSPECTOR
         [InfoBox("Instantiated automatically after scene loaded.")]
         [ListDrawerSettings(HideAddButton = true, NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
@@ -39,13 +39,13 @@ namespace TinyMVC.Boot.Contexts {
         [SerializeField]
         private View[] _generated;
         
-        private View[] _instances;
-        internal List<View> mainViews;
-        internal List<View> subViews;
+        private IView[] _instances;
+        internal List<IView> mainViews;
+        internal List<IView> subViews;
         private bool _isUsedViewResolve;
         
         internal void Instantiate() {
-            List<View> instances = new List<View>(_assets.Length);
+            List<IView> instances = new List<IView>(_assets.Length);
             
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
             #if UNITY_EDITOR
@@ -58,8 +58,7 @@ namespace TinyMVC.Boot.Contexts {
                 instances.Add(UnityObject.Instantiate(_assets[assetId]));
             }
             
-            _instances = new View[instances.Count];
-            instances.CopyTo(_instances);
+            _instances = instances.ToArray();
             _isUsedViewResolve = false;
         }
         
@@ -74,8 +73,8 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         internal void CreateViews() {
-            mainViews = new List<View>();
-            subViews = new List<View>();
+            mainViews = new List<IView>();
+            subViews = new List<IView>();
             
             Create();
             
@@ -83,15 +82,15 @@ namespace TinyMVC.Boot.Contexts {
             mainViews.AddRange(_generated);
         }
         
-        internal async UniTask InitAsync() {
+        internal async Task InitAsync() {
             for (int viewId = 0; viewId < mainViews.Count; viewId++) {
-                mainViews[viewId].connectState = View.ConnectState.Connected;
+                mainViews[viewId].connectState = ConnectState.Connected;
             }
             
             await mainViews.TryInitAsync();
         }
         
-        internal async UniTask BeginPlay() => await mainViews.TryBeginPlayAsync();
+        internal async Task BeginPlay() => await mainViews.TryBeginPlayAsync();
         
         internal void CheckAndAdd<T>(List<T> list) {
             for (int viewId = 0; viewId < mainViews.Count; viewId++) {
@@ -209,5 +208,21 @@ namespace TinyMVC.Boot.Contexts {
         }
         
     #endif
+        
+        List<IView> IViewsContext.mainViews => mainViews;
+        
+        void IViewsContext.Instantiate() => Instantiate();
+        
+        void IViewsContext.GetDependencies(List<IDependency> dependencies) => GetDependencies(dependencies);
+        
+        void IViewsContext.CreateViews() => CreateViews();
+        
+        Task IViewsContext.InitAsync() => InitAsync();
+        
+        Task IViewsContext.BeginPlay() => BeginPlay();
+        
+        void IViewsContext.CheckAndAdd<T>(List<T> collection) => CheckAndAdd(collection);
+        
+        void IViewsContext.ApplyDontDestroyOnLoad() => ApplyDontDestroyOnLoad();
     }
 }

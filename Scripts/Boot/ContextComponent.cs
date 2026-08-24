@@ -16,7 +16,11 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Boot {
-    public abstract class ContextComponent : MonoBehaviour {
+    /// <summary>
+    /// Unity module of the scene context.<br/>
+    /// Platform part of <see cref="TinyMVC.Boot.Contexts.IContextModule"/>: asset serialization and instantiation.
+    /// </summary>
+    public abstract class ContextComponent : MonoBehaviour, IContextModule {
     #if ODIN_INSPECTOR
         [ListDrawerSettings(NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
     #endif
@@ -50,7 +54,7 @@ namespace TinyMVC.Boot {
             CreateControllers();
         }
         
-        internal void AddComponentsViews(List<View> mainViews) => mainViews.AddRange(_instances);
+        internal void AddComponentsViews(List<IView> mainViews) => mainViews.AddRange(_instances);
         
         internal void CheckAndAdd<T>(List<T> list) {
             for (int systemId = 0; systemId < _systems.Count; systemId++) {
@@ -112,5 +116,17 @@ namespace TinyMVC.Boot {
             
             _parameters.Add(dependency);
         }
+        
+        void IContextModule.Instantiate() => Instantiate();
+        
+        void IContextModule.CreateControllersInternal(List<IController> systems, List<ActionListener> initSystemsLazy) => CreateControllersInternal(systems, initSystemsLazy);
+        
+        void IContextModule.AddComponentsViews(List<IView> mainViews) => AddComponentsViews(mainViews);
+        
+        void IContextModule.CreateParametersInternal(List<IDependency> parameters) => CreateParametersInternal(parameters);
+        
+        void IContextModule.CreateBindersInternal<T>(T context) => CreateBindersInternal(context);
+        
+        void IContextModule.CreateModelsInternal(List<IDependency> models) => CreateModelsInternal(models);
     }
 }

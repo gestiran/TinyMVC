@@ -10,12 +10,12 @@ namespace TinyMVC.Controllers {
         protected T Spawn<T>([NotNull] T view) where T : View => Spawn(view, ProjectContext.scene.key);
         
         protected T Spawn<T>([NotNull] T view, string contextKey) where T : View {
-            if (view.connectState == View.ConnectState.Connected) {
+            if (view.connectState == ConnectState.Connected) {
                 return view;
             }
             
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                view.connectState = View.ConnectState.Connected;
+                view.connectState = ConnectState.Connected;
                 context.Connect(view);
             }
             
