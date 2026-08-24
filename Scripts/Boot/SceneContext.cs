@@ -58,7 +58,7 @@ namespace TinyMVC.Boot {
         private Dictionary<IController, UnloadPool> _unloads;
         private int _sceneId;
         
-        private void Awake() {
+        private async void Awake() {
             key = gameObject.name;
             
             fixedTicks = new List<IFixedTick>();
@@ -72,7 +72,7 @@ namespace TinyMVC.Boot {
             }
         #endif
             
-            ProjectContext.AddContext(this, gameObject.scene.buildIndex);
+            await ProjectContext.AddContext(this, gameObject.scene.buildIndex);
             
         #if UNITY_EDITOR
             Application.quitting += MarkRemoved;

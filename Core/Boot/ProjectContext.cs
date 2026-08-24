@@ -42,7 +42,7 @@ namespace TinyMVC.Boot {
             _sceneContexts = new Dictionary<int, List<IContext>>();
         }
         
-        internal static async void AddContext<T>(T context, int sceneId) where T : IContext {
+        internal static async Task AddContext<T>(T context, int sceneId) where T : IContext {
             if (_contexts.TryAdd(context.key, context) == false) {
                 return;
             }

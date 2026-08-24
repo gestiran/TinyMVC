@@ -70,7 +70,7 @@ namespace TinyMVC.Boot {
             }
             
             _isInitialized = true;
-            ProjectContext.AddContext(this, _sceneId);
+            await ProjectContext.AddContext(this, _sceneId);
             await _initCompletionSource.Task;
         }
         
