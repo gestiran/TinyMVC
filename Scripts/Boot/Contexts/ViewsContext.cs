@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TinyMVC.Dependencies;
+using TinyMVC.Dependencies.Extensions;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
 using TinyMVC.Views;
@@ -39,13 +40,13 @@ namespace TinyMVC.Boot.Contexts {
         [SerializeField]
         private View[] _generated;
         
-        private IView[] _instances;
-        internal List<IView> mainViews;
-        internal List<IView> subViews;
+        private View[] _instances;
+        internal List<View> mainViews;
+        internal List<View> subViews;
         private bool _isUsedViewResolve;
         
         internal void Instantiate() {
-            List<IView> instances = new List<IView>(_assets.Length);
+            List<View> instances = new List<View>(_assets.Length);
             
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
             #if UNITY_EDITOR
@@ -73,8 +74,8 @@ namespace TinyMVC.Boot.Contexts {
         }
         
         internal void CreateViews() {
-            mainViews = new List<IView>();
-            subViews = new List<IView>();
+            mainViews = new List<View>();
+            subViews = new List<View>();
             
             Create();
             
@@ -102,8 +103,8 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void ApplyDontDestroyOnLoad() {
             for (int viewId = 0; viewId < mainViews.Count; viewId++) {
-                if (mainViews[viewId] is IDontDestroyOnLoad && mainViews[viewId] is MonoBehaviour monoView) {
-                    UnityObject.DontDestroyOnLoad(monoView);
+                if (mainViews[viewId] is IDontDestroyOnLoad) {
+                    UnityObject.DontDestroyOnLoad(mainViews[viewId].gameObject);
                 }
             }
         }
@@ -209,9 +210,11 @@ namespace TinyMVC.Boot.Contexts {
         
     #endif
         
-        List<IView> IViewsContext.mainViews => mainViews;
-        
         void IViewsContext.Instantiate() => Instantiate();
+        
+        void IViewsContext.AddView(IView view) => mainViews.Add(view as View);
+        
+        void IViewsContext.TryApplyResolving() => mainViews.TryApplyResolving();
         
         void IViewsContext.GetDependencies(List<IDependency> dependencies) => GetDependencies(dependencies);
         
@@ -220,9 +223,5 @@ namespace TinyMVC.Boot.Contexts {
         Task IViewsContext.InitAsync() => InitAsync();
         
         Task IViewsContext.BeginPlay() => BeginPlay();
-        
-        void IViewsContext.CheckAndAdd<T>(List<T> collection) => CheckAndAdd(collection);
-        
-        void IViewsContext.ApplyDontDestroyOnLoad() => ApplyDontDestroyOnLoad();
     }
 }

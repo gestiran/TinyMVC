@@ -16,10 +16,7 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Boot {
-    /// <summary>
-    /// Unity module of the scene context.<br/>
-    /// Platform part of <see cref="TinyMVC.Boot.Contexts.IContextModule"/>: asset serialization and instantiation.
-    /// </summary>
+    /// <summary> Unity module of the scene context. </summary>
     public abstract class ContextComponent : MonoBehaviour, IContextModule {
     #if ODIN_INSPECTOR
         [ListDrawerSettings(NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
@@ -53,8 +50,6 @@ namespace TinyMVC.Boot {
             _initSystemsLazy = initSystemsLazy;
             CreateControllers();
         }
-        
-        internal void AddComponentsViews(List<IView> mainViews) => mainViews.AddRange(_instances);
         
         internal void CheckAndAdd<T>(List<T> list) {
             for (int systemId = 0; systemId < _systems.Count; systemId++) {
@@ -121,7 +116,11 @@ namespace TinyMVC.Boot {
         
         void IContextModule.CreateControllersInternal(List<IController> systems, List<ActionListener> initSystemsLazy) => CreateControllersInternal(systems, initSystemsLazy);
         
-        void IContextModule.AddComponentsViews(List<IView> mainViews) => AddComponentsViews(mainViews);
+        void IContextModule.AddComponentsViews(IViewsContext context) {
+            for (int viewId = 0; viewId < _instances.Length; viewId++) {
+                context.AddView(_instances[viewId]);
+            }
+        }
         
         void IContextModule.CreateParametersInternal(List<IDependency> parameters) => CreateParametersInternal(parameters);
         

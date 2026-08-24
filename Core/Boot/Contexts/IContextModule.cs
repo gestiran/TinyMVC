@@ -4,14 +4,9 @@
 using System.Collections.Generic;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
-using TinyMVC.Views;
 using TinyReactive.Fields;
 
 namespace TinyMVC.Boot.Contexts {
-    /// <summary>
-    /// Contract of a context module: additional source of controllers, models, binders, parameters and views.<br/>
-    /// Inside Unity implemented by <see cref="TinyMVC.Boot.ContextComponent"/>; outside Unity by a plain class.
-    /// </summary>
     internal interface IContextModule {
         /// <summary> Creates platform instances of the pre-configured assets. </summary>
         internal void Instantiate();
@@ -20,7 +15,7 @@ namespace TinyMVC.Boot.Contexts {
         internal void CreateControllersInternal(List<IController> systems, List<ActionListener> initSystemsLazy);
         
         /// <summary> Adds module views into the context main views list. </summary>
-        internal void AddComponentsViews(List<IView> mainViews);
+        internal void AddComponentsViews(IViewsContext context);
         
         /// <summary> Registers module parameters into the dependencies list. </summary>
         internal void CreateParametersInternal(List<IDependency> parameters);

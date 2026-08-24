@@ -18,7 +18,7 @@ namespace TinyMVC.Boot.Helpers {
             }
             
             context = default;
-            id = default;
+            id = 0;
             
             return false;
         }

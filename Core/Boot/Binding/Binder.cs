@@ -36,10 +36,7 @@ namespace TinyMVC.Boot.Binding {
         /// <returns> Type of model being created. </returns>
         internal abstract Type GetBindType();
         
-        /// <summary>
-        /// Connect the unload reference.<br/>
-        /// Initialization in <see cref="TinyMVC.Boot.SceneContext{T}">SceneContext</see> auto-connect <see cref="TinyReactive.UnloadPool">Unload</see> to the current scene.
-        /// </summary>
+        /// <summary> Connect the unload reference. </summary>
         /// <param name="unload"> Unload reference. </param>
         internal void ConnectUnload(UnloadPool unload) => _unload = unload;
     }
@@ -92,10 +89,7 @@ namespace TinyMVC.Boot.Binding {
         /// <param name="model"> Model reference after <see cref="TinyMVC.Boot.Binding.Binder{T}.BindInternal">internal bind</see> process. </param>
         protected abstract void Bind(T model);
         
-        /// <summary>
-        /// Internal model initialization.<br/>
-        /// Used in <see cref="TinyMVC.Boot.Binding.ActorBinder{T}">ActorBinder</see> for automatic <see cref="TinyMVC.Views.View">View</see> injection.
-        /// </summary>
+        /// <summary> Internal model initialization. </summary>
         /// <param name="model"> Empty model. </param>
         internal virtual void BindInternal(T model) { }
     }

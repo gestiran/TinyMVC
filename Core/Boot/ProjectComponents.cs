@@ -36,7 +36,8 @@ namespace TinyMVC.Boot {
             }
         }
         
-        public void AddOnAddListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener, UnloadPool unload) where TModel : Model where TComponent : ModelComponent {
+        public void AddOnAddListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener, UnloadPool unload)
+            where TModel : Model where TComponent : ModelComponent {
             string key = Key<TModel, TComponent>();
             
             if (_listeners.TryGetValue(key, out IComponentListeners value)) {
@@ -54,7 +55,8 @@ namespace TinyMVC.Boot {
             }
         }
         
-        public void RemoveOnAddListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener) where TModel : Model where TComponent : ModelComponent {
+        public void RemoveOnAddListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener)
+            where TModel : Model where TComponent : ModelComponent {
             string key = Key<TModel, TComponent>();
             
             if (_listeners.TryGetValue(key, out IComponentListeners value)) {
@@ -70,7 +72,8 @@ namespace TinyMVC.Boot {
             }
         }
         
-        public void AddOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener) where TModel : Model where TComponent : ModelComponent {
+        public void AddOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener)
+            where TModel : Model where TComponent : ModelComponent {
             string key = Key<TModel, TComponent>();
             
             if (_listeners.TryGetValue(key, out IComponentListeners value)) {
@@ -86,7 +89,8 @@ namespace TinyMVC.Boot {
             }
         }
         
-        public void AddOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener, UnloadPool unload) where TModel : Model where TComponent : ModelComponent {
+        public void AddOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener, UnloadPool unload)
+            where TModel : Model where TComponent : ModelComponent {
             string key = Key<TModel, TComponent>();
             
             if (_listeners.TryGetValue(key, out IComponentListeners value)) {
@@ -104,7 +108,8 @@ namespace TinyMVC.Boot {
             }
         }
         
-        public void RemoveOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener) where TModel : Model where TComponent : ModelComponent {
+        public void RemoveOnRemoveListener<TModel, TComponent>(ActionListener<TModel, TComponent> listener)
+            where TModel : Model where TComponent : ModelComponent {
             string key = Key<TModel, TComponent>();
             
             if (_listeners.TryGetValue(key, out IComponentListeners value)) {

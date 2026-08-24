@@ -3,14 +3,10 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Extensions;
 
 namespace TinyMVC.Boot {
-    /// <summary>
-    /// Global registry of contexts and their data.<br/>
-    /// Platform independent part: scene loading API is provided by the host adapter (Unity: <c>ProjectScenes</c>).
-    /// </summary>
+    /// <summary> Global registry of contexts and their data. </summary>
     public static class ProjectContext {
         public static ProjectComponents components { get; private set; }
         public static ProjectData data { get; private set; }
@@ -67,9 +63,7 @@ namespace TinyMVC.Boot {
         }
         
         internal static void RemoveContext<T>(T context, int sceneId) where T : class, IContext {
-            if (context is IGlobalContext) {
-                return;
-            }
+            // Global contexts are immortal: the platform host (SceneContext) filters them out before this point.
             
             if (_sceneContexts.TryGetValue(sceneId, out List<IContext> list)) {
                 if (list.Contains(context)) {

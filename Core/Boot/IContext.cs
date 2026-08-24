@@ -6,18 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using TinyMVC.Controllers;
 using TinyMVC.Boot.Contexts;
-using TinyMVC.Boot.Extensions;
 using TinyReactive;
 
 namespace TinyMVC.Boot {
-    /// <summary>
-    /// Single contract of the context.<br/>
-    /// Combines common operations executed by <see cref="ContextExtension">ContextExtension</see>,
-    /// the context composition (<see cref="TinyMVC.Boot.Contexts.ControllersContext">ControllersContext</see>,
-    /// <see cref="TinyMVC.Boot.Contexts.ModelsContext">ModelsContext</see>,
-    /// <see cref="TinyMVC.Boot.Contexts.ParametersContext">ParametersContext</see>, views and modules)
-    /// and the host platform hooks.
-    /// </summary>
     public interface IContext : IUnloadLink {
         /// <summary> Unique context identifier. Unity: the name of the context GameObject. </summary>
         public string key { get; }
@@ -63,15 +54,6 @@ namespace TinyMVC.Boot {
         
         /// <summary> Creates the user-defined parameters composition. </summary>
         internal ParametersContext CreateParameters();
-        
-        /// <summary> Yields to the host frame loop. Returns unscaled elapsed time in seconds. </summary>
-        internal Task<float> WaitFrame(CancellationToken cancellation);
-        
-        /// <summary> Stops the host pumping (Unity: StopAllCoroutines and editor subscriptions). </summary>
-        internal void StopPumping();
-        
-        /// <summary> Marks the host as persistent across scenes. Called only for <see cref="IGlobalContext"/>. </summary>
-        internal void MarkPersistent();
         
         /// <summary> Creates all context sub-systems: controllers, models, parameters, views and modules. </summary>
         internal void Create();

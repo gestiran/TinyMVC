@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 using TinyMVC.Controllers;
 using TinyMVC.Loop;
 using TinyMVC.Loop.Extensions;
@@ -24,13 +23,8 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Boot {
-    /// <summary>
-    /// Unity scene entry point.<br/>
-    /// Thin platform adapter: all common operations and the initialization pipeline
-    /// are executed through <see cref="IContext"/> by <see cref="ContextExtension"/>.
-    /// </summary>
     [DefaultExecutionOrder(-50)]
-    public abstract class SceneContext : MonoBehaviour, IContext, IEquatable<SceneContext> {
+    public abstract class SceneContext : MonoBehaviour, IContext, IUnload, IEquatable<SceneContext> {
         public string key { get; private set; }
         public CancellationToken cancellation => cancellationInternal.Token;
         
@@ -120,18 +114,21 @@ namespace TinyMVC.Boot {
         private void OnDestroy() {
             if (unloadInternal == null) {
             #if UNITY_EDITOR
-                
                 if (key == null) {
                     key = $"t:{GetType().Name}";
                 }
                 
                 DebugUtility.LogError($"SceneContext.OnDestroy - Invalid context {key} unload, GameObject disabled!");
-                
             #endif
                 return;
             }
             
             if (unloadInternal.isUnloaded) {
+                return;
+            }
+            
+            if (this is IGlobalContext) {
+                ((IUnload)this).Unload();
                 return;
             }
             
@@ -150,7 +147,7 @@ namespace TinyMVC.Boot {
         
         private async void RunRemove() {
             try {
-                await ContextExtension.Remove(this);
+                await this.Remove();
             } catch (Exception exception) {
                 DebugUtility.LogError(exception);
             }
@@ -168,12 +165,7 @@ namespace TinyMVC.Boot {
         
         bool IContext.isInitializationComplete { get => _isInitializationComplete; set => _isInitializationComplete = value; }
         
-        async Task<float> IContext.WaitFrame(CancellationToken cancellation) {
-            await UniTask.Yield(PlayerLoopTiming.Update, cancellation);
-            return Time.unscaledDeltaTime;
-        }
-        
-        void IContext.StopPumping() {
+        void IUnload.Unload() {
             StopAllCoroutines();
             
         #if UNITY_EDITOR
@@ -181,12 +173,17 @@ namespace TinyMVC.Boot {
         #endif
         }
         
-        void IContext.MarkPersistent() => DontDestroyOnLoad(gameObject);
-        
-        void IContext.Create() => ContextExtension.Create(this);
+        void IContext.Create() {
+            this.Create();
+            
+            if (this is IGlobalContext) {
+                DontDestroyOnLoad(gameObject);
+                viewsInternal.ApplyDontDestroyOnLoad();
+            }
+        }
         
         async Task IContext.InitAsync() {
-            await ContextExtension.InitAsync(this);
+            await this.InitAsync();
             
             controllers.CheckAndAdd(fixedTicks);
             controllers.CheckAndAdd(ticks);
@@ -204,7 +201,12 @@ namespace TinyMVC.Boot {
             ticks.Clear();
             lateTicks.Clear();
             
-            await ContextExtension.Remove(this);
+            if (this is IGlobalContext) {
+                ((IUnload)this).Unload();
+                return;
+            }
+            
+            await this.Remove();
         }
         
         void IContext.Connect<T1, T2>(T2 system, T1 controller) => Connect(system, controller);
@@ -281,7 +283,9 @@ namespace TinyMVC.Boot {
             }
             
             try {
-                ProjectContext.RemoveContext(this, _sceneId);
+                if (this is IGlobalContext == false) {
+                    ProjectContext.RemoveContext(this, _sceneId);
+                }
             } catch (Exception) {
                 // Do nothing, app closed
             }

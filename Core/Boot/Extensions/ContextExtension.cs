@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
@@ -16,11 +15,6 @@ using TinyUtilities.Extensions;
 using TinyUtilities.Logger;
 
 namespace TinyMVC.Boot.Extensions {
-    /// <summary>
-    /// Common context initialization pipeline.<br/>
-    /// All shared operations of the context are executed here through <see cref="IContext"/>,
-    /// keeping any host (Unity <c>MonoBehaviour</c>, console application, UI framework) as thin adapter.
-    /// </summary>
     internal static class ContextExtension {
         private const int _DEPENDENCIES_CAPACITY = 64;
         private const float _CHECK_INITIALIZATION_TIMEOUT = 5f;
@@ -48,12 +42,7 @@ namespace TinyMVC.Boot.Extensions {
             CreateComponentsControllers(context.modules, controllers.systems, controllers.initLazyList);
             
             context.views.CreateViews();
-            AddComponentsViews(context.modules, context.views.mainViews);
-            
-            if (context is IGlobalContext) {
-                context.views.ApplyDontDestroyOnLoad();
-                context.MarkPersistent();
-            }
+            AddComponentsViews(context.modules, context.views);
         }
         
         /// <summary> Runs the full initialization sequence: view init, resolve, begin play and loop registration. </summary>
@@ -74,10 +63,13 @@ namespace TinyMVC.Boot.Extensions {
                     break;
                 }
                 
-                time += await context.WaitFrame(CancellationToken.None);
+                await Task.Delay(16);
+                time += 0.016f;
             }
             
-            context.StopPumping();
+            if (context is IUnload unload) {
+                unload.Unload();
+            }
             
             ProjectContext.RemoveContext(context, context.sceneId);
         }
@@ -101,7 +93,6 @@ namespace TinyMVC.Boot.Extensions {
             }
             
             context.unloads.Clear();
-            
             context.cancellationSource = context.cancellationSource.Reset();
         }
         
@@ -149,7 +140,7 @@ namespace TinyMVC.Boot.Extensions {
             await controllers.InitAsync();
             
             controllers.systems.TryApplyResolving();
-            context.views.mainViews.TryApplyResolving();
+            context.views.TryApplyResolving();
         }
         
         private static void InstantiateComponents(IContextModule[] components) {
@@ -164,9 +155,9 @@ namespace TinyMVC.Boot.Extensions {
             }
         }
         
-        private static void AddComponentsViews(IContextModule[] components, List<IView> mainViews) {
+        private static void AddComponentsViews(IContextModule[] components, IViewsContext context) {
             for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].AddComponentsViews(mainViews);
+                components[componentId].AddComponentsViews(context);
             }
         }
         

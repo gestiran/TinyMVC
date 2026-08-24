@@ -6,7 +6,6 @@ using TinyMVC.Boot.Binding;
 using TinyMVC.Dependencies;
 using TinyReactive;
 using TinyReactive.Fields;
-using Binder = TinyMVC.Boot.Binding.Binder;
 
 namespace TinyMVC.Boot.Contexts {
     public abstract class ModelsContext {
