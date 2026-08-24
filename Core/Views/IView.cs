@@ -3,8 +3,7 @@
 
 namespace TinyMVC.Views {
     /// <summary>
-    /// Platform-independent representation of the visual layer element.<br/>
-    /// Inside Unity it is implemented by scene objects (<see cref="View"/>), outside Unity by UI windows.
+    /// Platform-independent representation of the visual layer element.
     /// </summary>
     public interface IView {
         /// <summary> Root view that has connected the current view. </summary>
