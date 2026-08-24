@@ -25,18 +25,23 @@ using Sirenix.OdinInspector;
 namespace TinyMVC.Boot {
     [DefaultExecutionOrder(-50)]
     public abstract class SceneContext : MonoBehaviour, IContext, IUnload, IEquatable<SceneContext> {
-        public string key { get; private set; }
         public CancellationToken cancellation => cancellationInternal.Token;
         
-        Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
-        
-        ControllersContext IContext.controllers { get => controllers; set => controllers = value; }
+        public string key { get; private set; }
+        public ControllersContext controllers { get; private set; }
         
         public ViewsContext views { get => viewsInternal; internal set => viewsInternal = value; }
         
-        internal virtual ViewsContext viewsInternal { get; set; }
+        Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
+        ControllersContext IContext.controllers { get => controllers; set => controllers = value; }
         
-        public ControllersContext controllers { get; set; }
+        internal virtual ViewsContext viewsInternal { get; set; }
+        internal ModelsContext models { get; set; }
+        internal ParametersContext parameters { get; set; }
+        
+        internal List<IFixedTick> fixedTicks { get; private set; }
+        internal List<ITick> ticks { get; private set; }
+        internal List<ILateTick> lateTicks { get; private set; }
         
     #if ODIN_INSPECTOR
         [field: ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
@@ -44,19 +49,14 @@ namespace TinyMVC.Boot {
         [SerializeField]
         internal ContextComponent[] components;
         
-        internal ModelsContext models { get; set; }
-        internal ParametersContext parameters { get; set; }
-        
         internal UnloadPool unloadInternal;
         internal CancellationTokenSource cancellationInternal;
-        
-        internal List<IFixedTick> fixedTicks { get; private set; }
-        internal List<ITick> ticks { get; private set; }
-        internal List<ILateTick> lateTicks { get; private set; }
         
         private bool _isInitializationComplete;
         private Dictionary<IController, UnloadPool> _unloads;
         private int _sceneId;
+        
+        private readonly TaskCompletionSource<bool> _initCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         
         private async void Awake() {
             key = gameObject.name;
@@ -165,6 +165,8 @@ namespace TinyMVC.Boot {
         
         bool IContext.isInitializationComplete { get => _isInitializationComplete; set => _isInitializationComplete = value; }
         
+        Task IContext.initialization => _initCompletionSource.Task;
+        
         void IUnload.Unload() {
             StopAllCoroutines();
             
@@ -183,17 +185,22 @@ namespace TinyMVC.Boot {
         }
         
         async Task IContext.InitAsync() {
-            await this.InitAsync();
-            
-            controllers.CheckAndAdd(fixedTicks);
-            controllers.CheckAndAdd(ticks);
-            controllers.CheckAndAdd(lateTicks);
-            
-            viewsInternal.CheckAndAdd(fixedTicks);
-            viewsInternal.CheckAndAdd(ticks);
-            viewsInternal.CheckAndAdd(lateTicks);
-            
-            _isInitializationComplete = true;
+            try {
+                await this.InitAsync();
+                
+                controllers.CheckAndAdd(fixedTicks);
+                controllers.CheckAndAdd(ticks);
+                controllers.CheckAndAdd(lateTicks);
+                
+                viewsInternal.CheckAndAdd(fixedTicks);
+                viewsInternal.CheckAndAdd(ticks);
+                viewsInternal.CheckAndAdd(lateTicks);
+            } catch (Exception exception) {
+                DebugUtility.LogException(exception);
+            } finally {
+                _isInitializationComplete = true;
+                _initCompletionSource.TrySetResult(true);
+            }
         }
         
         async Task IContext.Remove() {

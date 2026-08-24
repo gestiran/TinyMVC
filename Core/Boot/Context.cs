@@ -42,6 +42,8 @@ namespace TinyMVC.Boot {
         
         bool IContext.isInitializationComplete { get => _isInitializationComplete; set => _isInitializationComplete = value; }
         
+        Task IContext.initialization => _initCompletionSource.Task;
+        
         internal ModelsContext models { get; set; }
         internal ParametersContext parameters { get; set; }
         

@@ -8,7 +8,6 @@ using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Dependencies.Extensions;
-using TinyMVC.Views;
 using TinyReactive;
 using TinyReactive.Fields;
 using TinyUtilities.Extensions;
@@ -58,13 +57,14 @@ namespace TinyMVC.Boot.Extensions {
         
         /// <summary> Waits for initialization completion, then unregisters the context from the project. </summary>
         internal static async Task Remove(this IContext context) {
-            for (float time = 0f; time < _CHECK_INITIALIZATION_TIMEOUT;) {
-                if (context.isInitializationComplete) {
-                    break;
-                }
+            if (context.isInitializationComplete == false) {
+                Task initialization = context.initialization;
                 
-                await Task.Delay(16);
-                time += 0.016f;
+                if (await Task.WhenAny(initialization, Task.Delay(TimeSpan.FromSeconds(_CHECK_INITIALIZATION_TIMEOUT))) != initialization) {
+                    DebugUtility.LogException(
+                        new TimeoutException(
+                            $"Context '{context.key}' did not finish initialization within {_CHECK_INITIALIZATION_TIMEOUT}s! Force unloading."));
+                }
             }
             
             if (context is IUnload unload) {
