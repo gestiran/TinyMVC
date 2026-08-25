@@ -34,9 +34,6 @@ namespace TinyMVC.Boot {
         /// <summary> Modules attached to the context. </summary>
         internal IContextModule[] modules { get; }
         
-        /// <summary> Scene identifier provided during registration. Unity: scene build index. </summary>
-        internal int id { get; set; }
-        
         /// <summary> Pool unloaded with the current context. </summary>
         internal UnloadPool unloadPool { get; }
         

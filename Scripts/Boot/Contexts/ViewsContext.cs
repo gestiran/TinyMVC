@@ -147,8 +147,6 @@ namespace TinyMVC.Boot.Contexts {
             subViews.Remove(view);
         }
         
-        protected void Add<T>(T view) where T : View => mainViews.Add(view);
-        
         internal void Insert<T>(T view) where T : View {
             if (_isUsedViewResolve) {
                 string label = view.gameObject != null ? view.gameObject.name : typeof(T).Name;

@@ -30,23 +30,23 @@ namespace TinyMVC.Boot {
         ParametersContext IContext.parameters { get; set; }
         
         ControllersContext IContext.controllers { get => _controllers; set => _controllers = value; }
-        int IContext.id { get => _id; set => _id = value; }
         
         private ControllersContext _controllers;
-        private int _id;
         private CancellationTokenSource _cancellationSource;
         
+        private readonly int _id;
         private readonly UnloadPool _unload;
+        private readonly Dictionary<IController, UnloadPool> _unloads;
         private readonly IViewsContext _views;
         private readonly IContextModule[] _modules;
-        private readonly Dictionary<IController, UnloadPool> _unloads;
         private readonly TaskCompletionSource<bool> _initializationStatus;
         
         protected Context() {
+            _id = GetType().Name.GetHashCode();
+            _unload = new UnloadPool();
+            _unloads = new Dictionary<IController, UnloadPool>();
             _views = CreateViews();
             _modules = CreateModules() ?? Array.Empty<IContextModule>();
-            _unloads = new Dictionary<IController, UnloadPool>();
-            _unload = new UnloadPool();
             _initializationStatus = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         
@@ -206,11 +206,11 @@ namespace TinyMVC.Boot {
         
         protected virtual void OnControllerDisconnected(IController controller) { }
         
-        public bool Equals(Context other) => other != null && key == other.key;
+        public bool Equals(Context other) => other != null && _id == other._id;
         
         public override bool Equals(object obj) => obj is Context other && Equals(other);
         
-        public override int GetHashCode() => key.GetHashCode();
+        public override int GetHashCode() => _id;
         
         public sealed class EmptyViews : IViewsContext {
             void IViewsContext.Instantiate() { }

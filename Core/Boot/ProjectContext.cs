@@ -47,8 +47,6 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            context.id = id;
-            
             if (_sceneContexts.TryGetValue(id, out List<IContext> list)) {
                 if (list.Contains(context) == false) {
                     list.Add(context);

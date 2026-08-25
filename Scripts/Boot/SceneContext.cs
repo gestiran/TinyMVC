@@ -33,8 +33,6 @@ namespace TinyMVC.Boot {
         [field: SerializeField]
         public ViewsContext views { get; private set; }
         
-        int IContext.id { get => _sceneId; set => _sceneId = value; }
-        
         public string key { get; private set; }
         public ControllersContext controllers { get; private set; }
         
@@ -68,6 +66,7 @@ namespace TinyMVC.Boot {
         
         private async void Awake() {
             key = gameObject.name;
+            _sceneId = gameObject.scene.buildIndex;
             
             _fixedTicks = new List<IFixedTick>();
             _ticks = new List<ITick>();
@@ -161,11 +160,13 @@ namespace TinyMVC.Boot {
         
         internal void Connect(View view) => views.Connect(view, ConnectLoop);
         
-        internal void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController => controllers.Connect(system, controller, ConnectLoop);
+        internal void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController
+            => controllers.Connect(system, controller, ConnectLoop);
         
         internal void Disconnect(View view) => views.Disconnect(view, DisconnectLoop);
         
-        internal void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController => controllers.Disconnect(system, controller, DisconnectLoop);
+        internal void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController
+            => controllers.Disconnect(system, controller, DisconnectLoop);
         
         void IContext.Create() {
             this.Create();
@@ -282,13 +283,15 @@ namespace TinyMVC.Boot {
     #if ODIN_INSPECTOR
         [Button("Generate"), PropertyOrder(20), ShowIn(PrefabKind.InstanceInScene), HideInPlayMode]
     #endif
-        public virtual void Reset() {
+        protected void Reset() {
             if (views != null) {
                 views.Reset();
+                Generate();
+                UnityEditor.EditorUtility.SetDirty(gameObject);
             }
-            
-            UnityEditor.EditorUtility.SetDirty(gameObject);
         }
+        
+        protected virtual void Generate() { }
         
         private void MarkRemoved() {
             try {
