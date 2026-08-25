@@ -15,7 +15,6 @@ using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Extensions;
 using TinyMVC.Views;
 using TinyReactive;
-using TinyReactive.Fields;
 using TinyUtilities.Extensions;
 using TinyUtilities.Logger;
 using UnityEngine;
@@ -25,41 +24,14 @@ using Sirenix.OdinInspector;
 #endif
 
 namespace TinyMVC.Boot {
-    /// <summary> Typed scene context with a custom views composition. </summary>
+    /// <summary> Scene context with views composition. </summary>
     [DisallowMultipleComponent]
-    public abstract class SceneContext<TViews> : SceneContext where TViews : ViewsContext {
-        [field: SerializeField]
-        public new TViews views { get; private set; }
-        
-        protected override ViewsContext _views => views;
-        
-        internal override void Connect(View view) => views.Connect(view, ConnectLoop);
-        
-        internal override void Connect<T1, T2>(T2 system, T1 controller) => controllers.Connect(system, controller, ConnectLoop);
-        
-        internal override void Disconnect(View view) => views.Disconnect(view, DisconnectLoop);
-        
-        internal override void Disconnect<T1, T2>(T2 system, T1 controller) => controllers.Disconnect(system, controller, DisconnectLoop);
-        
-    #if UNITY_EDITOR
-    #if ODIN_INSPECTOR
-        [Button("Generate"), PropertyOrder(20), ShowIn(PrefabKind.InstanceInScene), HideInPlayMode]
-    #endif
-        public override void Reset() {
-            if (views != null) {
-                views.Reset();
-            }
-            
-            base.Reset();
-        }
-        
-    #endif
-    }
-    
     [DefaultExecutionOrder(-50)]
     public abstract class SceneContext : MonoBehaviour, IContext, IEquatable<SceneContext> {
         public CancellationToken cancellation => _cancellationSource.Token;
-        public ViewsContext views => _views;
+        
+        [field: SerializeField]
+        public ViewsContext views { get; private set; }
         
         int IContext.id { get => _sceneId; set => _sceneId = value; }
         
@@ -68,13 +40,12 @@ namespace TinyMVC.Boot {
         
         Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
         UnloadPool IContext.unloadPool => _unload;
-        IViewsContext IContext.views => _views;
+        IViewsContext IContext.views => views;
         IContextModule[] IContext.modules => components;
         ControllersContext IContext.controllers { get => controllers; set => controllers = value; }
         ModelsContext IContext.models { get => _models; set => _models = value; }
         ParametersContext IContext.parameters { get => _parameters; set => _parameters = value; }
         
-        protected virtual ViewsContext _views { get; set; }
         private ModelsContext _models { get; set; }
         private ParametersContext _parameters { get; set; }
         private List<IFixedTick> _fixedTicks { get; set; }
@@ -188,12 +159,20 @@ namespace TinyMVC.Boot {
         
         protected virtual void InitWindows() { }
         
+        internal void Connect(View view) => views.Connect(view, ConnectLoop);
+        
+        internal void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController => controllers.Connect(system, controller, ConnectLoop);
+        
+        internal void Disconnect(View view) => views.Disconnect(view, DisconnectLoop);
+        
+        internal void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController => controllers.Disconnect(system, controller, DisconnectLoop);
+        
         void IContext.Create() {
             this.Create();
             
             if (this is IGlobalContext) {
                 DontDestroyOnLoad(gameObject);
-                _views.ApplyDontDestroyOnLoad();
+                views.ApplyDontDestroyOnLoad();
             }
         }
         
@@ -205,9 +184,9 @@ namespace TinyMVC.Boot {
                 controllers.CheckAndAdd(_ticks);
                 controllers.CheckAndAdd(_lateTicks);
                 
-                _views.CheckAndAdd(_fixedTicks);
-                _views.CheckAndAdd(_ticks);
-                _views.CheckAndAdd(_lateTicks);
+                views.CheckAndAdd(_fixedTicks);
+                views.CheckAndAdd(_ticks);
+                views.CheckAndAdd(_lateTicks);
             } catch (Exception exception) {
                 DebugUtility.LogException(exception);
             } finally {
@@ -270,14 +249,6 @@ namespace TinyMVC.Boot {
         
         protected abstract ParametersContext CreateParameters();
         
-        internal abstract void Connect(View view);
-        
-        internal abstract void Disconnect(View view);
-        
-        internal abstract void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;
-        
-        internal abstract void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;
-        
         internal void ConnectLoop(ILoop loop) {
             if (loop is IFixedTick fixedTick) {
                 _fixedTicks.Add(fixedTick);
@@ -308,7 +279,16 @@ namespace TinyMVC.Boot {
         
     #if UNITY_EDITOR
         
-        public virtual void Reset() => UnityEditor.EditorUtility.SetDirty(gameObject);
+    #if ODIN_INSPECTOR
+        [Button("Generate"), PropertyOrder(20), ShowIn(PrefabKind.InstanceInScene), HideInPlayMode]
+    #endif
+        public virtual void Reset() {
+            if (views != null) {
+                views.Reset();
+            }
+            
+            UnityEditor.EditorUtility.SetDirty(gameObject);
+        }
         
         private void MarkRemoved() {
             try {

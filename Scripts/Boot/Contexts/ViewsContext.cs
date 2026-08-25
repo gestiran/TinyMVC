@@ -25,7 +25,7 @@ namespace TinyMVC.Boot.Contexts {
     [InlineProperty, HideLabel]
 #endif
     [Serializable]
-    public abstract class ViewsContext : IViewsContext {
+    public sealed class ViewsContext : IViewsContext {
     #if ODIN_INSPECTOR
         [InfoBox("Instantiated automatically after scene loaded.")]
         [ListDrawerSettings(HideAddButton = true, NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
@@ -76,8 +76,6 @@ namespace TinyMVC.Boot.Contexts {
         internal void CreateViews() {
             mainViews = new List<View>();
             subViews = new List<View>();
-            
-            Create();
             
             mainViews.AddRange(_instances);
             mainViews.AddRange(_generated);
@@ -165,8 +163,6 @@ namespace TinyMVC.Boot.Contexts {
             mainViews.Add(view);
         }
         
-        protected abstract void Create();
-        
         public bool TryGetGenerated<T>(out T view) where T : View, IGeneratedContext {
             for (int i = 0; i < _generated.Length; i++) {
                 if (_generated[i] is T result) {
@@ -181,7 +177,7 @@ namespace TinyMVC.Boot.Contexts {
         
     #if UNITY_EDITOR
         
-        public virtual void Reset() {
+        public void Reset() {
             List<View> views = UnityObject.FindObjectsOfType<View>(true).ToList();
             List<View> generated = new List<View>();
             
@@ -202,7 +198,7 @@ namespace TinyMVC.Boot.Contexts {
             _generated = generated.ToArray();
         }
         
-        protected int CompareViewsByPriority(View first, View second) {
+        public int CompareViewsByPriority(View first, View second) {
             int firstPriority = first is IGeneratedPriority customFirstPriority ? customFirstPriority.priority : 0;
             int secondPriority = second is IGeneratedPriority customSecondPriority ? customSecondPriority.priority : 0;
             return secondPriority - firstPriority;
