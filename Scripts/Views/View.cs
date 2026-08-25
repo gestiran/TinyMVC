@@ -145,7 +145,7 @@ namespace TinyMVC.Views {
         
         public T Insert<T>([NotNull] T view, string contextKey) where T : View {
             if (ProjectContext.TryGetContext(contextKey, out SceneContext context)) {
-                context.Insert(view);
+                context.views.Insert(view);
             }
             
             return view;
