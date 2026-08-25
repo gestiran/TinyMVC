@@ -42,19 +42,19 @@ namespace TinyMVC.Boot {
             _sceneContexts = new Dictionary<int, List<IContext>>();
         }
         
-        internal static async Task AddContext<T>(T context, int sceneId) where T : IContext {
+        internal static async Task AddContext<T>(T context, int id) where T : IContext {
             if (_contexts.TryAdd(context.key, context) == false) {
                 return;
             }
             
-            context.sceneId = sceneId;
+            context.id = id;
             
-            if (_sceneContexts.TryGetValue(sceneId, out List<IContext> list)) {
+            if (_sceneContexts.TryGetValue(id, out List<IContext> list)) {
                 if (list.Contains(context) == false) {
                     list.Add(context);
                 }
             } else {
-                _sceneContexts.Add(sceneId, new List<IContext>() { context });
+                _sceneContexts.Add(id, new List<IContext>() { context });
             }
             
             scene = context;

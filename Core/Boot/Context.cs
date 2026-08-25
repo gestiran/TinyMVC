@@ -12,87 +12,73 @@ using TinyMVC.Dependencies;
 using TinyMVC.Loop;
 using TinyMVC.Views;
 using TinyReactive;
+using TinyUtilities.Extensions;
 using TinyUtilities.Logger;
 
 namespace TinyMVC.Boot {
     public abstract class Context : IContext, IEquatable<Context> {
         public virtual string key => GetType().Name;
         
-        public CancellationToken cancellation => cancellationSource?.Token ?? CancellationToken.None;
-        
-        public ControllersContext controllers { get; set; }
+        public CancellationToken cancellation => _cancellationSource?.Token ?? CancellationToken.None;
         
         Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
         IViewsContext IContext.views => _views;
         IContextModule[] IContext.modules => _modules;
-        UnloadPool IContext.unloadPool => unloadPool;
-        Task IContext.initialization => _initCompletionSource.Task;
+        UnloadPool IContext.unloadPool => _unload;
         
-        ControllersContext IContext.controllers { get => controllers; set => controllers = value; }
-        ModelsContext IContext.models { get => models; set => models = value; }
-        ParametersContext IContext.parameters { get => parameters; set => parameters = value; }
-        int IContext.sceneId { get => _sceneId; set => _sceneId = value; }
-        CancellationTokenSource IContext.cancellationSource { get => cancellationSource; set => cancellationSource = value; }
-        bool IContext.isInitializationComplete { get => _isInitializationComplete; set => _isInitializationComplete = value; }
+        ModelsContext IContext.models { get; set; }
+        ParametersContext IContext.parameters { get; set; }
         
-        internal ModelsContext models { get; set; }
-        internal ParametersContext parameters { get; set; }
+        ControllersContext IContext.controllers { get => _controllers; set => _controllers = value; }
+        int IContext.id { get => _id; set => _id = value; }
         
-        internal CancellationTokenSource cancellationSource;
+        private ControllersContext _controllers;
+        private int _id;
+        private CancellationTokenSource _cancellationSource;
         
-        private int _sceneId;
-        private bool _isInitializationComplete;
-        private bool _isInitialized;
-        private bool _isRemoved;
-        
-        private readonly UnloadPool unloadPool;
+        private readonly UnloadPool _unload;
         private readonly IViewsContext _views;
         private readonly IContextModule[] _modules;
         private readonly Dictionary<IController, UnloadPool> _unloads;
-        private readonly TaskCompletionSource<bool> _initCompletionSource;
+        private readonly TaskCompletionSource<bool> _initializationStatus;
         
         protected Context() {
             _views = CreateViews();
             _modules = CreateModules() ?? Array.Empty<IContextModule>();
             _unloads = new Dictionary<IController, UnloadPool>();
-            unloadPool = new UnloadPool();
-            _initCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _unload = new UnloadPool();
+            _initializationStatus = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         
         public async Task Initialize() {
-            if (_isInitialized) {
-                return;
+            await ProjectContext.AddContext(this, _id);
+            
+            if (_initializationStatus.Task.IsCompleted == false) {
+                DebugUtility.LogError($"Context.Initialize: context '{key}' was not registered (duplicate key?), initialization skipped.");
+                _initializationStatus.TrySetResult(true);
             }
             
-            _isInitialized = true;
-            await ProjectContext.AddContext(this, _sceneId);
-            await _initCompletionSource.Task;
+            await _initializationStatus.Task;
         }
         
         public async Task RemoveAsync() {
-            if (_isRemoved) {
-                return;
-            }
-            
-            _isRemoved = true;
-            
-            if (!_isInitialized) {
-                return;
-            }
+            await _initializationStatus.Task;
             
             try {
-                await this.Remove();
+                _cancellationSource = _cancellationSource.Reset();
+                
+                ProjectContext.RemoveContext(this, _id);
             } catch (Exception exception) {
                 DebugUtility.LogException(exception);
             }
         }
         
         public T Add<T>(T unload) where T : IUnload {
-            if (unloadPool == null) {
+            if (_unload == null) {
                 return unload;
             }
             
-            return unloadPool.Add(unload);
+            return _unload.Add(unload);
         }
         
         void IContext.Create() => this.Create();
@@ -105,23 +91,10 @@ namespace TinyMVC.Boot {
                 DebugUtility.LogException(exception);
             }
             
-            _isInitializationComplete = true;
-            _initCompletionSource.TrySetResult(true);
+            _initializationStatus.TrySetResult(true);
         }
         
-        async Task IContext.Remove() {
-            if (_isRemoved) {
-                return;
-            }
-            
-            _isRemoved = true;
-            
-            try {
-                await this.Remove();
-            } catch (Exception exception) {
-                DebugUtility.LogException(exception);
-            }
-        }
+        Task IContext.Remove() => RemoveAsync();
         
         void IContext.Connect<T1, T2>(T2 system, T1 controller) => ConnectController(system, controller);
         
@@ -176,16 +149,16 @@ namespace TinyMVC.Boot {
                 DebugUtility.LogException(exception);
             }
             
-            if (controllers == null) {
+            if (_controllers == null) {
                 return;
             }
             
             string systemName = system.GetType().Name;
             
-            if (controllers.controllers.TryGetValue(systemName, out List<IController> list)) {
+            if (_controllers.controllers.TryGetValue(systemName, out List<IController> list)) {
                 list.Add(controller);
             } else {
-                controllers.controllers.Add(systemName, new List<IController> { controller });
+                _controllers.controllers.Add(systemName, new List<IController> { controller });
             }
         }
         
@@ -212,19 +185,19 @@ namespace TinyMVC.Boot {
                 }
             }
             
-            if (controllers == null) {
+            if (_controllers == null) {
                 return;
             }
             
             string systemName = system.GetType().Name;
             
-            if (controllers.controllers.TryGetValue(controller.GetType().Name, out List<IController> subControllers)) {
+            if (_controllers.controllers.TryGetValue(controller.GetType().Name, out List<IController> subControllers)) {
                 for (int controllerId = subControllers.Count - 1; controllerId >= 0; controllerId--) {
                     DisconnectController(system, subControllers[controllerId]);
                 }
             }
             
-            if (controllers.controllers.TryGetValue(systemName, out List<IController> list)) {
+            if (_controllers.controllers.TryGetValue(systemName, out List<IController> list)) {
                 list.Remove(controller);
             }
         }

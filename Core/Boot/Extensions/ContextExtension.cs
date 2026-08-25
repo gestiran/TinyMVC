@@ -10,18 +10,14 @@ using TinyMVC.Dependencies;
 using TinyMVC.Dependencies.Extensions;
 using TinyReactive;
 using TinyReactive.Fields;
-using TinyUtilities.Extensions;
 using TinyUtilities.Logger;
 
 namespace TinyMVC.Boot.Extensions {
     internal static class ContextExtension {
         private const int _DEPENDENCIES_CAPACITY = 64;
-        private const float _CHECK_INITIALIZATION_TIMEOUT = 5f;
         
         /// <summary> Creates all context sub-systems: controllers, models, parameters, views and modules. </summary>
         internal static void Create(this IContext context) {
-            context.cancellationSource = context.cancellationSource.Create();
-            
             ControllersContext controllers = context.CreateControllers();
             ModelsContext models = context.CreateModels();
             ParametersContext parameters = context.CreateParameters();
@@ -54,23 +50,6 @@ namespace TinyMVC.Boot.Extensions {
             
         }
         
-        /// <summary> Waits for initialization completion, then unregisters the context from the project. </summary>
-        internal static async Task Remove(this IContext context) {
-            if (context.isInitializationComplete == false) {
-                Task initialization = context.initialization;
-                
-                if (await Task.WhenAny(initialization, Task.Delay(TimeSpan.FromSeconds(_CHECK_INITIALIZATION_TIMEOUT))) != initialization) {
-                    DebugUtility.LogException(new TimeoutException($"Context '{context.key}' did not finish initialization! Force unloading."));
-                }
-            }
-            
-            if (context is IUnload unload) {
-                unload.Unload();
-            }
-            
-            ProjectContext.RemoveContext(context, context.sceneId);
-        }
-        
         /// <summary> Unloads the context pool, per-controller pools and resets the cancellation source. </summary>
         internal static void Unload(this IContext context) {
             if (context.unloadPool == null) {
@@ -94,7 +73,6 @@ namespace TinyMVC.Boot.Extensions {
             }
             
             context.unloads.Clear();
-            context.cancellationSource = context.cancellationSource.Reset();
         }
         
         /// <summary> Dependency resolution stage: parameters → views → binders → models → controllers. </summary>

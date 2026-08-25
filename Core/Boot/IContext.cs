@@ -35,19 +35,10 @@ namespace TinyMVC.Boot {
         internal IContextModule[] modules { get; }
         
         /// <summary> Scene identifier provided during registration. Unity: scene build index. </summary>
-        internal int sceneId { get; set; }
+        internal int id { get; set; }
         
         /// <summary> Pool unloaded with the current context. </summary>
         internal UnloadPool unloadPool { get; }
-        
-        /// <summary> Cancellation source of the context lifetime. </summary>
-        internal CancellationTokenSource cancellationSource { get; set; }
-        
-        /// <summary> Set by the host when the context is fully initialized and all platform loop subscriptions are registered. </summary>
-        internal bool isInitializationComplete { get; set; }
-        
-        /// <summary> Task completed when context initialization is finished. Completes even after a failed initialization. </summary>
-        internal Task initialization { get; }
         
         /// <summary> Creates the user-defined controllers composition. </summary>
         internal ControllersContext CreateControllers();
