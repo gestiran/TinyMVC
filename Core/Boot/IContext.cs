@@ -38,7 +38,7 @@ namespace TinyMVC.Boot {
         internal int sceneId { get; set; }
         
         /// <summary> Pool unloaded with the current context. </summary>
-        internal UnloadPool unloadPool { get; set; }
+        internal UnloadPool unloadPool { get; }
         
         /// <summary> Cancellation source of the context lifetime. </summary>
         internal CancellationTokenSource cancellationSource { get; set; }

@@ -20,7 +20,6 @@ namespace TinyMVC.Boot.Extensions {
         
         /// <summary> Creates all context sub-systems: controllers, models, parameters, views and modules. </summary>
         internal static void Create(this IContext context) {
-            context.unloadPool = new UnloadPool();
             context.cancellationSource = context.cancellationSource.Create();
             
             ControllersContext controllers = context.CreateControllers();
@@ -83,6 +82,10 @@ namespace TinyMVC.Boot.Extensions {
             } catch (Exception exception) {
                 DebugUtility.LogError(new Exception("SceneContext.Unload with exception!", exception));
             }
+            
+            context.controllers.Unload();
+            context.models.Unload();
+            context.views.Unload();
             
             foreach (UnloadPool unload in context.unloads.Values) {
                 if (unload.isUnloaded == false) {

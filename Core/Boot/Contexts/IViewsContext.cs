@@ -23,6 +23,8 @@ namespace TinyMVC.Boot.Contexts {
         
         internal Task BeginPlay();
         
+        internal void Unload();
+        
         internal void AddView(IView view);
         
         internal void TryApplyResolving();

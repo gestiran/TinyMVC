@@ -33,7 +33,15 @@ namespace TinyMVC.Boot {
         public ViewsContext views { get => viewsInternal; internal set => viewsInternal = value; }
         
         Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
+        UnloadPool IContext.unloadPool => unloadInternal;
+        IViewsContext IContext.views => viewsInternal;
+        IContextModule[] IContext.modules => components;
+        
         ControllersContext IContext.controllers { get => controllers; set => controllers = value; }
+        
+        ModelsContext IContext.models { get => models; set => models = value; }
+        
+        ParametersContext IContext.parameters { get => parameters; set => parameters = value; }
         
         internal virtual ViewsContext viewsInternal { get; set; }
         internal ModelsContext models { get; set; }
@@ -65,6 +73,7 @@ namespace TinyMVC.Boot {
             ticks = new List<ITick>();
             lateTicks = new List<ILateTick>();
             _unloads = new Dictionary<IController, UnloadPool>();
+            unloadInternal = new UnloadPool();
             
         #if UNITY_EDITOR
             if (TinyMVCParameters.LoadFromResources().isEnableAutoReload) {
@@ -131,8 +140,11 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            ((IUnload)this).Unload();
-            RunRemove();
+            try {
+                this.Remove();
+            } catch (Exception exception) {
+                DebugUtility.LogError(exception);
+            }
         }
         
         private IEnumerator InitWindowsProcess() {
@@ -145,21 +157,11 @@ namespace TinyMVC.Boot {
             }
         }
         
-        private async void RunRemove() {
-            try {
-                await this.Remove();
-            } catch (Exception exception) {
-                DebugUtility.LogError(exception);
-            }
-        }
-        
         public T Add<T>(T unload) where T : IUnload => unloadInternal.Add(unload);
         
         protected virtual void InitWindows() { }
         
         int IContext.sceneId { get => _sceneId; set => _sceneId = value; }
-        
-        UnloadPool IContext.unloadPool { get => unloadInternal; set => unloadInternal = value; }
         
         CancellationTokenSource IContext.cancellationSource { get => cancellationInternal; set => cancellationInternal = value; }
         
@@ -225,14 +227,6 @@ namespace TinyMVC.Boot {
         ModelsContext IContext.CreateModels() => CreateModels();
         
         ParametersContext IContext.CreateParameters() => CreateParameters();
-        
-        ModelsContext IContext.models { get => models; set => models = value; }
-        
-        ParametersContext IContext.parameters { get => parameters; set => parameters = value; }
-        
-        IViewsContext IContext.views => viewsInternal;
-        
-        IContextModule[] IContext.modules => components;
         
         protected abstract ControllersContext CreateControllers();
         

@@ -70,7 +70,6 @@ namespace TinyMVC.Boot {
             }
             
             context.Unload();
-            
             _contexts.Remove(context.key);
             data.Remove(context.key);
         }

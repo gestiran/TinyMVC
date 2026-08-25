@@ -23,46 +23,39 @@ namespace TinyMVC.Boot {
         public ControllersContext controllers { get; set; }
         
         Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
+        IViewsContext IContext.views => _views;
+        IContextModule[] IContext.modules => _modules;
+        UnloadPool IContext.unloadPool => unloadPool;
+        Task IContext.initialization => _initCompletionSource.Task;
         
         ControllersContext IContext.controllers { get => controllers; set => controllers = value; }
-        
         ModelsContext IContext.models { get => models; set => models = value; }
-        
         ParametersContext IContext.parameters { get => parameters; set => parameters = value; }
-        
-        IViewsContext IContext.views => _views;
-        
-        IContextModule[] IContext.modules => _modules;
-        
         int IContext.sceneId { get => _sceneId; set => _sceneId = value; }
-        
-        UnloadPool IContext.unloadPool { get => unloadPool; set => unloadPool = value; }
-        
         CancellationTokenSource IContext.cancellationSource { get => cancellationSource; set => cancellationSource = value; }
-        
         bool IContext.isInitializationComplete { get => _isInitializationComplete; set => _isInitializationComplete = value; }
-        
-        Task IContext.initialization => _initCompletionSource.Task;
         
         internal ModelsContext models { get; set; }
         internal ParametersContext parameters { get; set; }
         
-        internal UnloadPool unloadPool;
         internal CancellationTokenSource cancellationSource;
         
-        private readonly IViewsContext _views;
-        private readonly IContextModule[] _modules;
-        private readonly Dictionary<IController, UnloadPool> _unloads;
         private int _sceneId;
         private bool _isInitializationComplete;
         private bool _isInitialized;
         private bool _isRemoved;
+        
+        private readonly UnloadPool unloadPool;
+        private readonly IViewsContext _views;
+        private readonly IContextModule[] _modules;
+        private readonly Dictionary<IController, UnloadPool> _unloads;
         private readonly TaskCompletionSource<bool> _initCompletionSource;
         
         protected Context() {
             _views = CreateViews();
             _modules = CreateModules() ?? Array.Empty<IContextModule>();
             _unloads = new Dictionary<IController, UnloadPool>();
+            unloadPool = new UnloadPool();
             _initCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         
@@ -256,6 +249,8 @@ namespace TinyMVC.Boot {
             Task IViewsContext.InitAsync() => Task.CompletedTask;
             
             Task IViewsContext.BeginPlay() => Task.CompletedTask;
+            
+            void IViewsContext.Unload() { }
             
             void IViewsContext.AddView(IView view) { }
             

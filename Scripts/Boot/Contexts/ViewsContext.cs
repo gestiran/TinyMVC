@@ -93,6 +93,14 @@ namespace TinyMVC.Boot.Contexts {
         
         internal async Task BeginPlay() => await mainViews.TryBeginPlayAsync();
         
+        void IViewsContext.Unload() {
+            subViews.TryUnload();
+            mainViews.TryUnload();
+            
+            subViews.Clear();
+            mainViews.Clear();
+        }
+        
         internal void CheckAndAdd<T>(List<T> list) {
             for (int viewId = 0; viewId < mainViews.Count; viewId++) {
                 if (mainViews[viewId] is T view) {
@@ -139,14 +147,6 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             subViews.Remove(view);
-        }
-        
-        internal void Unload() {
-            subViews.TryUnload();
-            mainViews.TryUnload();
-            
-            subViews.Clear();
-            mainViews.Clear();
         }
         
         protected void Add<T>(T view) where T : View => mainViews.Add(view);
