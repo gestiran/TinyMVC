@@ -187,6 +187,11 @@ namespace TinyMVC.Boot {
             }
         }
         
+        internal void Clear() {
+            all.Clear();
+            _listeners.Clear();
+        }
+        
         private string Key<TModel, TComponent>() where TModel : Model where TComponent : ModelComponent => $"{typeof(TModel).Name}#{typeof(TComponent).Name}";
     }
 }

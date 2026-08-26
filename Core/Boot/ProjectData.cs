@@ -419,5 +419,11 @@ namespace TinyMVC.Boot {
                 }
             }
         }
+        
+        internal void Clear() {
+            tempContainer = null;
+            viewsContainer = null;
+            contexts.Clear();
+        }
     }
 }

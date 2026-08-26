@@ -89,6 +89,6 @@ namespace TinyMVC.Boot {
         
         /// <summary> First project context creating </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        internal static void CreateContext() => ProjectContext.Initialize();
+        internal static void CreateContext() => ProjectContext.Clear();
     }
 }

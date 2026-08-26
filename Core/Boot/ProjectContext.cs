@@ -12,8 +12,16 @@ namespace TinyMVC.Boot {
         public static ProjectData data { get; private set; }
         public static IContext scene { get; private set; }
         
-        private static Dictionary<string, IContext> _contexts;
-        private static Dictionary<int, List<IContext>> _sceneContexts;
+        private static readonly Dictionary<string, IContext> _contexts;
+        private static readonly Dictionary<int, List<IContext>> _sceneContexts;
+        
+        static ProjectContext() {
+            components = new ProjectComponents();
+            data = new ProjectData(components);
+            
+            _contexts = new Dictionary<string, IContext>();
+            _sceneContexts = new Dictionary<int, List<IContext>>();
+        }
         
         public static IEnumerable<IContext> Contexts() {
             foreach (IContext context in _contexts.Values) {
@@ -31,15 +39,6 @@ namespace TinyMVC.Boot {
             
             context = null;
             return false;
-        }
-        
-        /// <summary> First project context creating </summary>
-        internal static void Initialize() {
-            components = new ProjectComponents();
-            data = new ProjectData(components);
-            
-            _contexts = new Dictionary<string, IContext>();
-            _sceneContexts = new Dictionary<int, List<IContext>>();
         }
         
         internal static async Task AddContext<T>(T context, int id) where T : IContext {
@@ -86,6 +85,15 @@ namespace TinyMVC.Boot {
             contexts.Clear();
             
             _sceneContexts.Remove(sceneBuildIndex);
+        }
+        
+        /// <summary> First project context creating </summary>
+        internal static void Clear() {
+            components.Clear();
+            data.Clear();
+            
+            _contexts.Clear();
+            _sceneContexts.Clear();
         }
     }
 }
