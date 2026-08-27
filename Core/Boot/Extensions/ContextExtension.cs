@@ -22,13 +22,13 @@ namespace TinyMVC.Boot.Extensions {
             context.models.ConnectUnload(context.unloadPool);
             
             context.views.Instantiate();
-            InstantiateComponents(context.modules);
+            InstantiateComponents(context);
             
             context.controllers.CreateControllers();
-            CreateComponentsControllers(context.modules, context.controllers.systems, context.controllers.initLazyList);
+            CreateComponentsControllers(context, context.controllers.systems, context.controllers.initLazyList);
             
             context.views.CreateViews();
-            AddComponentsViews(context.modules, context.views);
+            AddComponentsViews(context, context.views);
         }
         
         /// <summary> Runs the full initialization sequence: view init, resolve, begin play and loop registration. </summary>
@@ -69,14 +69,13 @@ namespace TinyMVC.Boot.Extensions {
         /// <summary> Dependency resolution stage: parameters → views → binders → models → controllers. </summary>
         private static async Task Resolve(this IContext context) {
             string key = context.key;
-            IContextModule[] components = context.modules;
             
             List<IDependency> dependenciesParameters = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             List<IDependency> dependenciesViews = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
             ParametersContext parameters = context.parameters;
             parameters.Init();
-            CreateParametersComponents(components, parameters.all);
+            CreateParametersComponents(context, parameters.all);
             
             parameters.AddDependencies(dependenciesParameters);
             
@@ -90,7 +89,7 @@ namespace TinyMVC.Boot.Extensions {
             
             ModelsContext models = context.models;
             models.CreateBinders(key);
-            CreateBindersComponents(components, models);
+            CreateBindersComponents(context, models);
             
             List<IDependency> runtimeDependencies = new List<IDependency>(_DEPENDENCIES_CAPACITY);
             
@@ -101,7 +100,7 @@ namespace TinyMVC.Boot.Extensions {
             models.TryApplyResolving();
             
             models.Create();
-            CreateModelsComponents(components, models.dependencies);
+            CreateModelsComponents(context, models.dependencies);
             ProjectContext.data.Add(key, models.dependencies);
             
             ControllersContext controllers = context.controllers;
@@ -113,39 +112,39 @@ namespace TinyMVC.Boot.Extensions {
             context.views.TryApplyResolving();
         }
         
-        private static void InstantiateComponents(IContextModule[] components) {
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].Instantiate();
+        private static void InstantiateComponents(IContext root) {
+            foreach (IContextComponent component in root.Components()) {
+                component.Instantiate();
             }
         }
         
-        private static void CreateComponentsControllers(IContextModule[] components, List<IController> systems, List<ActionListener> initSystemsLazy) {
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CreateControllersInternal(systems, initSystemsLazy);
+        private static void CreateComponentsControllers(IContext root, List<IController> systems, List<ActionListener> initSystemsLazy) {
+            foreach (IContextComponent component in root.Components()) {
+                component.CreateControllers(systems, initSystemsLazy);
             }
         }
         
-        private static void AddComponentsViews(IContextModule[] components, IViewsContext context) {
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].AddComponentsViews(context);
+        private static void AddComponentsViews(IContext root, IViewsContext context) {
+            foreach (IContextComponent component in root.Components()) {
+                component.AddComponentsViews(context);
             }
         }
         
-        private static void CreateParametersComponents(IContextModule[] components, List<IDependency> dependencies) {
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CreateParametersInternal(dependencies);
+        private static void CreateParametersComponents(IContext root, List<IDependency> dependencies) {
+            foreach (IContextComponent component in root.Components()) {
+                component.CreateParameters(dependencies);
             }
         }
         
-        private static void CreateBindersComponents<T>(IContextModule[] components, T context) where T : ModelsContext {
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CreateBindersInternal(context);
+        private static void CreateBindersComponents<T>(IContext root, T context) where T : ModelsContext {
+            foreach (IContextComponent component in root.Components()) {
+                component.CreateBinders(context);
             }
         }
         
-        private static void CreateModelsComponents(IContextModule[] components, List<IDependency> dependencies) {
-            for (int componentId = 0; componentId < components.Length; componentId++) {
-                components[componentId].CreateModelsInternal(dependencies);
+        private static void CreateModelsComponents(IContext root, List<IDependency> dependencies) {
+            foreach (IContextComponent component in root.Components()) {
+                component.CreateModels(dependencies);
             }
         }
     }

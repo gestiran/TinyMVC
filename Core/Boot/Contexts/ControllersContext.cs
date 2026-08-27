@@ -12,11 +12,10 @@ namespace TinyMVC.Boot.Contexts {
     public abstract class ControllersContext : IController {
         protected UnloadPool _unload { get; private set; }
         
-        internal readonly List<IController> systems;
-        
-        internal readonly Dictionary<string, List<IController>> controllers;
-        
         internal List<ActionListener> initLazyList { get; private set; }
+        
+        internal readonly List<IController> systems;
+        internal readonly Dictionary<string, List<IController>> controllers;
         
         private static EmptyContext _empty;
         

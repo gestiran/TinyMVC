@@ -31,9 +31,6 @@ namespace TinyMVC.Boot {
         /// <summary> Views composition of the context. </summary>
         internal IViewsContext views { get; }
         
-        /// <summary> Modules attached to the context. </summary>
-        internal IContextModule[] modules { get; }
-        
         /// <summary> Pool unloaded with the current context. </summary>
         internal UnloadPool unloadPool { get; }
         
@@ -45,6 +42,8 @@ namespace TinyMVC.Boot {
         
         /// <summary> Waits for initialization completion, then unregisters the context from the project. </summary>
         internal Task Remove();
+        
+        internal IEnumerable<IContextComponent> Components();
         
         /// <summary> Connects a runtime-created controller to the system of another controller. </summary>
         internal void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController;

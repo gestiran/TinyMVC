@@ -25,7 +25,6 @@ namespace TinyMVC.Boot {
         ModelsContext IContext.models => _models;
         ParametersContext IContext.parameters => _parameters;
         IViewsContext IContext.views => _views;
-        IContextModule[] IContext.modules => _modules;
         UnloadPool IContext.unloadPool => _unload;
         Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
         
@@ -38,15 +37,15 @@ namespace TinyMVC.Boot {
         private readonly UnloadPool _unload;
         private readonly Dictionary<IController, UnloadPool> _unloads;
         private readonly IViewsContext _views;
-        private readonly IContextModule[] _modules;
+        private readonly List<ContextModule> _modules;
         private readonly TaskCompletionSource<bool> _initializationStatus;
         
         protected Context() {
             _id = GetType().Name.GetHashCode();
             _unload = new UnloadPool();
             _unloads = new Dictionary<IController, UnloadPool>();
+            _modules = new List<ContextModule>();
             _views = CreateViews();
-            _modules = CreateModules() ?? Array.Empty<IContextModule>();
             _initializationStatus = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         
@@ -66,6 +65,8 @@ namespace TinyMVC.Boot {
             _models = CreateModels();
             _parameters = CreateParameters();
             
+            CreateModules();
+            
             this.Create();
         }
         
@@ -77,6 +78,12 @@ namespace TinyMVC.Boot {
             }
             
             _initializationStatus.TrySetResult(true);
+        }
+        
+        IEnumerable<IContextComponent> IContext.Components() {
+            for (int componentId = 0; componentId < _modules.Count; componentId++) {
+                yield return _modules[componentId];
+            }
         }
         
         public async Task RemoveAsync() {
@@ -105,7 +112,9 @@ namespace TinyMVC.Boot {
         
         internal virtual IViewsContext CreateViews() => new EmptyViews();
         
-        internal virtual IContextModule[] CreateModules() => Array.Empty<IContextModule>();
+        protected virtual void CreateModules() { }
+        
+        protected void AddModule<T>(T module) where T : ContextModule => _modules.Add(module);
         
         protected abstract ControllersContext CreateControllers();
         

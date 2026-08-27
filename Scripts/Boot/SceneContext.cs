@@ -13,6 +13,7 @@ using TinyMVC.Loop.Extensions;
 using TinyMVC.Parameters;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Boot.Extensions;
+using TinyMVC.Dependencies;
 using TinyMVC.Views;
 using TinyReactive;
 using TinyUtilities.Extensions;
@@ -35,7 +36,6 @@ namespace TinyMVC.Boot {
         public string key { get; private set; }
         
         IViewsContext IContext.views => views;
-        IContextModule[] IContext.modules => components;
         ControllersContext IContext.controllers => _controllers;
         ModelsContext IContext.models => _models;
         ParametersContext IContext.parameters => _parameters;
@@ -43,10 +43,15 @@ namespace TinyMVC.Boot {
         Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
         
     #if ODIN_INSPECTOR
-        [field: ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
+        [PropertyOrder(10), InlineEditor(InlineEditorObjectFieldModes.Foldout), HideInPlayMode, Required]
     #endif
         [SerializeField]
         internal ContextComponent[] components;
+        
+    #if ODIN_INSPECTOR
+        [ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
+    #endif
+        private ControllersContext _controllers;
         
         private int _sceneId;
         
@@ -54,7 +59,6 @@ namespace TinyMVC.Boot {
         private List<ITick> _ticks;
         private List<ILateTick> _lateTicks;
         
-        private ControllersContext _controllers;
         private ModelsContext _models;
         private ParametersContext _parameters;
         
@@ -176,6 +180,12 @@ namespace TinyMVC.Boot {
             }
         }
         
+        IEnumerable<IContextComponent> IContext.Components() {
+            for (int componentId = 0; componentId < components.Length; componentId++) {
+                yield return components[componentId];
+            }
+        }
+        
         async Task IContext.Remove() => await RemoveProcess(_cancellationSource.Token);
         
         private async UniTask RemoveProcess(CancellationToken cancellationToken) {
@@ -229,23 +239,65 @@ namespace TinyMVC.Boot {
         
         protected virtual void InitWindows() { }
         
-        internal void Connect(View view) {
-            views.Connect(view, ConnectLoop);
-        }
-        
-        internal void Disconnect(View view) {
-            views.Disconnect(view, DisconnectLoop);
-        }
-        
-        void IContext.Connect<T1, T2>(T2 system, T1 controller) => _controllers.Connect(system, controller, ConnectLoop);
-        
-        void IContext.Disconnect<T1, T2>(T2 system, T1 controller) => _controllers.Disconnect(system, controller, DisconnectLoop);
-        
         protected abstract ControllersContext CreateControllers();
         
         protected abstract ModelsContext CreateModels();
         
         protected abstract ParametersContext CreateParameters();
+        
+        internal void Connect(View view) => views.Connect(view, ConnectLoop);
+        
+        internal void Disconnect(View view) => views.Disconnect(view, DisconnectLoop);
+        
+        void IContext.Connect<T1, T2>(T2 system, T1 controller) {
+            if (controller is IInit init) {
+                init.Init();
+            }
+            
+            if (controller is IApplyResolving applyResolving) {
+                applyResolving.ApplyResolving();
+            }
+            
+            if (controller is IBeginPlay beginPlay) {
+                beginPlay.BeginPlay();
+            }
+            
+            if (controller is ILoop loop) {
+                ConnectLoop(loop);
+            }
+            
+            string systemName = system.GetType().Name;
+            
+            if (_controllers.controllers.TryGetValue(systemName, out List<IController> all)) {
+                all.Add(controller);
+            } else {
+                _controllers.controllers.Add(systemName, new List<IController>() { controller });
+            }
+        }
+        
+        void IContext.Disconnect<T1, T2>(T2 system, T1 controller) {
+            if (controller is ILoop loop) {
+                DisconnectLoop(loop);
+            }
+            
+            if (controller is IUnload unload) {
+                unload.Unload();
+            }
+            
+            if (ProjectContext.scene.unloads.Remove(controller, out UnloadPool globalUnload)) {
+                globalUnload.Unload();
+            }
+            
+            if (_controllers.controllers.TryGetValue(system.GetType().Name, out List<IController> all)) {
+                if (_controllers.controllers.TryGetValue(controller.GetType().Name, out List<IController> subControllers)) {
+                    for (int controllerId = subControllers.Count - 1; controllerId >= 0; controllerId--) {
+                        DisconnectNR(system, subControllers[controllerId]);
+                    }
+                }
+                
+                all.Remove(controller);
+            }
+        }
         
         private void ConnectLoop(ILoop loop) {
             if (loop is IFixedTick fixedTick) {
@@ -273,6 +325,10 @@ namespace TinyMVC.Boot {
             if (loop is ILateTick lateTick) {
                 _lateTicks.Remove(lateTick);
             }
+        }
+        
+        private void DisconnectNR<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController {
+            (this as IContext).Disconnect(system, controller);
         }
         
     #if UNITY_EDITOR

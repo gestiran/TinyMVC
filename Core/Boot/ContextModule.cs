@@ -1,49 +1,18 @@
-// Copyright (c) 2023 Derek Sliman
-// Licensed under the MIT License. See LICENSE.md for details.
-
 using System.Collections.Generic;
 using TinyMVC.Boot.Binding;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
-using TinyMVC.Views;
 using TinyReactive.Fields;
-using UnityEngine;
-using UnityObject = UnityEngine.Object;
-
-#if ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
 
 namespace TinyMVC.Boot {
-    /// <summary> Unity module of the scene context. </summary>
-    public abstract class ContextComponent : MonoBehaviour, IContextComponent {
-    #if ODIN_INSPECTOR
-        [ListDrawerSettings(NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
-    #endif
-        [SerializeField]
-        private View[] _assets;
-        
-        private View[] _instances;
+    public abstract class ContextModule : IContextComponent {
         private List<IController> _systems;
         private List<ActionListener> _initSystemsLazy;
         private ModelsContext _models;
         private List<IDependency> _parameters;
         
-        void IContextComponent.Instantiate() {
-            _instances = new View[_assets.Length];
-            
-            for (int assetId = 0; assetId < _assets.Length; assetId++) {
-            #if UNITY_EDITOR
-                if (_assets[assetId] == null) {
-                    Debug.LogError("Context contain null element!");
-                    continue;
-                }
-            #endif
-                
-                _instances[assetId] = UnityObject.Instantiate(_assets[assetId]);
-            }
-        }
+        void IContextComponent.Instantiate() { }
         
         void IContextComponent.CreateControllers(List<IController> systems, List<ActionListener> initSystemsLazy) {
             _systems = systems;
@@ -101,23 +70,8 @@ namespace TinyMVC.Boot {
             _models.dependenciesBinded.Add(dependency);
         }
         
-        protected void Load<T>(T dependency) where T : ScriptableObject, IDependency {
-        #if UNITY_EDITOR
-            
-            if (dependency == null) {
-                Debug.LogError($"Can't find {typeof(T).Name} parameter");
-                return;
-            }
-            
-        #endif
-            
-            _parameters.Add(dependency);
-        }
+        protected void Load<T>(T dependency) where T : IDependency => _parameters.Add(dependency);
         
-        void IContextComponent.AddComponentsViews(IViewsContext context) {
-            for (int viewId = 0; viewId < _instances.Length; viewId++) {
-                context.AddView(_instances[viewId]);
-            }
-        }
+        void IContextComponent.AddComponentsViews(IViewsContext context) { }
     }
 }
