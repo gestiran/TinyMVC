@@ -21,10 +21,24 @@ namespace TinyMVC.Boot.Contexts {
         /// <summary> Views connected at runtime through <see cref="TinyMVC.Views.ViewExtension"/> or <c>Context.ConnectView</c>. </summary>
         private readonly List<IView> _views;
         
-        /// <summary> Creates an empty views context. </summary>
-        public ViewsContextCore() => _views = new List<IView>();
+        /// <summary>
+        /// Pool of connected views: root view to its children.<br/>
+        /// Analog of the Unity <c>WindowContext.connections</c> from the <c>WindowsService</c>. Stored like <see cref="ProjectComponents"/>.
+        /// </summary>
+        private readonly Dictionary<IView, List<IView>> _connections;
         
-        void IViewsContext.CreateViews() => _views.Clear();
+        private const int _CAPACITY = 64;
+        
+        /// <summary> Creates an empty views context. </summary>
+        public ViewsContextCore() {
+            _views = new List<IView>();
+            _connections = new Dictionary<IView, List<IView>>(_CAPACITY);
+        }
+        
+        void IViewsContext.CreateViews() {
+            _views.Clear();
+            _connections.Clear();
+        }
         
         async Task IViewsContext.InitAsync() {
             for (int viewId = 0; viewId < _views.Count; viewId++) {
@@ -49,6 +63,7 @@ namespace TinyMVC.Boot.Contexts {
         void IViewsContext.Unload() {
             _views.TryUnload();
             _views.Clear();
+            _connections.Clear();
         }
         
         void IViewsContext.Add(IView view) => _views.Add(view);
@@ -70,13 +85,56 @@ namespace TinyMVC.Boot.Contexts {
             _views.Add(view);
         }
         
-        /// <summary> Runtime disconnection: Unload. </summary>
+        /// <summary> Runtime disconnection: Unload → recursive disconnection of all child views. </summary>
         internal void Disconnect(IView view) {
             if (view is IUnload unload) {
                 unload.Unload();
             }
             
+            DisconnectAll(view);
             _views.Remove(view);
+        }
+        
+        /// <summary> Returns the children pool of the given root view. Creates one if it doesn't exist. </summary>
+        internal List<IView> GetOrCreateConnections(IView root) {
+            if (_connections.TryGetValue(root, out List<IView> connections) == false) {
+                connections = new List<IView>();
+                _connections.Add(root, connections);
+            }
+            
+            return connections;
+        }
+        
+        /// <summary> Tries to get the children pool of the given root view. </summary>
+        internal bool TryGetConnections(IView root, out List<IView> connections) => _connections.TryGetValue(root, out connections);
+        
+        /// <summary> Removes a single child view from the root connections pool. </summary>
+        internal void RemoveConnection(IView root, IView view) {
+            if (_connections.TryGetValue(root, out List<IView> connections)) {
+                connections.Remove(view);
+                
+                if (connections.Count == 0) {
+                    _connections.Remove(root);
+                }
+            }
+        }
+        
+        /// <summary> Recursively disconnects all child views connected to the given root. </summary>
+        internal void DisconnectAll(IView root) {
+            if (_connections.TryGetValue(root, out List<IView> connections) == false) {
+                return;
+            }
+            
+            for (int connectionId = connections.Count - 1; connectionId >= 0; connectionId--) {
+                IView view = connections[connectionId];
+                
+                view.root = null;
+                view.connectState = ConnectState.Disconnected;
+                connections.RemoveAt(connectionId);
+                Disconnect(view);
+            }
+            
+            _connections.Remove(root);
         }
     }
 }

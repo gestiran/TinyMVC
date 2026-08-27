@@ -36,7 +36,7 @@ namespace TinyMVC.Boot {
         private readonly int _id;
         private readonly UnloadPool _unload;
         private readonly Dictionary<IController, UnloadPool> _unloads;
-        private readonly IViewsContext _views;
+        private readonly ViewsContextCore _views;
         private readonly List<ContextModule> _modules;
         private readonly TaskCompletionSource<bool> _initializationStatus;
         
