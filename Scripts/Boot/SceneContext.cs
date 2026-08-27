@@ -336,7 +336,7 @@ namespace TinyMVC.Boot {
     #if ODIN_INSPECTOR
         [Button("Generate"), PropertyOrder(20), ShowIn(PrefabKind.InstanceInScene), HideInPlayMode]
     #endif
-        protected void Reset() {
+        public void Reset() {
             if (views != null) {
                 views.Reset();
                 Generate();
