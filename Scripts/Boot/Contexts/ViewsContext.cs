@@ -26,7 +26,7 @@ namespace TinyMVC.Boot.Contexts {
     [InlineProperty, HideLabel]
 #endif
     [Serializable]
-    public sealed class ViewsContext : IViewsContext {
+    public sealed class ViewsContext : IViewsContext, IInit {
     #if ODIN_INSPECTOR
         [InfoBox("Instantiated automatically after scene loaded.")]
         [ListDrawerSettings(HideAddButton = true, NumberOfItemsPerPage = 5), AssetsOnly, Searchable, HideInPlayMode, Required]
@@ -46,7 +46,7 @@ namespace TinyMVC.Boot.Contexts {
         internal List<View> subViews;
         private bool _isUsedViewResolve;
         
-        void IViewsContext.Instantiate() {
+        public void Init() {
             List<View> instances = new List<View>(_assets.Length);
             
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
@@ -102,7 +102,7 @@ namespace TinyMVC.Boot.Contexts {
             mainViews.Clear();
         }
         
-        void IViewsContext.AddView(IView view) => mainViews.Add(view as View);
+        void IViewsContext.Add(IView view) => mainViews.Add(view as View);
         
         internal void ApplyDontDestroyOnLoad() {
             for (int viewId = 0; viewId < mainViews.Count; viewId++) {

@@ -10,9 +10,6 @@ using TinyMVC.Views;
 namespace TinyMVC.Boot.Contexts {
     /// <summary> Views composition of the context required by the common initialization pipeline (<see cref="ContextExtension"/>). </summary>
     internal interface IViewsContext {
-        /// <summary> Creates platform instances of the pre-configured assets. </summary>
-        internal void Instantiate();
-        
         /// <summary> Creates user views and combines them with instantiated assets. </summary>
         internal void CreateViews();
         
@@ -27,6 +24,6 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void Unload();
         
-        internal void AddView(IView view);
+        internal void Add(IView view);
     }
 }

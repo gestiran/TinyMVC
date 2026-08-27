@@ -8,6 +8,7 @@ using TinyMVC.Boot.Contexts;
 using TinyMVC.Controllers;
 using TinyMVC.Dependencies;
 using TinyMVC.Dependencies.Extensions;
+using TinyMVC.Loop;
 using TinyReactive;
 using TinyReactive.Fields;
 using TinyUtilities.Logger;
@@ -21,7 +22,10 @@ namespace TinyMVC.Boot.Extensions {
             context.controllers.ConnectUnload(context.unloadPool);
             context.models.ConnectUnload(context.unloadPool);
             
-            context.views.Instantiate();
+            if (context.views is IInit views) {
+                views.Init();
+            }
+            
             InstantiateComponents(context);
             
             context.controllers.CreateControllers();

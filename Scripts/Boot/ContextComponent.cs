@@ -116,7 +116,7 @@ namespace TinyMVC.Boot {
         
         void IContextComponent.AddComponentsViews(IViewsContext context) {
             for (int viewId = 0; viewId < _instances.Length; viewId++) {
-                context.AddView(_instances[viewId]);
+                context.Add(_instances[viewId]);
             }
         }
     }

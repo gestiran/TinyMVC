@@ -45,7 +45,7 @@ namespace TinyMVC.Boot {
             _unload = new UnloadPool();
             _unloads = new Dictionary<IController, UnloadPool>();
             _modules = new List<ContextModule>();
-            _views = CreateViews();
+            _views = new ViewsContextCore();
             _initializationStatus = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         
@@ -106,11 +106,34 @@ namespace TinyMVC.Boot {
             return _unload.Add(unload);
         }
         
+        /// <summary> Runtime-connects a rootless view to the current context: Init → ApplyResolving → BeginPlay. </summary>
+        public void ConnectView(IView view) {
+            if (view == null) {
+                DebugUtility.LogError("Context.ConnectView: view is null!");
+                return;
+            }
+            
+            if (_views is ViewsContextCore viewsContext) {
+                view.connectState = ConnectState.Connected;
+                viewsContext.Connect(view);
+            }
+        }
+        
+        /// <summary> Disconnects a rootless view from the current context: Unload. </summary>
+        public void DisconnectView(IView view) {
+            if (view == null) {
+                return;
+            }
+            
+            if (_views is ViewsContextCore viewsContext) {
+                view.connectState = ConnectState.Disconnected;
+                viewsContext.Disconnect(view);
+            }
+        }
+        
         void IContext.Connect<T1, T2>(T2 system, T1 controller) => ConnectController(system, controller);
         
         void IContext.Disconnect<T1, T2>(T2 system, T1 controller) => DisconnectController(system, controller);
-        
-        internal virtual IViewsContext CreateViews() => new EmptyViews();
         
         protected virtual void CreateModules() { }
         
@@ -201,23 +224,5 @@ namespace TinyMVC.Boot {
         public override bool Equals(object obj) => obj is Context other && Equals(other);
         
         public override int GetHashCode() => _id;
-        
-        public sealed class EmptyViews : IViewsContext {
-            void IViewsContext.Instantiate() { }
-            
-            void IViewsContext.GetDependencies(List<IDependency> dependencies) { }
-            
-            void IViewsContext.CreateViews() { }
-            
-            Task IViewsContext.InitAsync() => Task.CompletedTask;
-            
-            Task IViewsContext.BeginPlay() => Task.CompletedTask;
-            
-            void IViewsContext.Unload() { }
-            
-            void IViewsContext.AddView(IView view) { }
-            
-            void IViewsContext.TryApplyResolving() { }
-        }
     }
 }
