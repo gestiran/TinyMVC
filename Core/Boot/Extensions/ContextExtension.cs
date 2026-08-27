@@ -18,22 +18,14 @@ namespace TinyMVC.Boot.Extensions {
         
         /// <summary> Creates all context sub-systems: controllers, models, parameters, views and modules. </summary>
         internal static void Create(this IContext context) {
-            ControllersContext controllers = context.CreateControllers();
-            ModelsContext models = context.CreateModels();
-            ParametersContext parameters = context.CreateParameters();
-            
-            context.controllers = controllers;
-            context.models = models;
-            context.parameters = parameters;
-            
-            controllers.ConnectUnload(context.unloadPool);
-            models.ConnectUnload(context.unloadPool);
+            context.controllers.ConnectUnload(context.unloadPool);
+            context.models.ConnectUnload(context.unloadPool);
             
             context.views.Instantiate();
             InstantiateComponents(context.modules);
             
-            controllers.CreateControllers();
-            CreateComponentsControllers(context.modules, controllers.systems, controllers.initLazyList);
+            context.controllers.CreateControllers();
+            CreateComponentsControllers(context.modules, context.controllers.systems, context.controllers.initLazyList);
             
             context.views.CreateViews();
             AddComponentsViews(context.modules, context.views);
@@ -47,7 +39,6 @@ namespace TinyMVC.Boot.Extensions {
             
             await context.controllers.BeginPlay();
             await context.views.BeginPlay();
-            
         }
         
         /// <summary> Unloads the context pool, per-controller pools and resets the cancellation source. </summary>

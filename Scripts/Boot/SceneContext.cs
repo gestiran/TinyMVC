@@ -25,8 +25,7 @@ using Sirenix.OdinInspector;
 
 namespace TinyMVC.Boot {
     /// <summary> Scene context with views composition. </summary>
-    [DisallowMultipleComponent]
-    [DefaultExecutionOrder(-50)]
+    [DisallowMultipleComponent, DefaultExecutionOrder(-50)]
     public abstract class SceneContext : MonoBehaviour, IContext, IEquatable<SceneContext> {
         public CancellationToken cancellation => _cancellationSource.Token;
         
@@ -34,21 +33,14 @@ namespace TinyMVC.Boot {
         public ViewsContext views { get; private set; }
         
         public string key { get; private set; }
-        public ControllersContext controllers { get; private set; }
         
-        Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
-        UnloadPool IContext.unloadPool => _unload;
         IViewsContext IContext.views => views;
         IContextModule[] IContext.modules => components;
-        ControllersContext IContext.controllers { get => controllers; set => controllers = value; }
-        ModelsContext IContext.models { get => _models; set => _models = value; }
-        ParametersContext IContext.parameters { get => _parameters; set => _parameters = value; }
-        
-        private ModelsContext _models { get; set; }
-        private ParametersContext _parameters { get; set; }
-        private List<IFixedTick> _fixedTicks { get; set; }
-        private List<ITick> _ticks { get; set; }
-        private List<ILateTick> _lateTicks { get; set; }
+        ControllersContext IContext.controllers => _controllers;
+        ModelsContext IContext.models => _models;
+        ParametersContext IContext.parameters => _parameters;
+        UnloadPool IContext.unloadPool => _unload;
+        Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
         
     #if ODIN_INSPECTOR
         [field: ShowInInspector, HideLabel, HideReferenceObjectPicker, HideDuplicateReferenceBox, InlineProperty, HideInEditorMode]
@@ -57,6 +49,15 @@ namespace TinyMVC.Boot {
         internal ContextComponent[] components;
         
         private int _sceneId;
+        
+        private List<IFixedTick> _fixedTicks;
+        private List<ITick> _ticks;
+        private List<ILateTick> _lateTicks;
+        
+        private ControllersContext _controllers;
+        private ModelsContext _models;
+        private ParametersContext _parameters;
+        
         private UnloadPool _unload;
         private Dictionary<IController, UnloadPool> _unloads;
         private CancellationTokenSource _cancellationSource;
@@ -71,8 +72,8 @@ namespace TinyMVC.Boot {
             _fixedTicks = new List<IFixedTick>();
             _ticks = new List<ITick>();
             _lateTicks = new List<ILateTick>();
-            _unloads = new Dictionary<IController, UnloadPool>();
             _unload = new UnloadPool();
+            _unloads = new Dictionary<IController, UnloadPool>();
             _cancellationSource = new CancellationTokenSource();
             _initializationStatus = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             
@@ -144,31 +145,11 @@ namespace TinyMVC.Boot {
             }
         }
         
-        private IEnumerator InitWindowsProcess() {
-            yield return new WaitForEndOfFrame();
-            
-            try {
-                InitWindows();
-            } catch (Exception exception) {
-                DebugUtility.LogError(new Exception("SceneContext.InitWindows with exception!", exception));
-            }
-        }
-        
-        public T Add<T>(T unload) where T : IUnload => _unload.Add(unload);
-        
-        protected virtual void InitWindows() { }
-        
-        internal void Connect(View view) => views.Connect(view, ConnectLoop);
-        
-        internal void Connect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController
-            => controllers.Connect(system, controller, ConnectLoop);
-        
-        internal void Disconnect(View view) => views.Disconnect(view, DisconnectLoop);
-        
-        internal void Disconnect<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController
-            => controllers.Disconnect(system, controller, DisconnectLoop);
-        
         void IContext.Create() {
+            _controllers = CreateControllers();
+            _models = CreateModels();
+            _parameters = CreateParameters();
+            
             this.Create();
             
             if (this is IGlobalContext) {
@@ -181,9 +162,9 @@ namespace TinyMVC.Boot {
             try {
                 await this.InitAsync();
                 
-                controllers.CheckAndAdd(_fixedTicks);
-                controllers.CheckAndAdd(_ticks);
-                controllers.CheckAndAdd(_lateTicks);
+                _controllers.CheckAndAdd(_fixedTicks);
+                _controllers.CheckAndAdd(_ticks);
+                _controllers.CheckAndAdd(_lateTicks);
                 
                 views.CheckAndAdd(_fixedTicks);
                 views.CheckAndAdd(_ticks);
@@ -234,15 +215,31 @@ namespace TinyMVC.Boot {
             ProjectContext.RemoveContext(this, _sceneId);
         }
         
-        void IContext.Connect<T1, T2>(T2 system, T1 controller) => Connect(system, controller);
+        public T Add<T>(T unload) where T : IUnload => _unload.Add(unload);
         
-        void IContext.Disconnect<T1, T2>(T2 system, T1 controller) => Disconnect(system, controller);
+        private IEnumerator InitWindowsProcess() {
+            yield return new WaitForEndOfFrame();
+            
+            try {
+                InitWindows();
+            } catch (Exception exception) {
+                DebugUtility.LogError(new Exception("SceneContext.InitWindows with exception!", exception));
+            }
+        }
         
-        ControllersContext IContext.CreateControllers() => CreateControllers();
+        protected virtual void InitWindows() { }
         
-        ModelsContext IContext.CreateModels() => CreateModels();
+        internal void Connect(View view) {
+            views.Connect(view, ConnectLoop);
+        }
         
-        ParametersContext IContext.CreateParameters() => CreateParameters();
+        internal void Disconnect(View view) {
+            views.Disconnect(view, DisconnectLoop);
+        }
+        
+        void IContext.Connect<T1, T2>(T2 system, T1 controller) => _controllers.Connect(system, controller, ConnectLoop);
+        
+        void IContext.Disconnect<T1, T2>(T2 system, T1 controller) => _controllers.Disconnect(system, controller, DisconnectLoop);
         
         protected abstract ControllersContext CreateControllers();
         
@@ -250,7 +247,7 @@ namespace TinyMVC.Boot {
         
         protected abstract ParametersContext CreateParameters();
         
-        internal void ConnectLoop(ILoop loop) {
+        private void ConnectLoop(ILoop loop) {
             if (loop is IFixedTick fixedTick) {
                 _fixedTicks.Add(fixedTick);
             }
@@ -264,7 +261,7 @@ namespace TinyMVC.Boot {
             }
         }
         
-        internal void DisconnectLoop(ILoop loop) {
+        private void DisconnectLoop(ILoop loop) {
             if (loop is IFixedTick fixedTick) {
                 _fixedTicks.Remove(fixedTick);
             }

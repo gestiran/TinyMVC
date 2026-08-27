@@ -21,17 +21,17 @@ namespace TinyMVC.Boot {
         
         public CancellationToken cancellation => _cancellationSource?.Token ?? CancellationToken.None;
         
-        Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
+        ControllersContext IContext.controllers => _controllers;
+        ModelsContext IContext.models => _models;
+        ParametersContext IContext.parameters => _parameters;
         IViewsContext IContext.views => _views;
         IContextModule[] IContext.modules => _modules;
         UnloadPool IContext.unloadPool => _unload;
-        
-        ModelsContext IContext.models { get; set; }
-        ParametersContext IContext.parameters { get; set; }
-        
-        ControllersContext IContext.controllers { get => _controllers; set => _controllers = value; }
+        Dictionary<IController, UnloadPool> IContext.unloads => _unloads;
         
         private ControllersContext _controllers;
+        private ModelsContext _models;
+        private ParametersContext _parameters;
         private CancellationTokenSource _cancellationSource;
         
         private readonly int _id;
@@ -61,6 +61,24 @@ namespace TinyMVC.Boot {
             await _initializationStatus.Task;
         }
         
+        void IContext.Create() {
+            _controllers = CreateControllers();
+            _models = CreateModels();
+            _parameters = CreateParameters();
+            
+            this.Create();
+        }
+        
+        async Task IContext.InitAsync() {
+            try {
+                await this.InitAsync();
+            } catch (Exception exception) {
+                DebugUtility.LogException(exception);
+            }
+            
+            _initializationStatus.TrySetResult(true);
+        }
+        
         public async Task RemoveAsync() {
             await _initializationStatus.Task;
             
@@ -81,36 +99,13 @@ namespace TinyMVC.Boot {
             return _unload.Add(unload);
         }
         
-        void IContext.Create() => this.Create();
-        
-        async Task IContext.InitAsync() {
-            try {
-                await this.InitAsync();
-                OnInitializationComplete();
-            } catch (Exception exception) {
-                DebugUtility.LogException(exception);
-            }
-            
-            _initializationStatus.TrySetResult(true);
-        }
-        
-        Task IContext.Remove() => RemoveAsync();
-        
         void IContext.Connect<T1, T2>(T2 system, T1 controller) => ConnectController(system, controller);
         
         void IContext.Disconnect<T1, T2>(T2 system, T1 controller) => DisconnectController(system, controller);
         
-        ControllersContext IContext.CreateControllers() => CreateControllers();
-        
-        ModelsContext IContext.CreateModels() => CreateModels();
-        
-        ParametersContext IContext.CreateParameters() => CreateParameters();
-        
         internal virtual IViewsContext CreateViews() => new EmptyViews();
         
         internal virtual IContextModule[] CreateModules() => Array.Empty<IContextModule>();
-        
-        protected virtual void OnInitializationComplete() { }
         
         protected abstract ControllersContext CreateControllers();
         
@@ -143,12 +138,6 @@ namespace TinyMVC.Boot {
                 }
             }
             
-            try {
-                OnControllerConnected(controller);
-            } catch (Exception exception) {
-                DebugUtility.LogException(exception);
-            }
-            
             if (_controllers == null) {
                 return;
             }
@@ -163,12 +152,6 @@ namespace TinyMVC.Boot {
         }
         
         protected virtual void DisconnectController<T1, T2>(T2 system, T1 controller) where T1 : IController where T2 : IController {
-            try {
-                OnControllerDisconnected(controller);
-            } catch (Exception exception) {
-                DebugUtility.LogException(exception);
-            }
-            
             if (controller is IUnload unload) {
                 try {
                     unload.Unload();
@@ -202,9 +185,7 @@ namespace TinyMVC.Boot {
             }
         }
         
-        protected virtual void OnControllerConnected(IController controller) { }
-        
-        protected virtual void OnControllerDisconnected(IController controller) { }
+        Task IContext.Remove() => RemoveAsync();
         
         public bool Equals(Context other) => other != null && _id == other._id;
         

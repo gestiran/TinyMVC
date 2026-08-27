@@ -13,20 +13,20 @@ namespace TinyMVC.Boot.Contexts {
         /// <summary> Creates platform instances of the pre-configured assets. </summary>
         internal void Instantiate();
         
-        /// <summary> Collects view-based dependencies for the resolve stage. </summary>
-        internal void GetDependencies(List<IDependency> dependencies);
-        
         /// <summary> Creates user views and combines them with instantiated assets. </summary>
         internal void CreateViews();
         
         internal Task InitAsync();
+        
+        /// <summary> Collects view-based dependencies for the resolve stage. </summary>
+        internal void GetDependencies(List<IDependency> dependencies);
+        
+        internal void TryApplyResolving();
         
         internal Task BeginPlay();
         
         internal void Unload();
         
         internal void AddView(IView view);
-        
-        internal void TryApplyResolving();
     }
 }

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 using TinyMVC.Dependencies;
@@ -45,7 +46,7 @@ namespace TinyMVC.Boot.Contexts {
         internal List<View> subViews;
         private bool _isUsedViewResolve;
         
-        internal void Instantiate() {
+        void IViewsContext.Instantiate() {
             List<View> instances = new List<View>(_assets.Length);
             
             for (int assetId = 0; assetId < _assets.Length; assetId++) {
@@ -63,7 +64,23 @@ namespace TinyMVC.Boot.Contexts {
             _isUsedViewResolve = false;
         }
         
-        internal void GetDependencies(List<IDependency> dependencies) {
+        void IViewsContext.CreateViews() {
+            mainViews = new List<View>();
+            subViews = new List<View>();
+            
+            mainViews.AddRange(_instances);
+            mainViews.AddRange(_generated);
+        }
+        
+        async Task IViewsContext.InitAsync() {
+            for (int viewId = 0; viewId < mainViews.Count; viewId++) {
+                mainViews[viewId].connectState = ConnectState.Connected;
+            }
+            
+            await mainViews.TryInitAsync();
+        }
+        
+        void IViewsContext.GetDependencies(List<IDependency> dependencies) {
             for (int assetId = 0; assetId < mainViews.Count; assetId++) {
                 if (mainViews[assetId] is IDependency dependency) {
                     dependencies.Add(dependency);
@@ -73,23 +90,9 @@ namespace TinyMVC.Boot.Contexts {
             _isUsedViewResolve = true;
         }
         
-        internal void CreateViews() {
-            mainViews = new List<View>();
-            subViews = new List<View>();
-            
-            mainViews.AddRange(_instances);
-            mainViews.AddRange(_generated);
-        }
+        void IViewsContext.TryApplyResolving() => mainViews.TryApplyResolving();
         
-        internal async Task InitAsync() {
-            for (int viewId = 0; viewId < mainViews.Count; viewId++) {
-                mainViews[viewId].connectState = ConnectState.Connected;
-            }
-            
-            await mainViews.TryInitAsync();
-        }
-        
-        internal async Task BeginPlay() => await mainViews.TryBeginPlayAsync();
+        async Task IViewsContext.BeginPlay() => await mainViews.TryBeginPlayAsync();
         
         void IViewsContext.Unload() {
             subViews.TryUnload();
@@ -97,6 +100,16 @@ namespace TinyMVC.Boot.Contexts {
             
             subViews.Clear();
             mainViews.Clear();
+        }
+        
+        void IViewsContext.AddView(IView view) => mainViews.Add(view as View);
+        
+        internal void ApplyDontDestroyOnLoad() {
+            for (int viewId = 0; viewId < mainViews.Count; viewId++) {
+                if (mainViews[viewId] is IDontDestroyOnLoad) {
+                    UnityObject.DontDestroyOnLoad(mainViews[viewId].gameObject);
+                }
+            }
         }
         
         internal void CheckAndAdd<T>(List<T> list) {
@@ -107,12 +120,18 @@ namespace TinyMVC.Boot.Contexts {
             }
         }
         
-        internal void ApplyDontDestroyOnLoad() {
-            for (int viewId = 0; viewId < mainViews.Count; viewId++) {
-                if (mainViews[viewId] is IDontDestroyOnLoad) {
-                    UnityObject.DontDestroyOnLoad(mainViews[viewId].gameObject);
-                }
+        internal void Insert<T>(T view) where T : View {
+            if (_isUsedViewResolve) {
+                string label = view.gameObject != null ? view.gameObject.name : typeof(T).Name;
+                Debug.LogError($"ViewsContext.Add({label}) - Can't be added, resolve is completed!");
+                return;
             }
+            
+            if (view is IInit init) {
+                init.Init();
+            }
+            
+            mainViews.Add(view);
         }
         
         internal void Connect(View view, Action<ILoop> connectLoop) {
@@ -145,20 +164,6 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             subViews.Remove(view);
-        }
-        
-        internal void Insert<T>(T view) where T : View {
-            if (_isUsedViewResolve) {
-                string label = view.gameObject != null ? view.gameObject.name : typeof(T).Name;
-                Debug.LogError($"ViewsContext.Add({label}) - Can't be added, resolve is completed!");
-                return;
-            }
-            
-            if (view is IInit init) {
-                init.Init();
-            }
-            
-            mainViews.Add(view);
         }
         
         public bool TryGetGenerated<T>(out T view) where T : View, IGeneratedContext {
@@ -196,6 +201,7 @@ namespace TinyMVC.Boot.Contexts {
             _generated = generated.ToArray();
         }
         
+        [Pure]
         public int CompareViewsByPriority(View first, View second) {
             int firstPriority = first is IGeneratedPriority customFirstPriority ? customFirstPriority.priority : 0;
             int secondPriority = second is IGeneratedPriority customSecondPriority ? customSecondPriority.priority : 0;
@@ -203,19 +209,5 @@ namespace TinyMVC.Boot.Contexts {
         }
         
     #endif
-        
-        void IViewsContext.Instantiate() => Instantiate();
-        
-        void IViewsContext.AddView(IView view) => mainViews.Add(view as View);
-        
-        void IViewsContext.TryApplyResolving() => mainViews.TryApplyResolving();
-        
-        void IViewsContext.GetDependencies(List<IDependency> dependencies) => GetDependencies(dependencies);
-        
-        void IViewsContext.CreateViews() => CreateViews();
-        
-        Task IViewsContext.InitAsync() => InitAsync();
-        
-        Task IViewsContext.BeginPlay() => BeginPlay();
     }
 }
