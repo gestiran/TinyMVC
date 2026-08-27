@@ -1,0 +1,21 @@
+# Build artifacts
+/.intellijPlatform/
+[Bb]in/
+[Oo]bj/
+build
+output
+.gradle
+.tmp
+
+# User-specific files
+*.suo
+*.user
+*.sln.docstates
+*.cache
+
+# IDEs
+/.vscode/*
+/.idea/*
+.vs
+_ReSharper*
+_dotTrace*
