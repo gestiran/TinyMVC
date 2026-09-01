@@ -11,7 +11,7 @@ namespace TinyMVC.Boot.Binding {
         
         protected DependencyAbstractPoolBinder(string key = null) => keyValue = key;
         
-        public override IDependency GetDependency() => Bind();
+        internal override IDependency GetDependency() => Bind();
         
         internal override Type GetBindType() => typeof(DependencyPool<T>);
         

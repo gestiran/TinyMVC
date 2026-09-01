@@ -27,7 +27,7 @@ namespace TinyMVC.Boot.Binding {
         
         /// <summary> Creates and initializes the model. </summary>
         /// <returns> The model is ready for work. </returns>
-        public abstract IDependency GetDependency();
+        internal abstract IDependency GetDependency();
         
         /// <summary> Get the type of the model being created. </summary>
         /// <returns> Type of model being created. </returns>
@@ -53,7 +53,7 @@ namespace TinyMVC.Boot.Binding {
         
         /// <summary> Creates and initializes the model. </summary>
         /// <returns> The model is ready for work. </returns>
-        public override IDependency GetDependency() {
+        internal override IDependency GetDependency() {
             if (_isCreated) {
                 DebugUtility.LogError($"{GetType().Name} - Self created!");
                 return _model;
