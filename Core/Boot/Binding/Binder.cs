@@ -7,8 +7,8 @@ using TinyReactive;
 using TinyUtilities.Logger;
 
 namespace TinyMVC.Boot.Binding {
-    /// <summary> The (internal API) factory responsible for initializing and loading models. </summary>
-    public abstract class Binder : IBinder {
+    /// <summary> The factory responsible for initializing and loading models. </summary>
+    public abstract class Binder {
         /// <summary> Unique model identifier required for save-load. </summary>
         protected string _key { get; private set; }
         
@@ -21,10 +21,7 @@ namespace TinyMVC.Boot.Binding {
             set => _key = value;
         }
         
-        /// <summary> Self-reference. </summary>
-        public Binder current => this;
-        
-        /// <summary> Protected/Internal constructor. </summary>
+        /// <summary> Override default key value. </summary>
         /// <param name="key"> Unique model identifier required for save-load. </param>
         protected Binder(string key = null) => _key = key;
         
@@ -78,11 +75,14 @@ namespace TinyMVC.Boot.Binding {
         /// <returns> The model is ready for work. </returns>
         public T Bind() => (T)GetDependency();
         
+        /// <summary> Resets the previous creation marker and bind next model. </summary>
+        /// <returns> The new model is ready for work. </returns>
         public T ReBind() {
             Reset();
             return Bind();
         }
         
+        /// <summary> Resets the previous creation marker. </summary>
         public void Reset() => _isCreated = false;
         
         /// <summary> Initializes the model parameters. </summary>
