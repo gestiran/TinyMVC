@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using TinyMVC.Boot;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Dependencies;
+using TinyReactive;
 
 namespace TinyMVC.Views {
     /// <summary>
@@ -32,6 +33,22 @@ namespace TinyMVC.Views {
                 view.connectState = ConnectState.Connected;
                 views.GetOrCreateConnections(root).Add(view);
                 views.Connect(view);
+            }
+            
+            return view;
+        }
+        
+        /// <summary> Connects the view to the current context. Unloading the <paramref name="unload"/> pool disconnects the view on demand. </summary>
+        public static T Connect<T>(this IView root, T view, IUnloadLink unload) where T : IView {
+            return Connect(root, view, unload, ProjectContext.scene.key);
+        }
+        
+        /// <summary> Connects the view to the target context. Unloading the <paramref name="unload"/> pool disconnects the view on demand. </summary>
+        public static T Connect<T>(this IView root, T view, IUnloadLink unload, string contextKey) where T : IView {
+            Connect(root, view, contextKey);
+            
+            if (unload != null) {
+                unload.Add(new UnloadAction(() => view.Disconnect(contextKey)));
             }
             
             return view;

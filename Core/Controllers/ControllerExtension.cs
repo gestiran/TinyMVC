@@ -28,6 +28,24 @@ namespace TinyMVC.Controllers {
             return controller;
         }
         
+        /// <summary> Connect a controller into the current context. Unloading the <paramref name="unload"/> pool disconnects the controller on demand. </summary>
+        public static T2 Connect<T1, T2>(this T1 system, T2 controller, IUnloadLink unload) where T1 : IController where T2 : IController {
+            return system.Connect(controller, unload, ProjectContext.scene.key);
+        }
+        
+        /// <summary> Connect a controller into the target context. Unloading the <paramref name="unload"/> pool disconnects the controller on demand. </summary>
+        public static T2 Connect<T1, T2>(this T1 system, T2 controller, IUnloadLink unload, string contextKey) where T1 : IController where T2 : IController {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
+                context.Connect(system, controller);
+                
+                if (unload != null) {
+                    unload.Add(new UnloadAction(() => context.Disconnect(system, controller)));
+                }
+            }
+            
+            return controller;
+        }
+        
         public static void Connect<T1>(this T1 system, List<IController> controllers) where T1 : IController {
             string contextKey = ProjectContext.scene.key;
             

@@ -119,6 +119,29 @@ namespace TinyMVC.Boot {
             }
         }
         
+        /// <summary> Runtime-connects a rootless view to the current context. Unloading the <paramref name="unload"/> pool disconnects the view on demand. </summary>
+        /// <param name="view"> Target view. </param>
+        /// <param name="unload"> Unload pool: unloading it disconnects the view on demand. </param>
+        public void ConnectView(IView view, IUnloadLink unload) {
+            if (view == null) {
+                DebugUtility.LogError("Context.ConnectView: view is null!");
+                return;
+            }
+            
+            if (_views is ViewsContextCore viewsContext) {
+                view.connectState = ConnectState.Connected;
+                viewsContext.Connect(view);
+                
+                if (unload != null) {
+                    unload.Add(new UnloadAction(() => {
+                        if (view.connectState == ConnectState.Connected) {
+                            DisconnectView(view);
+                        }
+                    }));
+                }
+            }
+        }
+        
         /// <summary> Disconnects a rootless view from the current context: Unload. </summary>
         public void DisconnectView(IView view) {
             if (view == null) {
