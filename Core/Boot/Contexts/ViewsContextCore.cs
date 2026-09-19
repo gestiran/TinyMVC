@@ -128,10 +128,12 @@ namespace TinyMVC.Boot.Contexts {
             for (int connectionId = connections.Count - 1; connectionId >= 0; connectionId--) {
                 IView view = connections[connectionId];
                 
-                view.root = null;
-                view.connectState = ConnectState.Disconnected;
-                connections.RemoveAt(connectionId);
-                Disconnect(view);
+                if (view.connectState == ConnectState.Connected) {
+                    view.root = null;
+                    view.connectState = ConnectState.Disconnected;
+                    connections.RemoveAt(connectionId);
+                    Disconnect(view);   
+                }
             }
             
             _connections.Remove(root);
