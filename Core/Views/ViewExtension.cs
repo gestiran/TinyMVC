@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using TinyMVC.Boot;
 using TinyMVC.Boot.Contexts;
 using TinyMVC.Dependencies;
@@ -15,11 +16,33 @@ namespace TinyMVC.Views {
     /// The pool of connected views lives inside <see cref="ViewsContextCore"/> (analog of the <c>WindowsService</c> connections).
     /// </summary>
     public static class ViewExtension {
-        [Obsolete("Can't connect nothing!", true)]
-        public static void Connect(this IView _) { }
+        [Pure]
+        public static IEnumerable<T> Connections<T>(this IView root) where T : IView {
+            return root.Connections<T>(ProjectContext.scene.key);
+        }
         
-        [Obsolete("Can't connect nothing!", true)]
-        public static void Connect(this IView _, string contextKey) { }
+        [Pure]
+        public static IEnumerable<T> Connections<T>(this IView root, string contextKey) where T : IView {
+            foreach (IView view in root.Connections(contextKey)) {
+                if (view is T target) {
+                    yield return target;
+                }
+            }
+        }
+        
+        [Pure]
+        public static IEnumerable<IView> Connections(this IView root) {
+            return root.Connections(ProjectContext.scene.key);
+        }
+        
+        [Pure]
+        public static IEnumerable<IView> Connections(this IView root, string contextKey) {
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context) && context.TryGetConnections(root, out List<IView> connections)) {
+                for (int connectionId = connections.Count - 1; connectionId >= 0; connectionId--) {
+                    yield return connections[connectionId];
+                }
+            }
+        }
         
         /// <summary> Connects the view to the current context: Init → ApplyResolving → BeginPlay. </summary>
         public static T Connect<T>(this IView root, T view) where T : IView {
@@ -28,11 +51,11 @@ namespace TinyMVC.Views {
         
         /// <summary> Connects the view to the target context: Init → ApplyResolving → BeginPlay. </summary>
         public static T Connect<T>(this IView root, T view, string contextKey) where T : IView {
-            if (TryGetViewsContext(contextKey, out ViewsContextCore views) && view.connectState == ConnectState.Disconnected) {
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context) && view.connectState == ConnectState.Disconnected) {
                 view.root = root;
                 view.connectState = ConnectState.Connected;
-                views.GetOrCreateConnections(root).Add(view);
-                views.Connect(view);
+                context.GetOrCreateConnections(root).Add(view);
+                context.Connect(view);
             }
             
             return view;
@@ -76,12 +99,12 @@ namespace TinyMVC.Views {
         
         /// <summary> Connects the view to the target context with a resolved <paramref name="container"/>. </summary>
         public static T Connect<T>(this IView root, T view, string contextKey, DependencyContainer container) where T : IView {
-            if (TryGetViewsContext(contextKey, out ViewsContextCore views) && view.connectState == ConnectState.Disconnected) {
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context) && view.connectState == ConnectState.Disconnected) {
                 ProjectContext.data.tempContainer = container;
                 view.root = root;
                 view.connectState = ConnectState.Connected;
-                views.GetOrCreateConnections(root).Add(view);
-                views.Connect(view);
+                context.GetOrCreateConnections(root).Add(view);
+                context.Connect(view);
             }
             
             return view;
@@ -94,8 +117,8 @@ namespace TinyMVC.Views {
         
         /// <summary> Connects the views to the target context. </summary>
         public static void Connect<T>(this IView root, string contextKey, params T[] views) where T : IView {
-            if (TryGetViewsContext(contextKey, out ViewsContextCore target)) {
-                List<IView> connections = target.GetOrCreateConnections(root);
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context)) {
+                List<IView> connections = context.GetOrCreateConnections(root);
                 
                 for (int viewId = 0; viewId < views.Length; viewId++) {
                     T view = views[viewId];
@@ -104,7 +127,7 @@ namespace TinyMVC.Views {
                         view.root = root;
                         view.connectState = ConnectState.Connected;
                         connections.Add(view);
-                        target.Connect(view);
+                        context.Connect(view);
                     }
                 }
             }
@@ -117,10 +140,10 @@ namespace TinyMVC.Views {
         
         /// <summary> Connects the views to the target context with the resolved <paramref name="dependencies"/>. </summary>
         public static void Connect<T>(this IView root, T[] views, string contextKey, params IDependency[] dependencies) where T : IView {
-            if (TryGetViewsContext(contextKey, out ViewsContextCore target)) {
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context)) {
                 ProjectContext.data.tempContainer = new DependencyContainer(dependencies);
                 
-                List<IView> connections = target.GetOrCreateConnections(root);
+                List<IView> connections = context.GetOrCreateConnections(root);
                 
                 for (int viewId = 0; viewId < views.Length; viewId++) {
                     T view = views[viewId];
@@ -129,7 +152,7 @@ namespace TinyMVC.Views {
                         view.root = root;
                         view.connectState = ConnectState.Connected;
                         connections.Add(view);
-                        target.Connect(view);
+                        context.Connect(view);
                     }
                 }
             }
@@ -156,11 +179,11 @@ namespace TinyMVC.Views {
         
         /// <summary> Disconnects the view from the target context: Unload → recursive disconnection of all connected children. </summary>
         public static T Disconnect<T>(this IView root, T view, string contextKey) where T : IView {
-            if (view.connectState == ConnectState.Connected && TryGetViewsContext(contextKey, out ViewsContextCore views)) {
+            if (view.connectState == ConnectState.Connected && TryGetViewsContext(contextKey, out ViewsContextCore context)) {
                 view.root = null;
                 view.connectState = ConnectState.Disconnected;
-                views.RemoveConnection(root, view);
-                views.Disconnect(view);
+                context.RemoveConnection(root, view);
+                context.Disconnect(view);
             }
             
             return view;
@@ -173,7 +196,7 @@ namespace TinyMVC.Views {
         
         /// <summary> Disconnects the views from the target context. </summary>
         public static void Disconnect<T>(this IView root, string contextKey, params T[] views) where T : IView {
-            if (TryGetViewsContext(contextKey, out ViewsContextCore target) == false) {
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context) == false) {
                 return;
             }
             
@@ -181,10 +204,29 @@ namespace TinyMVC.Views {
                 T view = views[viewId];
                 
                 if (view.connectState == ConnectState.Connected) {
-                    views[viewId].root = null;
-                    views[viewId].connectState = ConnectState.Disconnected;
-                    target.RemoveConnection(root, views[viewId]);
-                    target.Disconnect(views[viewId]);
+                    view.root = null;
+                    view.connectState = ConnectState.Disconnected;
+                    context.RemoveConnection(root, view);
+                    context.Disconnect(view);
+                }
+            }
+        }
+        
+        public static void DisconnectReferences<T>(this IView root, T dependency) {
+            DisconnectReferences(root, ProjectContext.scene.key, dependency);
+        }
+        
+        public static void DisconnectReferences<T>(this IView root, string contextKey, T dependency) {
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context) && context.TryGetConnections(root, out List<IView> connections)) {
+                for (int connectionId = connections.Count - 1; connectionId >= 0; connectionId--) {
+                    IView view = connections[connectionId];
+                    
+                    if (view.connectState == ConnectState.Connected && view is IEquatable<T> equatable && equatable.Equals(dependency)) {
+                        view.root = null;
+                        view.connectState = ConnectState.Disconnected;
+                        context.RemoveConnection(root, view);
+                        context.Disconnect(view);
+                    }
                 }
             }
         }
@@ -283,5 +325,11 @@ namespace TinyMVC.Views {
             views = null;
             return false;
         }
+        
+        [Obsolete("Can't connect nothing!", true)]
+        public static void Connect(this IView _) { }
+        
+        [Obsolete("Can't connect nothing!", true)]
+        public static void Connect(this IView _, string contextKey) { }
     }
 }

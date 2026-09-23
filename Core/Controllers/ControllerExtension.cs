@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using TinyMVC.Boot;
@@ -10,6 +11,36 @@ using TinyReactive;
 
 namespace TinyMVC.Controllers {
     public static class ControllerExtension {
+        [Pure]
+        public static IEnumerable<T> Connections<T>(this IController system) where T : IController {
+            return system.Connections<T>(ProjectContext.scene.key);
+        }
+        
+        [Pure]
+        public static IEnumerable<T> Connections<T>(this IController system, string contextKey) where T : IController {
+            foreach (IController controller in system.Connections(contextKey)) {
+                if (controller is T target) {
+                    yield return target;
+                }
+            }
+        }
+        
+        [Pure]
+        public static IEnumerable<IController> Connections(this IController system) {
+            return system.Connections(ProjectContext.scene.key);
+        }
+        
+        [Pure]
+        public static IEnumerable<IController> Connections(this IController system, string contextKey) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
+                string systemName = system.GetType().Name;
+                
+                foreach (IController controller in context.controllers.ForEach(systemName)) {
+                    yield return controller;
+                }
+            }
+        }
+        
         public static T2 Connect<T1, T2>(this T1 system, T2 controller) where T1 : IController where T2 : IController {
             string contextKey = ProjectContext.scene.key;
             
@@ -96,7 +127,8 @@ namespace TinyMVC.Controllers {
             return controller;
         }
         
-        public static T2 Connect<T1, T2>(this T1 system, string contextKey, params IDependency[] dependencies) where T1 : IController where T2 : IController, new() {
+        public static T2 Connect<T1, T2>(this T1 system, string contextKey, params IDependency[] dependencies)
+            where T1 : IController where T2 : IController, new() {
             T2 controller = default;
             
             if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
@@ -160,6 +192,22 @@ namespace TinyMVC.Controllers {
         public static void Disconnect<T1, T2>(this T1 system, T2 controller, string contextKey) where T1 : IController where T2 : IController {
             if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
                 context.Disconnect(system, controller);
+            }
+        }
+        
+        public static void DisconnectReferences<T>(this IController system, T dependency) {
+            DisconnectReferences(system, ProjectContext.scene.key, dependency);
+        }
+        
+        public static void DisconnectReferences<T>(this IController system, string contextKey, T dependency) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
+                string systemName = system.GetType().Name;
+                
+                foreach (IController controller in context.controllers.ForEach(systemName)) {
+                    if (controller is IEquatable<T> equatable && equatable.Equals(dependency)) {
+                        system.Disconnect(controller, contextKey);
+                    }
+                }
             }
         }
         
