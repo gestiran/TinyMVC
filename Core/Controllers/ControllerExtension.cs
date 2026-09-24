@@ -195,8 +195,29 @@ namespace TinyMVC.Controllers {
             }
         }
         
+        public static bool DisconnectReference<T>(this IController system, T dependency, out IController controller) {
+            return system.DisconnectReference(ProjectContext.scene.key, dependency, out controller);
+        }
+        
+        public static bool DisconnectReference<T>(this IController system, string contextKey, T dependency, out IController controller) {
+            if (ProjectContext.TryGetContext(contextKey, out IContext context)) {
+                string systemName = system.GetType().Name;
+                
+                foreach (IController other in context.controllers.ForEach(systemName)) {
+                    if (other is IEquatable<T> equatable && equatable.Equals(dependency)) {
+                        system.Disconnect(other, contextKey);
+                        controller = other;
+                        return true;
+                    }
+                }
+            }
+            
+            controller = null;
+            return false;
+        }
+        
         public static void DisconnectReferences<T>(this IController system, T dependency) {
-            DisconnectReferences(system, ProjectContext.scene.key, dependency);
+            system.DisconnectReferences(ProjectContext.scene.key, dependency);
         }
         
         public static void DisconnectReferences<T>(this IController system, string contextKey, T dependency) {

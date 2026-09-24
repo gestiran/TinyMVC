@@ -212,8 +212,31 @@ namespace TinyMVC.Views {
             }
         }
         
+        public static bool DisconnectReference<T>(this IView root, T dependency, out IView connection) {
+            return root.DisconnectReference(ProjectContext.scene.key, dependency, out connection);
+        }
+        
+        public static bool DisconnectReference<T>(this IView root, string contextKey, T dependency, out IView connection) {
+            if (TryGetViewsContext(contextKey, out ViewsContextCore context) && context.TryGetConnections(root, out List<IView> connections)) {
+                for (int connectionId = connections.Count - 1; connectionId >= 0; connectionId--) {
+                    connection = connections[connectionId];
+                    
+                    if (connection.connectState == ConnectState.Connected && connection is IEquatable<T> equatable && equatable.Equals(dependency)) {
+                        connection.root = null;
+                        connection.connectState = ConnectState.Disconnected;
+                        context.RemoveConnection(root, connection);
+                        context.Disconnect(connection);
+                        return true;
+                    }
+                }
+            }
+            
+            connection = null;
+            return false;
+        }
+        
         public static void DisconnectReferences<T>(this IView root, T dependency) {
-            DisconnectReferences(root, ProjectContext.scene.key, dependency);
+            root.DisconnectReferences(ProjectContext.scene.key, dependency);
         }
         
         public static void DisconnectReferences<T>(this IView root, string contextKey, T dependency) {
