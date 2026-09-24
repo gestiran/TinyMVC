@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TinyMVC.Dependencies;
@@ -10,6 +11,7 @@ using TinyMVC.Loop.Extensions;
 using TinyMVC.Views;
 using TinyReactive;
 using TinyReactive.Fields;
+using TinyUtilities.Logger;
 
 namespace TinyMVC.Boot.Contexts {
     /// <summary>
@@ -88,7 +90,11 @@ namespace TinyMVC.Boot.Contexts {
         /// <summary> Runtime disconnection: Unload → recursive disconnection of all child views. </summary>
         internal void Disconnect(IView view) {
             if (view is IUnload unload) {
-                unload.Unload();
+                try {
+                    unload.Unload();
+                } catch (Exception exception) {
+                    DebugUtility.LogException(new Exception("ViewsContextCore.Disconnect - Unload exception!", exception));
+                }
             }
             
             DisconnectAll(view);
@@ -121,22 +127,20 @@ namespace TinyMVC.Boot.Contexts {
         
         /// <summary> Recursively disconnects all child views connected to the given root. </summary>
         internal void DisconnectAll(IView root) {
-            if (_connections.TryGetValue(root, out List<IView> connections) == false) {
-                return;
-            }
-            
-            for (int connectionId = connections.Count - 1; connectionId >= 0; connectionId--) {
-                IView view = connections[connectionId];
-                
-                if (view.connectState == ConnectState.Connected) {
-                    view.root = null;
-                    view.connectState = ConnectState.Disconnected;
-                    connections.RemoveAt(connectionId);
-                    Disconnect(view);   
+            if (_connections.TryGetValue(root, out List<IView> connections)) {
+                for (int connectionId = connections.Count - 1; connectionId >= 0; connectionId--) {
+                    IView view = connections[connectionId];
+                    
+                    if (view.connectState == ConnectState.Connected) {
+                        view.root = null;
+                        view.connectState = ConnectState.Disconnected;
+                        connections.RemoveAt(connectionId);
+                        Disconnect(view);
+                    }
                 }
+                
+                _connections.Remove(root);
             }
-            
-            _connections.Remove(root);
         }
     }
 }

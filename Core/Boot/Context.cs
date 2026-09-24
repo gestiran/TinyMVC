@@ -74,7 +74,7 @@ namespace TinyMVC.Boot {
             try {
                 await this.InitAsync();
             } catch (Exception exception) {
-                DebugUtility.LogException(exception);
+                DebugUtility.LogException(new Exception("Context.InitAsync - Initialize exception!", exception));
             }
             
             _initializationStatus.TrySetResult(true);
@@ -91,7 +91,6 @@ namespace TinyMVC.Boot {
             
             try {
                 _cancellationSource = _cancellationSource.Reset();
-                
                 ProjectContext.RemoveContext(this, _id);
             } catch (Exception exception) {
                 DebugUtility.LogException(exception);
@@ -113,9 +112,9 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            if (_views is ViewsContextCore viewsContext) {
+            if (_views is ViewsContextCore context) {
                 view.connectState = ConnectState.Connected;
-                viewsContext.Connect(view);
+                context.Connect(view);
             }
         }
         
@@ -128,12 +127,13 @@ namespace TinyMVC.Boot {
                 return;
             }
             
-            if (_views is ViewsContextCore viewsContext) {
+            if (_views is ViewsContextCore context) {
                 view.connectState = ConnectState.Connected;
-                viewsContext.Connect(view);
+                context.Connect(view);
                 
                 if (unload != null) {
-                    unload.Add(new UnloadAction(() => {
+                    unload.Add(new UnloadAction(() =>
+                    {
                         if (view.connectState == ConnectState.Connected) {
                             DisconnectView(view);
                         }
@@ -144,13 +144,9 @@ namespace TinyMVC.Boot {
         
         /// <summary> Disconnects a rootless view from the current context: Unload. </summary>
         public void DisconnectView(IView view) {
-            if (view == null) {
-                return;
-            }
-            
-            if (_views is ViewsContextCore viewsContext) {
+            if (view != null && _views is ViewsContextCore context) {
                 view.connectState = ConnectState.Disconnected;
-                viewsContext.Disconnect(view);
+                context.Disconnect(view);
             }
         }
         
@@ -173,7 +169,7 @@ namespace TinyMVC.Boot {
                 try {
                     init.Init();
                 } catch (Exception exception) {
-                    DebugUtility.LogException(exception);
+                    DebugUtility.LogException(new Exception($"Context.ConnectController<{typeof(T1).Name}, {typeof(T2).Name}> - Init exception!", exception));
                 }
             }
             
@@ -181,7 +177,7 @@ namespace TinyMVC.Boot {
                 try {
                     applyResolving.ApplyResolving();
                 } catch (Exception exception) {
-                    DebugUtility.LogException(exception);
+                    DebugUtility.LogException(new Exception($"Context.ConnectController<{typeof(T1).Name}, {typeof(T2).Name}> - ApplyResolving exception!", exception));
                 }
             }
             
@@ -189,7 +185,7 @@ namespace TinyMVC.Boot {
                 try {
                     beginPlay.BeginPlay();
                 } catch (Exception exception) {
-                    DebugUtility.LogException(exception);
+                    DebugUtility.LogException(new Exception($"Context.ConnectController<{typeof(T1).Name}, {typeof(T2).Name}> - BeginPlay exception!", exception));
                 }
             }
             
@@ -211,7 +207,7 @@ namespace TinyMVC.Boot {
                 try {
                     unload.Unload();
                 } catch (Exception exception) {
-                    DebugUtility.LogException(exception);
+                    DebugUtility.LogException(new Exception($"Context.DisconnectController<{typeof(T1).Name}, {typeof(T2).Name}> - Unload exception!", exception));
                 }
             }
             
@@ -219,7 +215,7 @@ namespace TinyMVC.Boot {
                 try {
                     globalUnload.Unload();
                 } catch (Exception exception) {
-                    DebugUtility.LogException(exception);
+                    DebugUtility.LogException(new Exception($"Context.DisconnectController<{typeof(T1).Name}, {typeof(T2).Name}> - Unload global exception!", exception));
                 }
             }
             

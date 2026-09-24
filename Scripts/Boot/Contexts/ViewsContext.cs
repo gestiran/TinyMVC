@@ -14,6 +14,7 @@ using TinyMVC.Views;
 using TinyMVC.Views.Generated;
 using TinyReactive;
 using TinyReactive.Fields;
+using TinyUtilities.Logger;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
@@ -128,7 +129,11 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (view is IInit init) {
-                init.Init();
+                try {
+                    init.Init();
+                } catch (Exception exception) {
+                    DebugUtility.LogException(new Exception($"ViewsContext.Insert<{typeof(T).Name}> - Init exception!", exception));
+                }
             }
             
             mainViews.Add(view);
@@ -136,15 +141,27 @@ namespace TinyMVC.Boot.Contexts {
         
         internal void Connect(View view, Action<ILoop> connectLoop) {
             if (view is IInit init) {
-                init.Init();
+                try {
+                    init.Init();
+                } catch (Exception exception) {
+                    DebugUtility.LogException(new Exception("ViewsContext.Connect - Init exception!", exception));
+                }
             }
             
             if (view is IApplyResolving apply) {
-                apply.ApplyResolving();
+                try {
+                    apply.ApplyResolving();
+                } catch (Exception exception) {
+                    DebugUtility.LogException(new Exception("ViewsContext.Connect - ApplyResolving exception!", exception));
+                }
             }
             
             if (view is IBeginPlay beginPlay) {
-                beginPlay.BeginPlay();
+                try {
+                    beginPlay.BeginPlay();
+                } catch (Exception exception) {
+                    DebugUtility.LogException(new Exception("ViewsContext.Connect - BeginPlay exception!", exception));
+                }
             }
             
             if (view is ILoop loop) {
@@ -160,7 +177,11 @@ namespace TinyMVC.Boot.Contexts {
             }
             
             if (view is IUnload unload) {
-                unload.Unload();
+                try {
+                    unload.Unload();
+                } catch (Exception exception) {
+                    DebugUtility.LogException(new Exception("ViewsContext.Disconnect - Unload exception!", exception));
+                }
             }
             
             subViews.Remove(view);

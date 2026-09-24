@@ -54,7 +54,7 @@ namespace TinyMVC.Boot.Extensions {
             try {
                 context.unloadPool.Unload();
             } catch (Exception exception) {
-                DebugUtility.LogError(new Exception("SceneContext.Unload with exception!", exception));
+                DebugUtility.LogException(new Exception("ContextExtension.Unload - Unload exception!", exception));
             }
             
             context.controllers.Unload();
