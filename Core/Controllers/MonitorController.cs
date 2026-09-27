@@ -9,12 +9,16 @@ using TinyReactive;
 using TinyReactive.Fields;
 
 namespace TinyMVC.Controllers {
-    public abstract class MonitorController<T> : IController, IApplyResolving, IBeginPlay, IUnload where T : IDependency {
-        protected ObservedList<T> _models;
-        
+    public abstract class MonitorController : IController, IUnload {
         protected readonly UnloadPool _unload;
         
         protected MonitorController() => _unload = new UnloadPool();
+        
+        public virtual void Unload() => _unload.Unload();
+    }
+    
+    public abstract class MonitorController<T> : MonitorController, IApplyResolving, IBeginPlay where T : IDependency {
+        protected ObservedList<T> _models;
         
         public virtual void ApplyResolving() {
             _models = GetModels();
@@ -28,8 +32,6 @@ namespace TinyMVC.Controllers {
                 ConnectController(_models[modelId]);
             }
         }
-        
-        public virtual void Unload() => _unload.Unload();
         
         protected abstract ObservedList<T> GetModels();
         
