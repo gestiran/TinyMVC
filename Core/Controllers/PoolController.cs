@@ -1,7 +1,6 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
-using System;
 using System.Collections.Generic;
 using TinyMVC.Boot;
 using TinyMVC.Dependencies;
@@ -33,7 +32,7 @@ namespace TinyMVC.Controllers {
         protected abstract void ConnectController(T model);
     }
     
-    public class PoolController<T1, T2> : PoolController<T1> where T1 : IDependency where T2 : IController, IEquatable<T1>, new() {
+    public class PoolController<T1, T2> : PoolController<T1> where T1 : IDependency where T2 : IController, new() {
         private readonly DependencyPool<T1> _owner;
         
         public PoolController() => ProjectContext.data.Get(out _owner);
