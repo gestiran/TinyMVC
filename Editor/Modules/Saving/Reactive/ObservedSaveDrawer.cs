@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
+using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using TinyMVC.Modules.Saving.Reactive;
 using TinyReactive.Editor.Fields;
@@ -21,7 +22,9 @@ namespace TinyMVC.Editor.Modules.Saving.Reactive {
                 }
                 
                 if (valueProperty != null) {
-                    if (current is ObservedSave<int> observedInt) {
+                    if (Property.GetAttribute<ReadOnlyAttribute>() != null) {
+                        DrawValue(label, valueProperty, current);
+                    } else if (current is ObservedSave<int> observedInt) {
                         EditorGUILayout.BeginHorizontal();
                         
                         DrawValue(label, valueProperty, current);
