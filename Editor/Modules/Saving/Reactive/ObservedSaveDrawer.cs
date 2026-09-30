@@ -1,7 +1,6 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
-using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using TinyMVC.Modules.Saving.Reactive;
 using TinyReactive.Editor.Fields;
@@ -22,28 +21,24 @@ namespace TinyMVC.Editor.Modules.Saving.Reactive {
                 }
                 
                 if (valueProperty != null) {
-                    if (Property.GetAttribute<ReadOnlyAttribute>() != null) {
-                        DrawValue(label, valueProperty, current);
-                    } else if (current is ObservedSave<int> observedInt) {
-                        EditorGUILayout.BeginHorizontal();
-                        
-                        DrawValue(label, valueProperty, current);
-                        
-                        if (ObservedDrawer.DrawButtonsInt(observedInt, GUILayout.Width(64f))) {
-                            ValueEntry.Values.ForceMarkDirty();
+                    ObservedDrawerSettingsAttribute settings = Property.GetAttribute<ObservedDrawerSettingsAttribute>();
+                    
+                    if (settings != null) {
+                        if (settings.ShowButtons) {
+                            if (current is ObservedSave<int> observedInt) {
+                                if (ObservedDrawer.DrawValueAndButtonsInt(observedInt, label)) {
+                                    ValueEntry.Values.ForceMarkDirty();
+                                }
+                            } else if (current is ObservedSave<float> observedFloat) {
+                                if (ObservedDrawer.DrawValueAndButtonsFloat(observedFloat, label)) {
+                                    ValueEntry.Values.ForceMarkDirty();
+                                }
+                            } else {
+                                DrawValue(label, valueProperty, current);
+                            }
+                        } else {
+                            DrawValue(label, valueProperty, current);
                         }
-                        
-                        EditorGUILayout.EndHorizontal();
-                    } else if (current is ObservedSave<float> observedFloat) {
-                        EditorGUILayout.BeginHorizontal();
-                        
-                        DrawValue(label, valueProperty, current);
-                        
-                        if (ObservedDrawer.DrawButtonsFloat(observedFloat, GUILayout.Width(64f))) {
-                            ValueEntry.Values.ForceMarkDirty();
-                        }
-                        
-                        EditorGUILayout.EndHorizontal();
                     } else {
                         DrawValue(label, valueProperty, current);
                     }
