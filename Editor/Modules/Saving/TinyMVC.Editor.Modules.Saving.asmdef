@@ -5,6 +5,7 @@
         "TinyMVC.Modules",
         "TinyMVC.Modules.Saving",
         "TinyReactive.Core",
+        "TinyReactive.Runtime",
         "TinyReactive.Editor"
     ],
     "includePlatforms": [
