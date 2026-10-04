@@ -101,7 +101,7 @@ namespace TinyMVC.Boot {
                 try {
                     _fixedTicks[tickId].FixedTick();
                 } catch (Exception exception) {
-                    DebugUtility.LogError(exception);
+                    DebugUtility.LogException(exception);
                 }
             }
         }
@@ -111,7 +111,7 @@ namespace TinyMVC.Boot {
                 try {
                     _ticks[tickId].Tick();
                 } catch (Exception exception) {
-                    DebugUtility.LogError(exception);
+                    DebugUtility.LogException(exception);
                 }
             }
         }
@@ -121,7 +121,7 @@ namespace TinyMVC.Boot {
                 try {
                     _lateTicks[tickId].LateTick();
                 } catch (Exception exception) {
-                    DebugUtility.LogError(exception);
+                    DebugUtility.LogException(exception);
                 }
             }
         }
@@ -145,7 +145,7 @@ namespace TinyMVC.Boot {
             try {
                 RemoveProcess(_cancellationSource.Token).Forget();
             } catch (Exception exception) {
-                DebugUtility.LogError(exception);
+                DebugUtility.LogException(exception);
             }
         }
         
@@ -233,7 +233,7 @@ namespace TinyMVC.Boot {
             try {
                 InitWindows();
             } catch (Exception exception) {
-                DebugUtility.LogError(new Exception("SceneContext.InitWindows with exception!", exception));
+                DebugUtility.LogException(new Exception("SceneContext.InitWindows with exception!", exception));
             }
         }
         

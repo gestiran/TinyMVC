@@ -1,9 +1,12 @@
 // Copyright (c) 2023 Derek Sliman
 // Licensed under the MIT License. See LICENSE.md for details.
 
+using System;
 using Cysharp.Threading.Tasks;
+using TinyUtilities.Logger;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using LogType = TinyUtilities.Logger.LogType;
 
 namespace TinyMVC.Boot {
     /// <summary> Unity scenes management adapter over the context registry (<see cref="ProjectContext"/>). </summary>
@@ -89,6 +92,24 @@ namespace TinyMVC.Boot {
         
         /// <summary> First project context creating </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        internal static void CreateContext() => ProjectContext.Clear();
+        internal static void CreateContext() {
+            DebugUtility.onMessageUpdate -= WriteLog;
+            DebugUtility.onCatchException -= WriteException;
+            
+            ProjectContext.Clear();
+            
+            DebugUtility.onMessageUpdate += WriteLog;
+            DebugUtility.onCatchException += WriteException;
+        }
+        
+        private static void WriteLog(string message, LogType type) {
+            switch (type) {
+                case LogType.Log: Debug.Log(message); break;
+                case LogType.Warning: Debug.LogWarning(message); break;
+                case LogType.Error: Debug.LogError(message); break;
+            }
+        }
+        
+        private static void WriteException(Exception exception) => Debug.LogException(exception);
     }
 }
